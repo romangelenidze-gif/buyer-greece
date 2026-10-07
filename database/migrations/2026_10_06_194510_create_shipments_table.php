@@ -10,17 +10,20 @@ return new class extends Migration
     {
         Schema::create('shipments', function (Blueprint $table) {
             $table->id();
-            $table->string('shipment_number')->unique();
+            $table->string('public_shipment_number')->unique();
+            $table->foreignId('customer_id')->nullable()->constrained('customers')->onDelete('cascade');
             $table->string('status')->default('preparing');
             $table->string('carrier')->default('CAMEX');
             $table->string('destination_country')->nullable();
             
-            $table->decimal('total_weight_kg', 8, 2)->default(0);
-            $table->decimal('total_cost', 10, 2)->default(0);
+            $table->decimal('weight_kg', 8, 2)->default(0);
+            $table->string('camex_tracking_number')->nullable();
+            $table->string('camex_status')->nullable();
             
+            $table->timestamp('transferred_to_camex_at')->nullable();
             $table->timestamp('dispatched_at')->nullable();
             $table->timestamp('delivered_at')->nullable();
-            $table->text('notes')->nullable();
+            $table->text('internal_note')->nullable();
             
             $table->timestamps();
             $table->softDeletes();
