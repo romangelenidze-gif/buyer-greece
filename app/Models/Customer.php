@@ -3,13 +3,14 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use App\Traits\Auditable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Notifications\Notifiable;
 
 class Customer extends Model
 {
-    use HasFactory, Notifiable;
+    use HasFactory, Auditable, Notifiable;
 
     protected $fillable = [
         'customer_number',
@@ -18,6 +19,7 @@ class Customer extends Model
         'email',
         'phone',
         'camex_personal_number',
+        'country',
         'city',
         'address',
         'notes',

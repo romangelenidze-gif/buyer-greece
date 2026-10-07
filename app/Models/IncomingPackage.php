@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\PackageSourceType;
+use App\Traits\Auditable;
 use App\Enums\PackageStatus;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -11,7 +12,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class IncomingPackage extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, Auditable, SoftDeletes;
 
     protected $fillable = [
         'public_package_number',

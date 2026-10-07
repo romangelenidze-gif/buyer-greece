@@ -4,6 +4,7 @@ namespace App\Filament\Resources\ShipmentResource\RelationManagers;
 
 use App\Enums\PackageStatus;
 use Filament\Actions\AssociateAction;
+use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DissociateAction;
 use Filament\Actions\DissociateBulkAction;
 use Filament\Actions\EditAction;
@@ -82,7 +83,7 @@ class PackagesRelationManager extends RelationManager
                     ->label('Убрать из партии'),
             ])
             ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
+                BulkActionGroup::make([
                     DissociateBulkAction::make()
                         ->label('Убрать выбранные'),
                 ]),

@@ -2,10 +2,12 @@
 
 namespace App\Filament\Resources;
 
+use App\Actions\Payments\ConfirmBankPaymentAction;
 use App\Enums\PaymentMethod;
 use App\Enums\PaymentStatus;
 use App\Filament\Resources\PaymentResource\Pages;
 use App\Models\Payment;
+use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
@@ -14,6 +16,7 @@ use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
+use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
@@ -143,6 +146,68 @@ class PaymentResource extends Resource
                     ->sortable(),
             ])
             ->actions([
+                Action::make('confirmPayment')
+                    ->label('Подтвердить')
+                    ->icon('heroicon-o-check-circle')
+                    ->color('success')
+                    ->visible(fn (Payment $record): bool => $record->status === PaymentStatus::PENDING || $record->status?->value === 'pending')
+                    ->form([
+                        TextInput::make('transaction_id')
+                            ->label('Банковский референс / Номер транзакции')
+                            ->required()
+                            ->maxLength(255),
+
+                        DateTimePicker::make('paid_at')
+                            ->label('Дата оплаты')
+                            ->default(now())
+                            ->required(),
+
+                        Textarea::make('notes')
+                            ->label('Заметка менеджера'),
+                    ])
+                    ->action(function (Payment $record, array $data, ConfirmBankPaymentAction $confirmPaymentAction): void {
+                        $record->update([
+                            'transaction_id' => $data['transaction_id'] ?? $record->transaction_id,
+                            'paid_at' => isset($data['paid_at']) ? \Carbon\Carbon::parse($data['paid_at']) : $record->paid_at,
+                            'notes' => $data['notes'] ?? $record->notes,
+                        ]);
+
+                        $confirmPaymentAction->execute(
+                            payment: $record,
+                            confirmedByUserId: (int) auth()->id()
+                        );
+
+                        Notification::make()
+                            ->title('Платёж успешно подтверждён')
+                            ->success()
+                            ->send();
+                    }),
+
+                Action::make('rejectPayment')
+                    ->label('Отклонить')
+                    ->icon('heroicon-o-x-circle')
+                    ->color('danger')
+                    ->requiresConfirmation()
+                    ->visible(fn (Payment $record): bool => $record->status === PaymentStatus::PENDING || $record->status?->value === 'pending')
+                    ->form([
+                        Textarea::make('rejection_reason')
+                            ->label('Причина отклонения платежа')
+                            ->required(),
+                    ])
+                    ->action(function (Payment $record, array $data): void {
+                        $failedStatus = defined('App\Enums\PaymentStatus::FAILED') ? PaymentStatus::FAILED : 'failed';
+
+                        $record->update([
+                            'status' => $failedStatus,
+                            'notes' => trim(($record->notes ?? '') . "\nОтклонён: " . $data['rejection_reason']),
+                        ]);
+
+                        Notification::make()
+                            ->title('Платёж отклонён')
+                            ->danger()
+                            ->send();
+                    }),
+
                 EditAction::make(),
                 ViewAction::make(),
             ])

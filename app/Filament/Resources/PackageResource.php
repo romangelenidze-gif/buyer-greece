@@ -42,7 +42,7 @@ class PackageResource extends Resource
                             ->label('Владелец (Клиент)')
                             ->relationship('customer', 'first_name')
                             ->getOptionLabelFromRecordUsing(fn ($record) => "{$record->first_name} {$record->last_name} ({$record->email})")
-                            ->searchable()
+                            ->searchable(['first_name', 'last_name', 'email'])
                             ->required(),
 
                         Select::make('order_id')

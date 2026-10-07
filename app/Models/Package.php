@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\PackageSourceType;
 use App\Enums\PackageStatus;
+use App\Traits\Auditable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -11,7 +12,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Package extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, Auditable, SoftDeletes;
 
     protected $fillable = [
         'customer_id',
@@ -39,7 +40,7 @@ class Package extends Model
 
     public function customer(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'customer_id');
+        return $this->belongsTo(Customer::class);
     }
 
     public function order(): BelongsTo

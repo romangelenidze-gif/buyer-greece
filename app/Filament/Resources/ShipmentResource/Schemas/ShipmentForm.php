@@ -18,9 +18,16 @@ class ShipmentForm
             ->components([
                 Section::make('Основная информация партии')
                     ->schema([
-                        TextInput::make('shipment_number')
+                        Select::make('customer_id')
+                            ->label('Клиент')
+                            ->relationship('customer', 'first_name')
+                            ->getOptionLabelFromRecordUsing(fn ($record) => "{$record->customer_number} — {$record->first_name} {$record->last_name}")
+                            ->searchable()
+                            ->required(),
+
+                        TextInput::make('public_shipment_number')
                             ->label('Номер партии / Накладной')
-                            ->default(fn () => 'SHP-' . strtoupper(substr(md5((string) time()), 0, 8)))
+                            ->default(fn () => 'SHP-' . strtoupper(substr(md5((string) microtime()), 0, 8)))
                             ->required()
                             ->unique(ignoreRecord: true),
 
@@ -31,42 +38,40 @@ class ShipmentForm
                             ->required(),
 
                         TextInput::make('carrier')
-                            ->label('Перевозчик / Служба')
+                            ->label('Перевозчик')
                             ->default('CAMEX')
                             ->required(),
 
                         TextInput::make('destination_country')
                             ->label('Страна назначения')
-                            ->placeholder('Грузия, Армения и т.д.')
-                            ->nullable(),
+                            ->default('Грузия')
+                            ->required(),
                     ])->columns(2),
 
-                Section::make('Параметры и стоимость')
+                Section::make('Параметры и Camex Трекинг')
                     ->schema([
-                        TextInput::make('total_weight_kg')
+                        TextInput::make('weight_kg')
                             ->label('Общий вес (кг)')
                             ->numeric()
-                            ->default(0),
+                            ->default(0.00),
 
-                        TextInput::make('total_cost')
-                            ->label('Общая стоимость (€)')
-                            ->numeric()
-                            ->default(0),
-                    ])->columns(2),
+                        TextInput::make('camex_tracking_number')
+                            ->label('Трек-номер Camex')
+                            ->maxLength(255),
 
-                Section::make('Даты отправки и логистики')
-                    ->schema([
-                        DateTimePicker::make('dispatched_at')
-                            ->label('Дата передачи перевозчику'),
+                        TextInput::make('camex_status')
+                            ->label('Статус Camex')
+                            ->maxLength(255),
 
-                        DateTimePicker::make('delivered_at')
-                            ->label('Дата завершения / доставки'),
+                        DateTimePicker::make('transferred_to_camex_at')
+                            ->label('Дата передачи в Camex')
+                            ->disabled(),
                     ])->columns(2),
 
                 Section::make('Дополнительно')
                     ->schema([
-                        Textarea::make('notes')
-                            ->label('Заметки к партии')
+                        Textarea::make('internal_note')
+                            ->label('Внутренняя заметка')
                             ->columnSpanFull(),
                     ]),
             ]);
