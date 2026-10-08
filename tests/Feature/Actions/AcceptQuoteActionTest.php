@@ -7,6 +7,7 @@ use App\Enums\OrderStatus;
 use App\Enums\QuoteStatus;
 use App\Models\Order;
 use App\Models\Quote;
+use DomainException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -32,7 +33,7 @@ class AcceptQuoteActionTest extends TestCase
 
     public function test_throws_exception_when_accepting_invalid_status(): void
     {
-        $this->expectException(\DomainException::class);
+        $this->expectException(DomainException::class);
 
         $quote = Quote::factory()->create([
             'status' => QuoteStatus::ACCEPTED,
@@ -40,5 +41,20 @@ class AcceptQuoteActionTest extends TestCase
 
         $action = app(AcceptQuoteAction::class);
         $action->execute($quote);
+    }
+
+    public function test_prevents_double_quote_acceptance(): void
+    {
+        $order = Order::factory()->create();
+        $quote = Quote::factory()->create([
+            'order_id' => $order->id,
+            'status' => QuoteStatus::SENT,
+        ]);
+
+        $action = app(AcceptQuoteAction::class);
+        $action->execute($quote);
+
+        $this->expectException(DomainException::class);
+        $action->execute($quote->fresh());
     }
 }

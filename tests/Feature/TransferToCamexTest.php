@@ -12,6 +12,7 @@ use App\Models\Order;
 use App\Models\Shipment;
 use App\Models\User;
 use App\Notifications\ShipmentTransferredToCamexNotification;
+use DomainException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Notification;
 use Tests\TestCase;
@@ -73,6 +74,38 @@ class TransferToCamexTest extends TestCase
         Notification::assertSentTo(
             $customer,
             ShipmentTransferredToCamexNotification::class
+        );
+    }
+
+    public function test_prevents_double_transfer_to_camex(): void
+    {
+        Notification::fake();
+
+        $customer = Customer::factory()->create();
+        $manager = User::factory()->create();
+
+        $shipment = Shipment::factory()->create([
+            'customer_id' => $customer->id,
+            'status' => ShipmentStatus::PREPARING ?? 'preparing',
+            'camex_tracking_number' => null,
+            'transferred_to_camex_at' => null,
+        ]);
+
+        $action = new TransferToCamexAction();
+        $action->execute(
+            shipment: $shipment,
+            camexTrackingNumber: 'CAMEX-12345678',
+            camexStatus: 'registered',
+            managerUserId: $manager->id
+        );
+
+        $this->expectException(DomainException::class);
+
+        $action->execute(
+            shipment: $shipment->fresh(),
+            camexTrackingNumber: 'CAMEX-12345678',
+            camexStatus: 'registered',
+            managerUserId: $manager->id
         );
     }
 }

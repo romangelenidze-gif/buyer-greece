@@ -13,6 +13,14 @@ return [
     | a conventional file to locate the various service credentials.
     |
     */
+    'telegram' => [
+        'username' => env('TELEGRAM_SUPPORT_USERNAME', 'buyer_greece_bot'),
+    ],
+
+    'whatsapp' => [
+        'phone' => env('WHATSAPP_SUPPORT_PHONE', '306900000000'),
+    ],
+    
 
     'postmark' => [
         'key' => env('POSTMARK_API_KEY'),
