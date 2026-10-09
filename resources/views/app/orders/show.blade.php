@@ -1,217 +1,268 @@
-<x-layouts.app title="Заказ #{{ $order->order_number ?? 'BG-1001' }} | Buyer Greece">
-
+<x-layouts.app title="Заказ {{ $order->public_order_number }} | Buyer Greece">
     <div class="max-w-4xl mx-auto space-y-6">
 
-        <!-- BREADCRUMBS & TOP BAR -->
-        <div class="flex items-center justify-between">
-            <a href="{{ route('dashboard') }}" class="inline-flex items-center text-xs font-semibold text-slate-500 hover:text-slate-800 transition-colors">
-                ← Назад в Дашборд
-            </a>
-            <x-status-badge 
-                :status="$order->status ?? 'quote_ready'" 
-                :label="$order->status_label ?? 'Расчет готов'" 
-            />
-        </div>
-
-        <!-- ORDER HEADER -->
-        <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-4">
-            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 border-b border-slate-100 pb-4">
-                <div>
-                    <span class="text-xs font-mono text-slate-400">Номер заказа</span>
-                    <h1 class="text-xl font-extrabold text-slate-900">#{{ $order->order_number ?? 'BG-1001' }}</h1>
-                </div>
-                <div class="text-xs text-slate-500">
-                    Создан: <strong class="text-slate-700">{{ isset($order->created_at) ? $order->created_at->format('d.m.Y H:i') : '08.10.2026 14:30' }}</strong>
+        <!-- HEADER & BACK BUTTON -->
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+                <a href="{{ route('dashboard') }}" class="inline-flex items-center gap-1 text-xs text-slate-500 hover:text-slate-800 transition-colors mb-2">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                    </svg>
+                    Назад к заказам
+                </a>
+                <div class="flex items-center gap-3">
+                    <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight">
+                        Заказ № {{ $order->public_order_number }}
+                    </h1>
+                    <span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-amber-100 text-amber-800 border border-amber-200">
+                        {{ is_object($order->status) ? $order->status->value : $order->status }}
+                    </span>
                 </div>
             </div>
-
-            <!-- PRODUCT SUMMARY -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
-                <div class="md:col-span-2 space-y-1">
-                    <span class="text-slate-500">Наименование товара:</span>
-                    <p class="font-bold text-slate-800 text-sm">{{ $order->product_name ?? 'Zara Wool Coat (Winter Collection)' }}</p>
-                    <a href="{{ $order->product_url ?? '#' }}" target="_blank" class="inline-block text-brand-600 hover:underline truncate max-w-full">
-                        {{ $order->product_url ?? 'https://www.zara.com/gr/en/wool-coat-p01234567.html' }} ↗
-                    </a>
-                </div>
-                <div class="space-y-1 bg-slate-50 p-3 rounded-xl border border-slate-100">
-                    <div class="flex justify-between">
-                        <span class="text-slate-500">Количество:</span>
-                        <span class="font-bold text-slate-800">{{ $order->quantity ?? 1 }} шт.</span>
-                    </div>
-                    <div class="flex justify-between">
-                        <span class="text-slate-500">Размер:</span>
-                        <span class="font-bold text-slate-800">{{ $order->size ?? 'M' }}</span>
-                    </div>
-                    <div class="flex justify-between">
-                        <span class="text-slate-500">Цвет:</span>
-                        <span class="font-bold text-slate-800">{{ $order->color ?? 'Black' }}</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- STATUS TIMELINE -->
-        <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
-            <h2 class="text-sm font-bold text-slate-900 mb-4">Статус выполнения</h2>
             
-            <div class="grid grid-cols-2 sm:grid-cols-5 gap-2 text-center text-xs">
-                <!-- Step 1 -->
-                <div class="p-2.5 rounded-lg border bg-emerald-50 border-emerald-200 text-emerald-800 font-medium">
-                    <div class="font-bold">1. Заявка</div>
-                    <div class="text-[10px] opacity-80">Принята</div>
-                </div>
-                <!-- Step 2 -->
-                <div class="p-2.5 rounded-lg border bg-amber-50 border-amber-300 text-amber-900 font-bold shadow-sm">
-                    <div class="font-bold">2. Расчет (Quote)</div>
-                    <div class="text-[10px] opacity-80">Ожидает оплаты</div>
-                </div>
-                <!-- Step 3 -->
-                <div class="p-2.5 rounded-lg border bg-slate-50 border-slate-200 text-slate-400">
-                    <div class="font-bold">3. Оплата</div>
-                    <div class="text-[10px]">Проверка чека</div>
-                </div>
-                <!-- Step 4 -->
-                <div class="p-2.5 rounded-lg border bg-slate-50 border-slate-200 text-slate-400">
-                    <div class="font-bold">4. Выкуп</div>
-                    <div class="text-[10px]">Магазин GR</div>
-                </div>
-                <!-- Step 5 -->
-                <div class="p-2.5 rounded-lg border bg-slate-50 border-slate-200 text-slate-400">
-                    <div class="font-bold">5. Camex</div>
-                    <div class="text-[10px]">Передано</div>
-                </div>
+            <div class="text-xs text-slate-500">
+                Создан: {{ $order->created_at ? $order->created_at->format('d.m.Y H:i') : now()->format('d.m.Y') }}
             </div>
         </div>
 
-        <!-- QUOTE & PAYMENT BLOCK -->
-        <div class="bg-white border-2 border-brand-500 rounded-2xl p-6 shadow-md space-y-6">
-            <div class="flex justify-between items-center border-b border-slate-100 pb-3">
-                <h2 class="text-base font-bold text-slate-900">Расчет стоимости (Quote)</h2>
-                <span class="text-xs bg-brand-50 text-brand-700 px-2.5 py-1 rounded-full font-semibold border border-brand-100">
-                    Готов к оплате
-                </span>
+        <!-- SUCCESS ALERT -->
+        @if (session('success'))
+            <div class="p-4 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl text-sm font-medium flex items-center gap-3">
+                <svg class="w-5 h-5 text-emerald-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+                <span>{{ session('success') }}</span>
             </div>
+        @endif
 
-            <!-- PRICE BREAKDOWN TABLE -->
-            <div class="space-y-2 text-xs font-mono">
-                <div class="flex justify-between py-1 border-b border-slate-100">
-                    <span class="text-slate-600">Товар в магазине Греции:</span>
-                    <span class="font-bold text-slate-800">€{{ number_format($order->item_price ?? 89.90, 2) }}</span>
-                </div>
-                <div class="flex justify-between py-1 border-b border-slate-100">
-                    <span class="text-slate-600">Доставка магазина до склада в Греции:</span>
-                    <span class="font-bold text-slate-800">€{{ number_format($order->local_shipping ?? 4.50, 2) }}</span>
-                </div>
-                <div class="flex justify-between py-1 border-b border-slate-100">
-                    <span class="text-slate-600">Сервисная комиссия за выкуп:</span>
-                    <span class="font-bold text-slate-800">€{{ number_format($order->service_fee ?? 10.00, 2) }}</span>
-                </div>
-                <div class="flex justify-between py-2 text-sm font-sans font-extrabold text-slate-900 pt-3">
-                    <span>ИТОГО К ОПЛАТЕ:</span>
-                    <span class="text-brand-600 font-mono text-base">€{{ number_format($order->total_amount ?? 104.40, 2) }}</span>
-                </div>
-            </div>
+        <!-- SECTION 1: ORDER ITEMS -->
+        <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-4">
+            <h2 class="text-base font-bold text-slate-900 border-b border-slate-100 pb-3">Товары в заказе</h2>
 
-            <div class="p-3 bg-amber-50 rounded-xl border border-amber-200 text-xs text-amber-900 leading-relaxed">
-                <strong>Обратите внимание:</strong> Доставка из Греции в Грузию оплачивается отдельно при получении посылки в компании Camex.
-            </div>
-
-            @if(($order->status ?? '') === 'expired')
-                <!-- EXPIRED QUOTE WARNING -->
-                <div class="bg-rose-50 border border-rose-200 rounded-2xl p-5 space-y-3">
-                    <div class="flex items-start gap-3">
-                        <svg class="w-5 h-5 text-rose-600 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        <div class="text-xs text-rose-900 space-y-1">
-                            <p class="font-bold text-sm">Срок действия расчета (Quote) истек</p>
-                            <p>Цены на товар или стоимость локальной доставки изменились. Оплата по данному расчету временно недоступна.</p>
+            @forelse($order->items as $item)
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 py-3 border-b border-slate-100 last:border-0">
+                    <div class="space-y-1">
+                        <h3 class="font-bold text-slate-900 text-sm">{{ $item->product_name }}</h3>
+                        @if($item->product_url)
+                            <a href="{{ $item->product_url }}" target="_blank" class="text-xs text-brand-600 hover:underline inline-flex items-center gap-1">
+                                <span>Открыть ссылку на товар</span>
+                                <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                                </svg>
+                            </a>
+                        @endif
+                        <div class="flex flex-wrap gap-2 text-xs text-slate-500 pt-1">
+                            @if($item->size) <span>Размер: <strong class="text-slate-700">{{ $item->size }}</strong></span> @endif
+                            @if($item->color) <span>Цвет: <strong class="text-slate-700">{{ $item->color }}</strong></span> @endif
+                            @if($item->model) <span>Модель: <strong class="text-slate-700">{{ $item->model }}</strong></span> @endif
                         </div>
                     </div>
 
-                    <div class="pt-2 flex items-center gap-3">
-                        <x-buttons.messenger type="telegram" :order-number="$order->order_number" size="small">
-                            Запросить обновленный расчет
-                        </x-buttons.messenger>
+                    <div class="text-right flex sm:flex-col justify-between items-center sm:items-end text-xs">
+                        <span class="text-slate-500">Количество: <strong>{{ $item->quantity }} шт.</strong></span>
+                        @if($item->total_price)
+                            <span class="text-sm font-bold text-slate-900">€{{ number_format($item->total_price, 2) }}</span>
+                        @endif
                     </div>
                 </div>
-            @endif
-
-            <!-- BANK TRANSFER PAYMENT FORM -->
-            <div x-data="{ showPaymentForm: false }" class="pt-2">
-                <div x-show="!showPaymentForm">
-                    <button 
-                        @click="showPaymentForm = true" 
-                        type="button" 
-                        class="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm rounded-xl transition-colors text-center shadow-sm"
-                    >
-                        Оплатить €{{ number_format($order->total_amount ?? 104.40, 2) }} банковским переводом
-                    </button>
+            @empty
+                <div class="text-sm text-slate-500 py-4 text-center">
+                    Информация о позициях обновляется менеджером.
                 </div>
+            @endforelse
+        </div>
 
-                <!-- CONTEXTUAL SUPPORT BLOCK -->
-                <div class="bg-slate-50 border border-slate-200 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                    <div class="space-y-0.5">
-                        <h3 class="text-xs font-bold text-slate-800">Возникли вопросы по этому заказу?</h3>
-                        <p class="text-[11px] text-slate-500">Напишите менеджеру — номер заказа #{{ $order->order_number ?? 'BG-1001' }} подставится автоматически.</p>
-                    </div>
+        <!-- SECTION 2: QUOTE / BREAKDOWN & ACCEPTANCE -->
+        @if(isset($quote) && $quote)
+            @php
+                $quoteStatus = is_object($quote->status) ? $quote->status->value : $quote->status;
+                $isAccepted = in_array($quoteStatus, ['accepted', 'approved', 'active']);
+                $isRejected = in_array($quoteStatus, ['rejected', 'declined']);
+            @endphp
 
-                    <div class="flex items-center gap-2 w-full sm:w-auto">
-                        <x-buttons.messenger type="telegram" :order-number="$order->order_number ?? 'BG-1001'" size="small" class="w-1/2 sm:w-auto">
-                            Telegram
-                        </x-buttons.messenger>
-                        <x-buttons.messenger type="whatsapp" :order-number="$order->order_number ?? 'BG-1001'" size="small" class="w-1/2 sm:w-auto">
-                            WhatsApp
-                        </x-buttons.messenger>
-                    </div>
-                </div>
-
-                <!-- PAYMENT DETAILS & RECEIPT UPLOAD -->
-                <div x-show="showPaymentForm" x-cloak class="bg-slate-50 border border-slate-200 rounded-xl p-5 space-y-4">
-                    <h3 class="text-sm font-bold text-slate-900">Реквизиты для банковского перевода</h3>
+            <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-6">
+                <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                    <h2 class="text-base font-bold text-slate-900">Расчет стоимости (Quote)</h2>
                     
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-                        <x-forms.copy-field label="Получатель (Beneficiary)" value="Buyer Greece LTD" />
-                        <x-forms.copy-field label="IBAN Банка" value="GR1234567890123456789012345" />
-                        <x-forms.copy-field label="SWIFT / BIC" value="BANKGR22XXX" />
-                        <x-forms.copy-field label="Назначение платежа (Обязательно)" value="Payment for Order #{{ $order->order_number ?? 'BG-1001' }}" />
+                    @if($isAccepted)
+                        <span class="text-xs text-emerald-700 font-semibold bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200">
+                            Расчет принят
+                        </span>
+                    @elseif($isRejected)
+                        <span class="text-xs text-rose-700 font-semibold bg-rose-50 px-2.5 py-1 rounded-full border border-rose-200">
+                            Расчет отклонен
+                        </span>
+                    @else
+                        <span class="text-xs text-amber-700 font-semibold bg-amber-50 px-2.5 py-1 rounded-full border border-amber-200">
+                            Ожидает вашего подтверждения
+                        </span>
+                    @endif
+                </div>
+
+                <!-- PRICE BREAKDOWN TABLE -->
+                <div class="space-y-2 text-sm text-slate-600">
+                    <div class="flex justify-between">
+                        <span>Стоимость товаров:</span>
+                        <span class="font-medium text-slate-900">€{{ number_format($quote->product_total, 2) }}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span>Доставка по Греции:</span>
+                        <span class="font-medium text-slate-900">€{{ number_format($quote->local_shipping, 2) }}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span>Комиссия выкупа:</span>
+                        <span class="font-medium text-slate-900">€{{ number_format($quote->buyer_fee, 2) }}</span>
                     </div>
 
-                    <!-- UPLOAD FORM -->
-                    <form action="{{ route('orders.payments.store', $order->id ?? 1) }}" method="POST" enctype="multipart/form-data" class="pt-4 border-t border-slate-200 space-y-4">
-                        @csrf
+                    @if($quote->services_total > 0)
+                        <div class="flex justify-between">
+                            <span>Доп. услуги:</span>
+                            <span class="font-medium text-slate-900">€{{ number_format($quote->services_total, 2) }}</span>
+                        </div>
+                    @endif
+
+                    @if($quote->other_costs > 0)
+                        <div class="flex justify-between">
+                            <span>Прочие расходы:</span>
+                            <span class="font-medium text-slate-900">€{{ number_format($quote->other_costs, 2) }}</span>
+                        </div>
+                    @endif
+
+                    @if($quote->discount > 0)
+                        <div class="flex justify-between text-emerald-600">
+                            <span>Скидка:</span>
+                            <span class="font-medium">-€{{ number_format($quote->discount, 2) }}</span>
+                        </div>
+                    @endif
+
+                    <div class="flex justify-between pt-3 border-t border-slate-200 text-base font-extrabold text-slate-900">
+                        <span>Итого к оплате:</span>
+                        <span class="text-brand-600">€{{ number_format($quote->total, 2) }}</span>
+                    </div>
+                </div>
+
+                @if($quote->notes)
+                    <div class="p-3 bg-slate-50 border border-slate-100 rounded-xl text-xs text-slate-600">
+                        <strong class="text-slate-700 block mb-1">Примечание менеджера:</strong>
+                        {{ $quote->notes }}
+                    </div>
+                @endif
+
+                <!-- ACCEPT / REJECT BUTTONS FOR PENDING QUOTES -->
+                @if(!$isAccepted && !$isRejected)
+                    <div class="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-3">
+                        <p class="text-xs text-slate-600">
+                            Пожалуйста, проверьте итоговую стоимость. После принятия расчета станет доступна форма загрузки чека оплаты.
+                        </p>
                         
-                        <div>
-                            <label for="receipt_file" class="block text-xs font-semibold text-slate-800 mb-1">
-                                Загрузите квитанцию / чек об оплате (PDF, JPG, PNG до 5MB) <span class="text-rose-500">*</span>
-                            </label>
-                            <input 
-                                type="file" 
-                                name="receipt_file" 
-                                id="receipt_file" 
-                                accept="image/*,.pdf" 
-                                required 
-                                class="block w-full text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-emerald-600 file:text-white hover:file:bg-emerald-500 cursor-pointer"
-                            >
-                            @error('receipt_file')
-                                <p class="text-xs text-rose-600 mt-1">{{ $message }}</p>
-                            @enderror
+                        <div class="flex flex-col sm:flex-row gap-3 pt-1">
+                            <form action="{{ route('orders.quotes.accept', [$order->id, $quote->id]) }}" method="POST" class="w-full sm:w-auto">
+                                @csrf
+                                <x-buttons.primary type="submit" class="w-full justify-center">
+                                    Принять расчет и перейти к оплате
+                                </x-buttons.primary>
+                            </form>
+
+                            <form action="{{ route('orders.quotes.reject', [$order->id, $quote->id]) }}" method="POST" class="w-full sm:w-auto">
+                                @csrf
+                                <button type="submit" class="w-full px-4 py-2 text-xs font-semibold text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 rounded-lg transition-colors text-center">
+                                    Отклонить расчет
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                @endif
+
+                <!-- BANK TRANSFER PAYMENT FORM WITH COPY FIELDS -->
+                @if($isAccepted || $order->active_quote_id === $quote->id)
+                    <div class="bg-slate-50 border border-slate-200 rounded-xl p-5 space-y-4">
+                        <h3 class="text-sm font-bold text-slate-900">Оплата банковским переводом (Bank Transfer)</h3>
+                        <p class="text-xs text-slate-600 leading-relaxed">
+                            Переведите итоговую сумму <strong>€{{ number_format($quote->total, 2) }}</strong> на банковские реквизиты сервиса и загрузите квитанцию об оплате ниже.
+                        </p>
+
+                        <!-- COPYABLE REQUISITES -->
+                        <div class="space-y-3 pt-1">
+                            <x-forms.copy-field 
+                                label="IBAN / Расчетный счет" 
+                                value="{{ config('services.bank.iban', 'GR1234567890123456789012345') }}" 
+                            />
+                            <x-forms.copy-field 
+                                label="Сумма к оплате (€)" 
+                                value="{{ number_format($quote->total, 2, '.', '') }}" 
+                            />
+                            <x-forms.copy-field 
+                                label="Назначение платежа" 
+                                value="Оплата заказа № {{ $order->public_order_number }}" 
+                            />
                         </div>
 
-                        <div class="flex items-center gap-3 pt-2">
+                        <form action="{{ route('orders.payments.store', $order->id) }}" method="POST" enctype="multipart/form-data" class="space-y-4 pt-3 border-t border-slate-200">
+                            @csrf
+                            <div>
+                                <label for="receipt" class="block text-xs font-semibold text-slate-700 mb-1">
+                                    Квитанция / Чек оплаты (PDF, JPG, PNG до 10MB) <span class="text-rose-500">*</span>
+                                </label>
+                                <input 
+                                    type="file" 
+                                    name="receipt" 
+                                    id="receipt" 
+                                    accept="image/*,.pdf" 
+                                    required 
+                                    class="block w-full text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-brand-50 file:text-brand-700 hover:file:bg-brand-100 transition-colors"
+                                >
+                                @error('receipt')
+                                    <p class="text-xs text-rose-600 mt-1">{{ $message }}</p>
+                                @enderror
+                            </div>
+
                             <x-buttons.primary type="submit" size="default">
-                                Подтвердить отправку чека
+                                Отправить чек на проверку
                             </x-buttons.primary>
-                            <button @click="showPaymentForm = false" type="button" class="text-xs font-semibold text-slate-500 hover:text-slate-800">
-                                Отмена
-                            </button>
-                        </div>
-                    </form>
-                </div>
+                        </form>
+                    </div>
+                @endif
+            </div>
+        @else
+            <div class="bg-blue-50 border border-blue-200 rounded-2xl p-6 text-center space-y-2">
+                <h3 class="text-sm font-bold text-blue-900">Расчет готовится менеджером</h3>
+                <p class="text-xs text-blue-700">
+                    Мы проверяем наличие товара в греческом магазине. Когда расчет будет готов, здесь появится итоговая сумма и кнопка подтверждения.
+                </p>
+            </div>
+        @endif
+
+        <!-- CONTEXTUAL SUPPORT BOX -->
+        <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div>
+                <h3 class="text-sm font-bold text-slate-900">Нужна консультация по заказу?</h3>
+                <p class="text-xs text-slate-500 mt-0.5">Менеджер ответит на любой вопрос по покупке, доставке или оплате.</p>
+            </div>
+            <div class="flex items-center gap-2 flex-shrink-0">
+                <x-messenger type="telegram" :orderNumber="$order->public_order_number" size="small" />
+                <x-messenger type="whatsapp" :orderNumber="$order->public_order_number" size="small" />
             </div>
         </div>
+
+        <!-- SECTION 3: UPLOADED PAYMENTS HISTORY -->
+        @if($order->payments && $order->payments->count() > 0)
+            <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-4">
+                <h2 class="text-base font-bold text-slate-900 border-b border-slate-100 pb-3">История платежей</h2>
+                <div class="space-y-3">
+                    @foreach($order->payments as $payment)
+                        <div class="flex items-center justify-between text-xs p-3 bg-slate-50 rounded-xl border border-slate-200">
+                            <div>
+                                <span class="font-bold text-slate-900">€{{ number_format($payment->amount, 2) }}</span>
+                                <span class="text-slate-500 ml-2">({{ $payment->created_at ? $payment->created_at->format('d.m.Y H:i') : '' }})</span>
+                            </div>
+                            <span class="px-2 py-0.5 font-semibold rounded-md bg-amber-100 text-amber-800">
+                                {{ $payment->status }}
+                            </span>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+        @endif
 
     </div>
-
 </x-layouts.app>

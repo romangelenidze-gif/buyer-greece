@@ -37,27 +37,34 @@ class Quote extends Model
         'valid_until' => 'datetime',
         'accepted_at' => 'datetime',
         'rejected_at' => 'datetime',
+        'product_total' => 'float',
+        'local_shipping' => 'float',
+        'buyer_fee' => 'float',
+        'services_total' => 'float',
+        'other_costs' => 'float',
+        'discount' => 'float',
+        'total' => 'float',
     ];
 
-    // Аксессоры для совпадения с именами в тесте
-    public function getItemsTotalEurAttribute(): float
+    protected static function booted(): void
     {
-        return (float) $this->product_total;
-    }
+        static::creating(function (Quote $quote) {
+            if (auth()->check() && empty($quote->created_by_user_id)) {
+                $quote->created_by_user_id = auth()->id();
+            }
+        });
 
-    public function getCommissionEurAttribute(): float
-    {
-        return (float) $this->buyer_fee;
-    }
+        // Строгое вычисление итоговой суммы на уровне модели перед сохранением
+        static::saving(function (Quote $quote) {
+            $quote->total = ($quote->product_total + $quote->local_shipping + $quote->buyer_fee + $quote->services_total + $quote->other_costs) - $quote->discount;
+        });
 
-    public function getShippingEurAttribute(): float
-    {
-        return (float) $this->local_shipping;
-    }
-
-    public function getTotalEurAttribute(): float
-    {
-        return (float) $this->total;
+        // Автоматическая установка активного расчета для заказа
+        static::saved(function (Quote $quote) {
+            if ($quote->order) {
+                $quote->order->updateQuietly(['active_quote_id' => $quote->id]);
+            }
+        });
     }
 
     public function order(): BelongsTo

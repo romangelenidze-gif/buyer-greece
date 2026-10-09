@@ -125,13 +125,9 @@
                 <p class="text-xs text-slate-400 max-w-md mx-auto">
                     Свяжитесь с нашим менеджером в мессенджерах для оперативной консультации.
                 </p>
-                <div class="flex justify-center gap-4 pt-2">
-                    <a href="https://t.me/your_support_bot" target="_blank" class="px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white font-semibold text-xs rounded-lg transition-colors">
-                        Telegram Support
-                    </a>
-                    <a href="https://wa.me/your_number" target="_blank" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs rounded-lg transition-colors">
-                        WhatsApp Support
-                    </a>
+                <div class="flex justify-center gap-3 pt-2">
+                    <x-messenger type="telegram" size="default" />
+                    <x-messenger type="whatsapp" size="default" />
                 </div>
             </div>
 

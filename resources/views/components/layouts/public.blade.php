@@ -116,11 +116,10 @@
 
             <div>
                 <h3 class="text-xs font-semibold text-slate-200 uppercase tracking-wider mb-4">Поддержка</h3>
-                <ul class="space-y-2 text-sm">
-                    <li><a href="{{ route('help') }}" class="hover:text-white transition-colors">Частые вопросы (FAQ)</a></li>
-                    <li><a href="https://t.me/your_support_bot" target="_blank" class="hover:text-white transition-colors">Telegram Support</a></li>
-                    <li><a href="https://wa.me/your_number" target="_blank" class="hover:text-white transition-colors">WhatsApp Support</a></li>
-                </ul>
+                <div class="space-y-2">
+                    <x-messenger type="telegram" size="small" />
+                    <x-messenger type="whatsapp" size="small" />
+                </div>
             </div>
 
             <div>

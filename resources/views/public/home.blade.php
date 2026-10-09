@@ -27,11 +27,10 @@
                         </a>
                     </div>
 
-                    <div class="pt-2 text-xs text-slate-500 flex items-center justify-center md:justify-start gap-2">
+                    <div class="pt-2 text-xs text-slate-500 flex flex-wrap items-center justify-center md:justify-start gap-3">
                         <span>Нужна помощь с выбором?</span>
-                        <a href="https://t.me/your_support_bot" target="_blank" class="text-brand-600 font-medium hover:underline">Написать в Telegram</a>
-                        <span>•</span>
-                        <a href="https://wa.me/your_number" target="_blank" class="text-brand-600 font-medium hover:underline">WhatsApp</a>
+                        <x-messenger type="telegram" size="small" />
+                        <x-messenger type="whatsapp" size="small" />
                     </div>
                 </div>
 
@@ -81,10 +80,9 @@
                             Не знаете, где найти нужный товар или необходим подбор размера? Менеджер поможет оформить запрос в чате.
                         </p>
                     </div>
-                    <div class="flex gap-4">
-                        <a href="https://t.me/your_support_bot" target="_blank" class="text-sm font-semibold text-brand-600 hover:text-brand-700">Telegram</a>
-                        <span class="text-slate-300">|</span>
-                        <a href="https://wa.me/your_number" target="_blank" class="text-sm font-semibold text-brand-600 hover:text-brand-700">WhatsApp</a>
+                    <div class="flex gap-2">
+                        <x-messenger type="telegram" size="small" />
+                        <x-messenger type="whatsapp" size="small" />
                     </div>
                 </div>
 
@@ -188,7 +186,7 @@
             <p class="text-slate-400 text-sm sm:text-base">
                 Отправьте нам ссылку на товар из любого магазина Греции, и мы оперативно подготовим расчет.
             </p>
-            <div class="pt-2">
+            <div class="flex justify-center gap-3 pt-2">
                 <x-buttons.primary href="{{ route('buy-for-me') }}" size="large">
                     Отправить ссылку на товар
                 </x-buttons.primary>

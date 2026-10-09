@@ -8,7 +8,7 @@
             <!-- HEADER SECTION -->
             <div class="text-center mb-8">
                 <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
-                    Пришліте ссылку на товар, который хотите купить в Греции
+                    Пришлите ссылку на товар, который хотите купить в Греции
                 </h1>
                 <p class="text-sm sm:text-base text-slate-600 mt-2">
                     Мы проверим наличие товара и подготовим точный расчет (Quote) перед вашей оплатой.
@@ -22,7 +22,7 @@
                 </div>
             </div>
 
-            <!-- SUCCESS STATE (Показывается при успешном создании заказа бэкендом) -->
+            <!-- SUCCESS STATE -->
             @if (session('order_created'))
                 <div class="bg-white border border-emerald-200 rounded-2xl p-6 shadow-sm text-center space-y-4 mb-8">
                     <div class="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto">
@@ -46,7 +46,7 @@
                 </div>
             @else
 
-                <!-- GUEST NOTICE (Если пользователь не вошел) -->
+                <!-- GUEST NOTICE -->
                 @guest
                     <div class="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-6 flex flex-col sm:flex-row items-center justify-between gap-4">
                         <div class="text-xs text-amber-900">
@@ -130,7 +130,7 @@
                                 </div>
                             </div>
 
-                            <!-- Optional Attributes: Size, Color, Model -->
+                            <!-- Optional Attributes -->
                             <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
                                 <div>
                                     <label for="size" class="block text-xs font-medium text-slate-600 mb-1">Размер (необязательно)</label>
@@ -180,6 +180,15 @@
                     </div>
 
                 </form>
+
+                <!-- ASSISTANCE BOX -->
+                <div class="mt-6 p-4 bg-slate-100 border border-slate-200 rounded-xl flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-600">
+                    <span>Затрудняетесь с заполнением ссылки или подбором товара?</span>
+                    <div class="flex gap-2">
+                        <x-messenger type="telegram" size="small" />
+                        <x-messenger type="whatsapp" size="small" />
+                    </div>
+                </div>
             @endif
 
         </div>

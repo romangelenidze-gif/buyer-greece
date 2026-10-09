@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
+    <!-- STRICT NOINDEX FOR CUSTOMER CABINET -->
+    <meta name="robots" content="noindex, nofollow">
+
     <title>{{ $title ?? 'Личный кабинет | Buyer Greece' }}</title>
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -116,10 +119,10 @@
             <div>
                 © {{ date('Y') }} Buyer Greece • Личный кабинет
             </div>
-            <div class="flex gap-4">
+            <div class="flex items-center gap-4">
                 <a href="{{ route('help') }}" class="hover:text-slate-800">Центр помощи</a>
                 <span>•</span>
-                <a href="https://t.me/your_support_bot" target="_blank" class="hover:text-brand-600">Telegram Support</a>
+                <x-messenger type="telegram" size="small">Telegram Support</x-messenger>
             </div>
         </div>
     </footer>

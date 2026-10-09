@@ -110,6 +110,16 @@
                 </ul>
             </div>
 
+            <!-- SUPPORT CTA -->
+            <div class="bg-white border border-slate-200 rounded-2xl p-6 text-center space-y-3">
+                <h3 class="text-base font-bold text-slate-900">Возникли сложности при заполнении адреса в магазине?</h3>
+                <p class="text-xs text-slate-500">Напишите менеджеру — мы поможем правильно ввести адрес на греческом сайте.</p>
+                <div class="flex justify-center gap-3 pt-2">
+                    <x-messenger type="telegram" size="small" />
+                    <x-messenger type="whatsapp" size="small" />
+                </div>
+            </div>
+
         </div>
     </div>
 </x-layouts.public>
