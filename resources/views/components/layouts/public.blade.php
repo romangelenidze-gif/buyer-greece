@@ -1,91 +1,118 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="h-full bg-slate-50">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="h-full bg-[#f2f2f2]">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>{{ $title ?? 'Buyer Greece — Выкуп и доставка товаров из Греции в Грузию' }}</title>
-    <meta name="description" content="{{ $description ?? 'Сервис выкупа товаров в магазинах Греции и подготовки посылок для международной доставки в Грузию через Camex.' }}">
-    
-    <!-- Canonical URL -->
-    <link rel="canonical" href="{{ url()->current() }}">
-
-    <!-- OpenGraph Metadata -->
-    <meta property="og:title" content="{{ $title ?? 'Buyer Greece — Выкуп товаров в Греции' }}">
-    <meta property="og:description" content="{{ $description ?? 'Помогаем покупать в греческих интернет-магазинах с доставкой в Грузию.' }}">
-    <meta property="og:type" content="website">
-    <meta property="og:url" content="{{ url()->current() }}">
-    <meta property="og:image" content="{{ asset('images/og-cover.jpg') }}">
+    <title>{{ $title ?? __('Buyer Greece → Georgia | Выкуп и доставка товаров из Греции') }}</title>
+    @if(isset($description))
+        <meta name="description" content="{{ $description }}">
+    @endif
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="flex flex-col min-h-full text-slate-800 antialiased font-sans">
-    
-    <!-- HEADER -->
-    <header x-data="{ mobileMenuOpen: false }" class="sticky top-0 z-40 bg-white/95 backdrop-blur border-b border-slate-200">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between h-16 items-center">
+<body class="flex flex-col min-h-full text-[#1d1d1f] antialiased font-sans bg-[#f2f2f2]" x-data="{ mobileNavOpen: false }">
+
+    <!-- PUBLIC NAVIGATION HEADER -->
+    <header class="bg-white text-[#1d1d1f] sticky top-0 z-50 border-b border-black/[0.08]">
+        <div class="px-4 sm:px-6 lg:px-8 w-full">
+            <div class="flex items-center justify-between h-16">
                 
-                <!-- Logo -->
-                <div class="flex-shrink-0 flex items-center">
-                    <a href="{{ route('home') }}" class="flex items-center gap-2 text-xl font-bold text-slate-900 tracking-tight">
-                        <span class="text-brand-600">Buyer</span>Greece
+                <!-- Logo (Extreme Left) -->
+                <div class="flex items-center">
+                    <a href="{{ route('home') }}" class="font-bold text-lg tracking-tight text-[#1d1d1f] flex items-center gap-1.5">
+                        <span class="text-[#0071e3]">Buyer</span>Greece
                     </a>
                 </div>
 
-                <!-- Desktop Nav -->
-                <nav class="hidden md:flex items-center space-x-8 text-sm font-medium">
-                    <a href="{{ route('how-it-works') }}" class="text-slate-600 hover:text-slate-900 transition-colors">Как это работает</a>
-                    <a href="{{ route('buy-for-me') }}" class="text-slate-600 hover:text-slate-900 transition-colors">Выкупите за меня</a>
-                    <a href="{{ route('forwarding') }}" class="text-slate-600 hover:text-slate-900 transition-colors">Форвардинг</a>
-                    <a href="{{ route('help') }}" class="text-slate-600 hover:text-slate-900 transition-colors">Помощь / FAQ</a>
-                </nav>
-
-                <!-- Desktop CTAs -->
-                <div class="hidden md:flex items-center space-x-4">
+                <!-- Right Actions: Login & Hamburger (Extreme Right) -->
+                <div class="flex items-center gap-3">
                     @auth
-                        <a href="{{ route('dashboard') }}" class="text-sm font-medium text-slate-700 hover:text-slate-900">
-                            Личный кабинет
+                        <a href="{{ route('dashboard') }}" class="text-xs font-semibold px-4 py-2 bg-black/[0.04] hover:bg-black/[0.08] text-[#1d1d1f] rounded-full transition-colors">
+                            {{ __('Личный кабинет') }}
                         </a>
                     @else
-                        <a href="{{ route('login') }}" class="text-sm font-medium text-slate-600 hover:text-slate-900 px-3 py-2">
-                            Войти
+                        <a href="{{ route('login') }}" class="text-xs font-semibold px-4 py-2 bg-black/[0.04] hover:bg-black/[0.08] text-[#1d1d1f] rounded-full transition-colors">
+                            {{ __('Войти') }}
                         </a>
-                        <x-buttons.primary href="{{ route('buy-for-me') }}" size="small">
-                            Отправить ссылку
-                        </x-buttons.primary>
                     @endauth
-                </div>
 
-                <!-- Mobile Hamburger Button -->
-                <div class="flex md:hidden items-center">
-                    <button @click="mobileMenuOpen = !mobileMenuOpen" type="button" class="text-slate-500 hover:text-slate-700 p-2 focus:outline-none" aria-label="Открыть меню">
-                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path x-show="!mobileMenuOpen" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-                            <path x-show="mobileMenuOpen" x-cloak stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    <!-- Hamburger Button -->
+                    <button @click="mobileNavOpen = true" type="button" class="p-2 text-[#1d1d1f] hover:bg-black/[0.04] rounded-xl transition-colors focus:outline-none cursor-pointer" aria-label="Открыть меню">
+                        <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
                         </svg>
                     </button>
                 </div>
+
             </div>
         </div>
 
-        <!-- Mobile Slide-out Menu -->
-        <div x-show="mobileMenuOpen" x-cloak class="md:hidden border-b border-slate-200 bg-white px-4 pt-2 pb-6 space-y-3">
-            <a href="{{ route('how-it-works') }}" class="block px-3 py-2 text-base font-medium text-slate-700 hover:bg-slate-50 rounded-md">Как это работает</a>
-            <a href="{{ route('buy-for-me') }}" class="block px-3 py-2 text-base font-medium text-slate-700 hover:bg-slate-50 rounded-md">Выкупите за меня</a>
-            <a href="{{ route('forwarding') }}" class="block px-3 py-2 text-base font-medium text-slate-700 hover:bg-slate-50 rounded-md">Форвардинг</a>
-            <a href="{{ route('help') }}" class="block px-3 py-2 text-base font-medium text-slate-700 hover:bg-slate-50 rounded-md">Помощь / FAQ</a>
-            
-            <div class="pt-4 border-t border-slate-100 flex flex-col gap-2">
-                @auth
-                    <a href="{{ route('dashboard') }}" class="w-full text-center py-2 px-4 bg-slate-100 text-slate-800 font-medium rounded-lg">Личный кабинет</a>
-                @else
-                    <a href="{{ route('login') }}" class="w-full text-center py-2 px-4 text-slate-700 font-medium">Войти</a>
-                    <x-buttons.primary href="{{ route('buy-for-me') }}" class="w-full justify-center">
-                        Отправить ссылку
-                    </x-buttons.primary>
-                @endauth
+        <!-- RIGHT SIDEBAR / APPLE DRAWER -->
+        <div 
+            x-show="mobileNavOpen" 
+            x-transition:enter="transition-opacity ease-linear duration-300" 
+            x-transition:enter-start="opacity-0" 
+            x-transition:enter-end="opacity-100" 
+            x-transition:leave="transition-opacity ease-linear duration-300" 
+            x-transition:leave-start="opacity-100" 
+            x-transition:leave-end="opacity-0" 
+            x-cloak 
+            class="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm"
+            @click="mobileNavOpen = false"
+        ></div>
+
+        <div 
+            x-show="mobileNavOpen" 
+            x-transition:enter="transition ease-in-out duration-300 transform" 
+            x-transition:enter-start="translate-x-full" 
+            x-transition:enter-end="translate-x-0" 
+            x-transition:leave="transition ease-in-out duration-300 transform" 
+            x-transition:leave-start="translate-x-0" 
+            x-transition:leave-end="translate-x-full" 
+            x-cloak 
+            class="fixed inset-y-0 right-0 z-50 w-full sm:w-80 bg-white/95 backdrop-blur-2xl border-l border-black/[0.08] shadow-2xl flex flex-col justify-between py-5 px-5"
+        >
+            <!-- Top: Compact Menu with Close Button beside the first item -->
+            <div class="space-y-3">
+                <div class="flex items-center gap-2">
+                    <a href="{{ route('home') }}" @click="mobileNavOpen = false" class="flex-grow flex items-center gap-3 px-4 py-3 rounded-2xl transition-all {{ request()->routeIs('home') ? 'bg-[#0071e3] text-white font-semibold shadow-xs' : 'text-[#1d1d1f] hover:bg-black/[0.04]' }}">
+                        {{ __('Главная') }}
+                    </a>
+                    <button @click="mobileNavOpen = false" type="button" class="p-2 text-gray-500 hover:text-[#1d1d1f] rounded-full hover:bg-black/[0.04] transition-colors cursor-pointer shrink-0" aria-label="Закрыть">
+                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+
+                <!-- Navigation Links inside Drawer -->
+                <nav class="space-y-1 text-sm font-medium">
+                    <a href="{{ route('buy-for-me') }}" @click="mobileNavOpen = false" class="flex items-center gap-3 px-4 py-3 rounded-2xl transition-all {{ request()->routeIs('buy-for-me') ? 'bg-[#0071e3] text-white font-semibold shadow-xs' : 'text-[#1d1d1f] hover:bg-black/[0.04]' }}">
+                        {{ __('Выкупите за меня') }}
+                    </a>
+                    <a href="{{ route('forwarding') }}" @click="mobileNavOpen = false" class="flex items-center gap-3 px-4 py-3 rounded-2xl transition-all {{ request()->routeIs('forwarding') ? 'bg-[#0071e3] text-white font-semibold shadow-xs' : 'text-[#1d1d1f] hover:bg-black/[0.04]' }}">
+                        {{ __('Форвардинг (Адрес в Греции)') }}
+                    </a>
+                    <a href="{{ route('help') }}" @click="mobileNavOpen = false" class="flex items-center gap-3 px-4 py-3 rounded-2xl transition-all {{ request()->routeIs('help') ? 'bg-[#0071e3] text-white font-semibold shadow-xs' : 'text-[#1d1d1f] hover:bg-black/[0.04]' }}">
+                        {{ __('Помощь / FAQ') }}
+                    </a>
+
+                    @guest
+                        <a href="{{ route('login') }}" @click="mobileNavOpen = false" class="flex items-center gap-3 px-4 py-3 rounded-2xl transition-all text-[#1d1d1f] hover:bg-black/[0.04]">
+                            {{ __('Войти в аккаунт') }}
+                        </a>
+                    @endguest
+                </nav>
+            </div>
+
+            <!-- Bottom: Language Switcher as the very last element -->
+            <div class="pt-4 border-t border-black/[0.08]">
+                <div class="bg-black/[0.03] p-3 rounded-2xl border border-black/[0.06] flex items-center justify-between">
+                    <span class="text-xs text-[#86868b] font-medium">{{ __('Язык интерфейса') }}</span>
+                    <x-language-switcher theme="light" direction="up" />
+                </div>
             </div>
         </div>
     </header>
@@ -96,44 +123,16 @@
     </main>
 
     <!-- FOOTER -->
-    <footer class="bg-slate-900 text-slate-400 py-12 border-t border-slate-800">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-4 gap-8">
-            <div class="space-y-4 md:col-span-1">
-                <span class="text-xl font-bold text-white tracking-tight">Buyer<span class="text-brand-500">Greece</span></span>
-                <p class="text-sm leading-relaxed">
-                    Сервис выкупа и приема покупок в греческих магазинах. Международная доставка в Грузию выполняется перевозчиком Camex.
-                </p>
-            </div>
-
+    <footer class="bg-white border-t border-black/[0.06] py-12 text-xs text-[#86868b]">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row justify-between items-center gap-4">
             <div>
-                <h3 class="text-xs font-semibold text-slate-200 uppercase tracking-wider mb-4">Услуги</h3>
-                <ul class="space-y-2 text-sm">
-                    <li><a href="{{ route('buy-for-me') }}" class="hover:text-white transition-colors">Выкуп по ссылке</a></li>
-                    <li><a href="{{ route('forwarding') }}" class="hover:text-white transition-colors">Греческий адрес (Форвардинг)</a></li>
-                    <li><a href="{{ route('how-it-works') }}" class="hover:text-white transition-colors">Схема работы</a></li>
-                </ul>
+                © {{ date('Y') }} Buyer Greece • {{ __('Все права защищены.') }}
             </div>
-
-            <div>
-                <h3 class="text-xs font-semibold text-slate-200 uppercase tracking-wider mb-4">Поддержка</h3>
-                <div class="space-y-2">
-                    <x-messenger type="telegram" size="small" />
-                    <x-messenger type="whatsapp" size="small" />
-                </div>
+            <div class="flex items-center gap-6">
+                <a href="{{ route('help') }}" class="hover:text-[#1d1d1f] transition-colors">{{ __('Помощь / FAQ') }}</a>
+                <x-messenger type="telegram" size="small">Telegram</x-messenger>
+                <x-messenger type="whatsapp" size="small">WhatsApp</x-messenger>
             </div>
-
-            <div>
-                <h3 class="text-xs font-semibold text-slate-200 uppercase tracking-wider mb-4">Информация</h3>
-                <ul class="space-y-2 text-sm">
-                    <li><a href="/terms" class="hover:text-white transition-colors">Условия обслуживания</a></li>
-                    <li><a href="/privacy" class="hover:text-white transition-colors">Политика конфиденциальности</a></li>
-                </ul>
-            </div>
-        </div>
-
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-12 pt-6 border-t border-slate-800 text-xs text-slate-500 flex flex-col sm:flex-row justify-between items-center gap-4">
-            <p>© {{ date('Y') }} BuyerGreece. Все права защищены.</p>
-            <p>Международная транспортировка Греция → Грузия регулируется правилами Camex.</p>
         </div>
     </footer>
 

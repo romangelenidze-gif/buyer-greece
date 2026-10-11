@@ -26,7 +26,9 @@ class CalculateBuyForMeQuoteActionTest extends TestCase
         ]);
 
         $action = app(CalculateBuyForMeQuoteAction::class);
-        $quote = $action->execute($order, commissionPercent: 10, shippingCostEur: 15.00);
+
+        // $order->fresh() принудительно перезагружает модель из БД вместе с позициями OrderItem
+        $quote = $action->execute($order->fresh(), commissionPercent: 10, shippingCostEur: 15.00);
 
         $this->assertEquals(200.00, (float) $quote->items_total_eur);
         $this->assertEquals(20.00, (float) $quote->commission_eur);

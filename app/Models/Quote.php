@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\QuoteStatus;
 use App\Traits\Auditable;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -54,17 +55,36 @@ class Quote extends Model
             }
         });
 
-        // Строгое вычисление итоговой суммы на уровне модели перед сохранением
         static::saving(function (Quote $quote) {
             $quote->total = ($quote->product_total + $quote->local_shipping + $quote->buyer_fee + $quote->services_total + $quote->other_costs) - $quote->discount;
         });
 
-        // Автоматическая установка активного расчета для заказа
         static::saved(function (Quote $quote) {
             if ($quote->order) {
                 $quote->order->updateQuietly(['active_quote_id' => $quote->id]);
             }
         });
+    }
+
+    // Аксессоры-псевдонимы для обратной совместимости с тестами
+    protected function itemsTotalEur(): Attribute
+    {
+        return Attribute::make(get: fn () => $this->product_total);
+    }
+
+    protected function commissionEur(): Attribute
+    {
+        return Attribute::make(get: fn () => $this->buyer_fee);
+    }
+
+    protected function shippingEur(): Attribute
+    {
+        return Attribute::make(get: fn () => $this->local_shipping);
+    }
+
+    protected function totalEur(): Attribute
+    {
+        return Attribute::make(get: fn () => $this->total);
     }
 
     public function order(): BelongsTo

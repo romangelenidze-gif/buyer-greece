@@ -16,17 +16,13 @@ class CalculateBuyForMeQuoteAction
         });
 
         $commission = $itemsTotal * ($commissionPercent / 100);
-        $total = $itemsTotal + $commission + $shippingCostEur;
 
         $quote = Quote::create([
             'order_id'       => $order->id,
             'product_total'  => $itemsTotal,
             'buyer_fee'      => $commission,
             'local_shipping' => $shippingCostEur,
-            'total'          => $total,
         ]);
-
-        $order->update(['active_quote_id' => $quote->id]);
 
         return $quote;
     }

@@ -3,9 +3,9 @@
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\OrderMediaController;
+use App\Http\Controllers\PackageController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\PackageController;
 use App\Http\Controllers\ShipmentController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
@@ -20,6 +20,14 @@ Route::view('/how-it-works', 'public.how-it-works')->name('how-it-works');
 Route::view('/buy-for-me', 'public.buy-for-me')->name('buy-for-me');
 Route::view('/forwarding', 'public.forwarding')->name('forwarding');
 Route::view('/help', 'public.help')->name('help');
+
+// Переключатель языка сессии (ru / ka / en)
+Route::get('/lang/{locale}', function (string $locale) {
+    if (in_array($locale, ['ru', 'ka', 'en'])) {
+        session(['app_locale' => $locale]);
+    }
+    return redirect()->back();
+})->name('lang.switch');
 
 /*
 |--------------------------------------------------------------------------
@@ -63,10 +71,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Посылки и Отправки Camex
     Route::get('/packages', [PackageController::class, 'index'])->name('packages.index');
     Route::get('/shipments', [ShipmentController::class, 'index'])->name('shipments.index');
-
-    Route::get('/shipments', function () {
-        return view('app.shipments.index');
-    })->name('shipments.index');
 
     // Безопасное скачивание медиафайлов (через Policies)
     Route::get('/orders/{order}/payments/{payment}/receipt', [OrderMediaController::class, 'downloadReceipt'])

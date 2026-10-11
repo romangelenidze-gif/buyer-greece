@@ -1,33 +1,22 @@
-<x-layouts.app title="Мой профиль | Buyer Greece">
+<x-layouts.app title="{{ __('Мой профиль') }} | Buyer Greece">
     <div class="max-w-4xl mx-auto space-y-6">
 
-        <!-- HEADER -->
         <div>
-            <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight">Настройки профиля</h1>
-            <p class="text-sm text-slate-500 mt-1">Управляйте личными данными и персональным кодом Camex для доставки в Грузию.</p>
+            <h1 class="apple-section-title">{{ __('Настройки профиля') }}</h1>
+            <p class="apple-section-subtitle">{{ __('Управляйте личными данными и персональным кодом Camex для доставки в Грузию.') }}</p>
         </div>
 
-        <!-- SUCCESS ALERT -->
-        @if (session('success'))
-            <div class="p-4 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl text-sm font-medium flex items-center gap-3">
-                <svg class="w-5 h-5 text-emerald-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                </svg>
-                <span>{{ session('success') }}</span>
-            </div>
-        @endif
-
-        <form action="{{ route('profile.update') }}" method="POST" class="bg-white border border-slate-200 rounded-2xl p-6 sm:p-8 shadow-sm space-y-6">
+        <form action="{{ route('profile.update') }}" method="POST" class="apple-card space-y-6">
             @csrf
 
             <!-- SECTION 1: PERSONAL DETAILS -->
             <div>
-                <h2 class="text-base font-bold text-slate-900 border-b border-slate-100 pb-3 mb-4">Личная информация</h2>
+                <h2 class="text-base font-semibold text-[#1d1d1f] border-b border-black/[0.06] pb-3 mb-4">{{ __('Личная информация') }}</h2>
                 
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                        <label for="first_name" class="block text-xs font-semibold text-slate-700 mb-1">
-                            Имя <span class="text-rose-500">*</span>
+                        <label for="first_name" class="block text-xs font-semibold text-[#1d1d1f] mb-1.5">
+                            {{ __('Имя') }} <span class="text-rose-500">*</span>
                         </label>
                         <input 
                             type="text" 
@@ -35,7 +24,7 @@
                             id="first_name" 
                             value="{{ old('first_name', $customer->first_name ?? $user->name) }}" 
                             required 
-                            class="w-full rounded-lg border-slate-300 text-sm focus:border-brand-500 focus:ring-brand-500"
+                            class="apple-search-input !px-4 !py-3 !rounded-2xl"
                         >
                         @error('first_name')
                             <p class="text-xs text-rose-600 mt-1">{{ $message }}</p>
@@ -43,8 +32,8 @@
                     </div>
 
                     <div>
-                        <label for="last_name" class="block text-xs font-semibold text-slate-700 mb-1">
-                            Фамилия <span class="text-rose-500">*</span>
+                        <label for="last_name" class="block text-xs font-semibold text-[#1d1d1f] mb-1.5">
+                            {{ __('Фамилия') }} <span class="text-rose-500">*</span>
                         </label>
                         <input 
                             type="text" 
@@ -52,7 +41,7 @@
                             id="last_name" 
                             value="{{ old('last_name', $customer->last_name ?? '') }}" 
                             required 
-                            class="w-full rounded-lg border-slate-300 text-sm focus:border-brand-500 focus:ring-brand-500"
+                            class="apple-search-input !px-4 !py-3 !rounded-2xl"
                         >
                         @error('last_name')
                             <p class="text-xs text-rose-600 mt-1">{{ $message }}</p>
@@ -60,21 +49,21 @@
                     </div>
 
                     <div>
-                        <label for="email" class="block text-xs font-semibold text-slate-500 mb-1">
-                            Email (не меняется)
+                        <label for="email" class="block text-xs font-medium text-[#86868b] mb-1.5">
+                            {{ __('Email (не меняется)') }}
                         </label>
                         <input 
                             type="email" 
                             id="email" 
                             value="{{ $user->email }}" 
                             disabled 
-                            class="w-full rounded-lg border-slate-200 bg-slate-50 text-slate-500 text-sm cursor-not-allowed"
+                            class="apple-search-input !px-4 !py-3 !rounded-2xl !bg-black/[0.03] cursor-not-allowed text-[#86868b]"
                         >
                     </div>
 
                     <div>
-                        <label for="phone" class="block text-xs font-semibold text-slate-700 mb-1">
-                            Телефон для связи <span class="text-rose-500">*</span>
+                        <label for="phone" class="block text-xs font-semibold text-[#1d1d1f] mb-1.5">
+                            {{ __('Телефон для связи') }} <span class="text-rose-500">*</span>
                         </label>
                         <input 
                             type="text" 
@@ -83,7 +72,7 @@
                             value="{{ old('phone', $customer->phone ?? '') }}" 
                             required 
                             placeholder="+995 5xx xx xx xx" 
-                            class="w-full rounded-lg border-slate-300 text-sm focus:border-brand-500 focus:ring-brand-500"
+                            class="apple-search-input !px-4 !py-3 !rounded-2xl"
                         >
                         @error('phone')
                             <p class="text-xs text-rose-600 mt-1">{{ $message }}</p>
@@ -92,24 +81,24 @@
                 </div>
             </div>
 
-            <!-- SECTION 2: CAMEX INTEGRATION & DELIVERY ADDRESS -->
+            <!-- SECTION 2: CAMEX INTEGRATION -->
             <div>
-                <h2 class="text-base font-bold text-slate-900 border-b border-slate-100 pb-3 mb-4">Доставка в Грузию (Camex)</h2>
+                <h2 class="text-base font-semibold text-[#1d1d1f] border-b border-black/[0.06] pb-3 mb-4">{{ __('Доставка в Грузию (Camex)') }}</h2>
                 
                 <div class="space-y-4">
                     <div>
-                        <label for="camex_personal_number" class="block text-xs font-semibold text-slate-700 mb-1">
-                            Персональный код Camex (Personal ID / Code)
+                        <label for="camex_personal_number" class="block text-xs font-semibold text-[#1d1d1f] mb-1.5">
+                            {{ __('Персональный код Camex (Personal ID / Code)') }}
                         </label>
                         <input 
                             type="text" 
                             name="camex_personal_number" 
                             id="camex_personal_number" 
                             value="{{ old('camex_personal_number', $customer->camex_personal_number ?? '') }}" 
-                            placeholder="например: CAMEX-12345" 
-                            class="w-full sm:w-1/2 rounded-lg border-slate-300 text-sm focus:border-brand-500 focus:ring-brand-500"
+                            placeholder="{{ __('например: CAMEX-12345') }}" 
+                            class="apple-search-input !px-4 !py-3 !rounded-2xl w-full sm:w-1/2"
                         >
-                        <p class="text-[11px] text-slate-500 mt-1">Указывается при отправке посылок со склада в Греции в филиал Camex в Тбилиси/Батуми.</p>
+                        <p class="text-xs text-[#86868b] mt-1.5">{{ __('Указывается при отправке посылок со склада в Греции в филиал Camex в Тбилиси/Батуми.') }}</p>
                         @error('camex_personal_number')
                             <p class="text-xs text-rose-600 mt-1">{{ $message }}</p>
                         @enderror
@@ -117,26 +106,26 @@
 
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
                         <div>
-                            <label for="city" class="block text-xs font-medium text-slate-700 mb-1">Город в Грузии</label>
+                            <label for="city" class="block text-xs font-medium text-[#86868b] mb-1.5">{{ __('Город в Грузии') }}</label>
                             <input 
                                 type="text" 
                                 name="city" 
                                 id="city" 
                                 value="{{ old('city', $customer->city ?? 'Тбилиси') }}" 
-                                placeholder="Тбилиси, Батуми, Кутаиси..." 
-                                class="w-full rounded-lg border-slate-300 text-sm focus:border-brand-500 focus:ring-brand-500"
+                                placeholder="{{ __('Тбилиси, Батуми, Кутаиси...') }}" 
+                                class="apple-search-input !px-4 !py-3 !rounded-2xl"
                             >
                         </div>
 
                         <div>
-                            <label for="address" class="block text-xs font-medium text-slate-700 mb-1">Адрес получателя</label>
+                            <label for="address" class="block text-xs font-medium text-[#86868b] mb-1.5">{{ __('Адрес получателя') }}</label>
                             <input 
                                 type="text" 
                                 name="address" 
                                 id="address" 
                                 value="{{ old('address', $customer->address ?? '') }}" 
-                                placeholder="Улица, дом, квартира" 
-                                class="w-full rounded-lg border-slate-300 text-sm focus:border-brand-500 focus:ring-brand-500"
+                                placeholder="{{ __('Улица, дом, квартира') }}" 
+                                class="apple-search-input !px-4 !py-3 !rounded-2xl"
                             >
                         </div>
                     </div>
@@ -144,10 +133,10 @@
             </div>
 
             <!-- SUBMIT BUTTON -->
-            <div class="pt-4 border-t border-slate-100 flex justify-end">
-                <x-buttons.primary type="submit">
-                    Сохранить изменения
-                </x-buttons.primary>
+            <div class="pt-4 border-t border-black/[0.06] flex justify-end">
+                <button type="submit" class="apple-search-button !relative !right-auto !top-auto !transform-none px-8 py-3 text-sm font-medium cursor-pointer">
+                    {{ __('Сохранить изменения') }}
+                </button>
             </div>
 
         </form>

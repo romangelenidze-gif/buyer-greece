@@ -24,6 +24,7 @@ class Customer extends Model
         'address',
         'notes',
         'status',
+        'country',
     ];
 
     protected static function booted(): void

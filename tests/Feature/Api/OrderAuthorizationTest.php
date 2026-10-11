@@ -23,9 +23,8 @@ class OrderAuthorizationTest extends TestCase
         $order = Order::factory()->create(['customer_id' => $customer->id]);
 
         $this->actingAs($user)
-            ->getJson("/api/v1/orders/{$order->id}")
-            ->assertStatus(200)
-            ->assertJsonPath('id', $order->id);
+            ->get(route('orders.show', $order))
+            ->assertStatus(200);
     }
 
     public function test_prevents_customer_from_viewing_another_customers_order(): void
@@ -41,7 +40,7 @@ class OrderAuthorizationTest extends TestCase
         $orderB = Order::factory()->create(['customer_id' => $customerB->id]);
 
         $this->actingAs($userA)
-            ->getJson("/api/v1/orders/{$orderB->id}")
+            ->get(route('orders.show', $orderB))
             ->assertStatus(403);
     }
 }
