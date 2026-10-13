@@ -28,8 +28,8 @@ class PaymentController extends Controller
 
         $receiptPath = $request->file('receipt')->store('payments/receipts', 'private');
 
-        // Получаем сумму из активного расчета (Quote) или ставим 0.00
-        $amount = $order->activeQuote ? $order->activeQuote->total_amount : 0.00;
+        // Безопасное получение суммы из активного расчета с защитой от null
+        $amount = $order->activeQuote?->total_amount ?? 0.00;
 
         Payment::create([
             'order_id' => $order->id,

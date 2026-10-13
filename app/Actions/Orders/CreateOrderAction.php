@@ -33,6 +33,7 @@ class CreateOrderAction
                     'model' => $item['model'] ?? null,
                     'options' => $item['options'] ?? null,
                     'requested_comment' => $item['requested_comment'] ?? null,
+                    'screenshot_path' => $item['screenshot_path'] ?? null, // Добавлено сохранение пути скриншота
                 ]);
             }
 

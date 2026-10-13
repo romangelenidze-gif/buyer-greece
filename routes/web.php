@@ -79,6 +79,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/packages/{package}/photo', [OrderMediaController::class, 'downloadPackagePhoto'])
         ->name('packages.photo');
 
+    Route::get('/orders/{order}/items/{item}/screenshot', [OrderMediaController::class, 'downloadItemScreenshot'])
+        ->name('orders.items.screenshot');    
+
     // Выход из системы
     Route::post('/logout', function () {
         Auth::logout();

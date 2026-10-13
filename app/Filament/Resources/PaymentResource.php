@@ -22,6 +22,8 @@ use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Filament\Forms\Components\Placeholder;
+use Illuminate\Support\HtmlString;
 
 class PaymentResource extends Resource
 {
@@ -101,6 +103,35 @@ class PaymentResource extends Resource
                             ->label('Примечания к платежу')
                             ->columnSpanFull(),
                     ]),
+
+                    Section::make('Квитанция об оплате')
+        ->schema([
+            Placeholder::make('receipt_preview_box')
+                ->label('Загруженный чек от клиента')
+                ->content(function (?Payment $record) {
+                    if (! $record || ! $record->receipt_file_path) {
+                        return new HtmlString('<span class="text-gray-400 text-sm">Чек не прикреплен к этому платежу</span>');
+                    }
+
+                    $url = $record->receipt_url;
+
+                    return new HtmlString(
+                        '<div class="mt-2 flex flex-col gap-3">' .
+                        '<div>' .
+                        '<a href="' . $url . '" target="_blank">' .
+                        '<img src="' . $url . '" alt="Чек" class="w-32 h-32 object-cover rounded-lg border shadow-sm hover:opacity-95 transition" />' .
+                        '</a>' .
+                        '</div>' .
+                        '<div>' .
+                        '<a href="' . $url . '" target="_blank" class="inline-flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-white bg-primary-600 rounded-md hover:bg-primary-500 shadow transition">' .
+                        'Открыть чек / Скачать' .
+                        '</a>' .
+                        '</div>' .
+                        '</div>'
+                    );
+                })
+                ->columnSpanFull(),
+        ]),
             ]);
     }
 

@@ -5,23 +5,22 @@ namespace App\Filament\Admin\Resources;
 use App\Enums\OrderStatus;
 use App\Filament\Admin\Resources\OrderResource\Pages;
 use App\Models\Order;
+use BackedEnum;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Filament\Tables\Actions\EditAction;
-use Filament\Tables\Actions\ViewAction;
-use Filament\Tables\Actions\DeleteBulkAction;
-use Filament\Tables\Actions\BulkActionGroup;
+use Illuminate\Support\HtmlString;
+use UnitEnum;
 
 class OrderResource extends Resource
 {
     protected static ?string $model = Order::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-shopping-bag';
+    protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-shopping-bag';
 
-    protected static ?string $navigationGroup = 'Заказы и Клиенты';
+    protected static string|UnitEnum|null $navigationGroup = 'Заказы и Клиенты';
 
     protected static ?string $modelLabel = 'Заказ';
 
@@ -64,6 +63,9 @@ class OrderResource extends Resource
                         Forms\Components\Repeater::make('items')
                             ->relationship('items')
                             ->schema([
+                                // Обязательно объявляем поле в схеме, чтобы Filament загружал его из БД
+                                Forms\Components\Hidden::make('screenshot_path'),
+
                                 Forms\Components\TextInput::make('product_name')
                                     ->label('Название товара')
                                     ->required(),
@@ -87,6 +89,43 @@ class OrderResource extends Resource
                                     ->columnSpanFull(),
                                 Forms\Components\Textarea::make('admin_comment')
                                     ->label('Заметка менеджера по товару')
+                                    ->columnSpanFull(),
+
+                                // Надежный вывод превью и кнопки через состояние строки репитера
+                                Forms\Components\Placeholder::make('screenshot_preview_box')
+                                    ->label('Скриншот клиента')
+                                    ->content(function (Forms\Get $get, ?Order $record) {
+                                        $path = $get('screenshot_path');
+                                        $itemId = $get('id');
+                                        $orderId = $record?->id;
+
+                                        if (! $path) {
+                                            return new HtmlString('<span class="text-gray-400 text-sm">Скриншот не прикреплен к этому товару</span>');
+                                        }
+
+                                        $url = ($orderId && $itemId) 
+                                            ? route('orders.items.screenshot', [$orderId, $itemId]) 
+                                            : null;
+
+                                        if (! $url) {
+                                            return new HtmlString('<span class="text-gray-500 text-sm">Путь файла: ' . e($path) . '</span>');
+                                        }
+
+                                        return new HtmlString(
+                                            '<div class="mt-2 flex flex-col gap-3">' .
+                                            '<div>' .
+                                            '<a href="' . $url . '" target="_blank">' .
+                                            '<img src="' . $url . '" alt="Скриншот" class="w-32 h-32 object-cover rounded-lg border shadow-sm hover:opacity-95 transition" />' .
+                                            '</a>' .
+                                            '</div>' .
+                                            '<div>' .
+                                            '<a href="' . $url . '" target="_blank" class="inline-flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-white bg-primary-600 rounded-md hover:bg-primary-500 shadow transition">' .
+                                            'Открыть в полном размере / Скачать' .
+                                            '</a>' .
+                                            '</div>' .
+                                            '</div>'
+                                        );
+                                    })
                                     ->columnSpanFull(),
                             ])
                             ->columns(3)

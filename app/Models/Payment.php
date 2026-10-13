@@ -26,6 +26,7 @@ class Payment extends Model
         'transaction_id',
         'paid_at',
         'notes',
+        'receipt_file_path',
     ];
 
     protected $casts = [
@@ -53,5 +54,12 @@ class Payment extends Model
     public function confirmedByUser(): BelongsTo
     {
         return $this->belongsTo(User::class, 'confirmed_by_user_id');
+    }
+    
+    public function getReceiptUrlAttribute(): ?string
+    {
+        return $this->receipt_file_path && $this->order_id
+            ? route('orders.payments.receipt', [$this->order_id, $this->id])
+            : null;
     }
 }

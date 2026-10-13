@@ -29,7 +29,7 @@ class OrderController extends Controller
             'color' => ['nullable', 'string', 'max:50'],
             'model' => ['nullable', 'string', 'max:100'],
             'comment' => ['nullable', 'string', 'max:1000'],
-            'screenshot' => ['nullable', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:5120'],
+            'screenshot' => ['nullable', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:2048'],
         ]);
 
         $user = Auth::user();

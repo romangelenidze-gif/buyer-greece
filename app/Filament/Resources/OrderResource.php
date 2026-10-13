@@ -6,6 +6,9 @@ use App\Enums\OrderStatus;
 use App\Filament\Resources\OrderResource\Pages;
 use App\Filament\Resources\OrderResource\Tables\OrdersTable;
 use App\Models\Order;
+use App\Models\OrderItem;
+use Filament\Forms\Components\Hidden;
+use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
@@ -14,6 +17,7 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Filament\Tables\Table;
+use Illuminate\Support\HtmlString;
 
 class OrderResource extends Resource
 {
@@ -68,6 +72,8 @@ class OrderResource extends Resource
                         Repeater::make('items')
                             ->relationship('items')
                             ->schema([
+                                Hidden::make('screenshot_path'),
+
                                 TextInput::make('product_name')
                                     ->label('Название товара')
                                     ->required(),
@@ -97,6 +103,44 @@ class OrderResource extends Resource
 
                                 Textarea::make('admin_comment')
                                     ->label('Заметка менеджера по товару')
+                                    ->columnSpanFull(),
+
+                                Placeholder::make('screenshot_preview_box')
+                                    ->label('Скриншот клиента')
+                                    ->content(function ($get, ?OrderItem $record) {
+                                        $path = $get('screenshot_path') ?? $record?->screenshot_path;
+                                        $itemId = $record?->id;
+                                        $orderId = $record?->order_id;
+
+                                        if (! $path) {
+                                            return new HtmlString('<span class="text-gray-400 text-sm">Скриншот не прикреплен к этому товару</span>');
+                                        }
+
+                                        $url = $record?->screenshot_url;
+
+                                        if (! $url && $orderId && $itemId) {
+                                            $url = route('orders.items.screenshot', [$orderId, $itemId]);
+                                        }
+
+                                        if (! $url) {
+                                            return new HtmlString('<span class="text-gray-500 text-sm">Путь файла: ' . e($path) . '</span>');
+                                        }
+
+                                        return new HtmlString(
+                                            '<div class="mt-2 flex flex-col gap-3">' .
+                                            '<div>' .
+                                            '<a href="' . $url . '" target="_blank">' .
+                                            '<img src="' . $url . '" alt="Скриншот" class="w-32 h-32 object-cover rounded-lg border shadow-sm hover:opacity-95 transition" />' .
+                                            '</a>' .
+                                            '</div>' .
+                                            '<div>' .
+                                            '<a href="' . $url . '" target="_blank" class="inline-flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-white bg-primary-600 rounded-md hover:bg-primary-500 shadow transition">' .
+                                            'Открыть в полном размере / Скачать' .
+                                            '</a>' .
+                                            '</div>' .
+                                            '</div>'
+                                        );
+                                    })
                                     ->columnSpanFull(),
                             ])
                             ->columns(3)

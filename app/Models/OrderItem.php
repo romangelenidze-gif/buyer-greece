@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class OrderItem extends Model
 {
-    use  Auditable, HasFactory;
+    use Auditable, HasFactory;
 
     protected $fillable = [
         'order_id',
@@ -20,10 +20,20 @@ class OrderItem extends Model
         'price_per_item',
         'total_price',
         'notes',
+        'screenshot_path',
     ];
 
     public function order(): BelongsTo
     {
         return $this->belongsTo(Order::class);
+    }
+
+    public function getScreenshotUrlAttribute(): ?string
+    {
+        if (! $this->screenshot_path) {
+            return null;
+        }
+
+        return route('orders.items.screenshot', [$this->order_id, $this->id]);
     }
 }
