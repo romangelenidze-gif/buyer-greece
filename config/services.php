@@ -20,6 +20,12 @@ return [
     'whatsapp' => [
         'phone' => env('WHATSAPP_SUPPORT_PHONE', '306900000000'),
     ],
+
+    'gemini' => [
+    'api_key' => env('GEMINI_API_KEY'),
+    'model' => env('GEMINI_MODEL', 'gemini-2.5-flash'),
+    'cache_ttl' => env('GEMINI_CACHE_TTL', 10800),
+    ],
     
 
     'postmark' => [

@@ -40,12 +40,16 @@
                     </form>
                 </div>
 
-                <!-- Кнопки связи (теперь видны и на мобильной, и на десктопной версиях) -->
+                <!-- Кнопки связи -->
                 <div class="flex pt-2 text-xs text-[#86868b] items-center justify-center lg:justify-start gap-4">
                     <span>{{ __('Нужна помощь с выбором?') }}</span>
                     <div class="flex items-center gap-2">
                         <x-messenger type="telegram" size="small" />
                         <x-messenger type="whatsapp" size="small" />
+                        <!-- Добавлен Messenger, если настроен -->
+                        @if(config('services.messenger.username') || config('services.facebook.messenger'))
+                            <x-messenger type="messenger" size="small" />
+                        @endif
                     </div>
                 </div>
 
@@ -63,8 +67,63 @@
 
 </section>
 
+<!-- BLOCK 1.5: POPULAR PRODUCTS SHOWCASE (EDGE-TO-EDGE SCROLLER) -->
+@php
+    $popularProducts = \App\Models\ShowcaseProduct::where('is_published', true)->orderBy('sort_order')->get();
+@endphp
+
+@if($popularProducts->isNotEmpty())
+<section class="py-16 bg-gradient-to-b from-gray-50 to-white border-b border-gray-100 overflow-hidden">
+    
+    <!-- Заголовок и кнопки прокрутки оставляем внутри сетки max-w-7xl -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-8">
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
+            <div>
+                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 text-blue-600 text-xs font-bold uppercase tracking-wider mb-3">
+                    <span class="w-2 h-2 rounded-full bg-blue-600 animate-ping"></span>
+                    {{ __('Тренды и Выгода') }}
+                </div>
+                <h2 class="text-3xl sm:text-4xl font-extrabold text-gray-900 tracking-tight">
+                    {{ __('Популярные товары') }}
+                </h2>
+                <p class="text-sm text-gray-500 mt-1 font-medium">
+                    {{ __('Лучшие находки из греческих интернет-магазинов с доставкой') }}
+                </p>
+            </div>
+            
+            @if($popularProducts->count() > 1)
+            <div class="flex gap-2">
+                <button onclick="document.getElementById('showcase-scroll-container').scrollBy({left: -320, behavior: 'smooth'})" 
+                        class="p-3 rounded-2xl bg-white text-gray-800 shadow-md border border-gray-100 hover:bg-blue-600 hover:text-white transition-all cursor-pointer" 
+                        aria-label="Назад">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/></svg>
+                </button>
+                <button onclick="document.getElementById('showcase-scroll-container').scrollBy({left: 320, behavior: 'smooth'})" 
+                        class="p-3 rounded-2xl bg-white text-gray-800 shadow-md border border-gray-100 hover:bg-blue-600 hover:text-white transition-all cursor-pointer" 
+                        aria-label="Вперед">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>
+                </button>
+            </div>
+            @endif
+        </div>
+    </div>
+
+    <!-- Скроллер на всю ширину экрана с центрированием карточек -->
+    <div class="w-full">
+        <div id="showcase-scroll-container" 
+             class="flex overflow-x-auto space-x-6 py-8 -my-4 px-4 sm:px-8 lg:px-[max(2rem,calc((100vw-80rem)/2))] no-scrollbar snap-x snap-center scroll-smooth">
+            @foreach($popularProducts as $product)
+                <div class="snap-center flex-shrink-0 w-[85%] sm:w-[45%] lg:w-[28%] min-w-[280px]">
+                    @include('components.showcase-card', ['product' => $product])
+                </div>
+            @endforeach
+        </div>
+    </div>
+</section>
+@endif
+
 <!-- BLOCK 2: BENTO GRID SCENARIOS -->
-<section class="py-20 bg-white">
+<section class="py-20 bg-gray-50">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="text-center max-w-2xl mx-auto mb-14">
             <h2 class="apple-section-title">{{ __('3 формата работы') }}</h2>

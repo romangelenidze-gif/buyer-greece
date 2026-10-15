@@ -63,6 +63,10 @@
                 <form action="{{ route('orders.store') }}" method="POST" enctype="multipart/form-data" class="apple-card space-y-6">
                     @csrf
 
+                    @if(isset($showcaseProduct) || request('showcase_product_id'))
+                        <input type="hidden" name="showcase_product_id" value="{{ $showcaseProduct->id ?? request('showcase_product_id') }}">
+                    @endif
+
                     <!-- SECTION 1: PRODUCT INFO -->
                     <div>
                         <h2 class="text-lg font-semibold text-[#1d1d1f] border-b border-black/[0.06] pb-3 mb-4">{{ __('Информация о товаре') }}</h2>
@@ -77,7 +81,7 @@
                                     type="url" 
                                     name="product_url" 
                                     id="product_url" 
-                                    value="{{ old('product_url', request('url')) }}"
+                                    value="{{ old('product_url', $showcaseProduct->partner_product_url ?? request('url')) }}"
                                     required 
                                     placeholder="https://www.zara.com/gr/..." 
                                     class="apple-search-input !px-4 !py-3 !rounded-2xl"
@@ -97,7 +101,7 @@
                                         type="text" 
                                         name="product_name" 
                                         id="product_name" 
-                                        value="{{ old('product_name') }}"
+                                        value="{{ old('product_name', $showcaseProduct->name ?? '') }}"
                                         required 
                                         placeholder="{{ __('например: Leather Jacket') }}" 
                                         class="apple-search-input !px-4 !py-3 !rounded-2xl"
@@ -151,7 +155,7 @@
                         <div class="space-y-4">
                             <div>
                                 <label for="comment" class="block text-xs font-medium text-[#86868b] mb-1.5">{{ __('Комментарий к заказу') }}</label>
-                                <textarea name="comment" id="comment" rows="3" placeholder="{{ __('Укажите пожелания по проверке, альтернативные размеры или промокоды...') }}" class="apple-search-input !rounded-2xl !px-4 !py-3">{{ old('comment') }}</textarea>
+                                <textarea name="comment" id="comment" rows="3" placeholder="{{ __('Укажите пожелания по проверке, альтернативные размеры или промокоды...') }}" class="apple-search-input !rounded-2xl !px-4 !py-3">{{ old('comment', isset($showcaseProduct) && $showcaseProduct->short_description ? __('Товар из витрины: ') . $showcaseProduct->short_description : '') }}</textarea>
                             </div>
 
                             <div>

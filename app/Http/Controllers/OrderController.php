@@ -9,6 +9,7 @@ use App\Enums\OrderType;
 use App\Models\Customer;
 use App\Models\Order;
 use App\Models\Quote;
+use App\Models\ShowcaseProduct;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -16,6 +17,20 @@ use Illuminate\View\View;
 
 class OrderController extends Controller
 {
+    /**
+     * Отображение страницы/формы «Выкупите за меня» с автозаполнением из витрины.
+     */
+    public function create(Request $request): View
+    {
+        $showcaseProduct = null;
+
+        if ($request->filled('showcase_product_id')) {
+            $showcaseProduct = ShowcaseProduct::find($request->input('showcase_product_id'));
+        }
+
+        return view('public.buy-for-me', compact('showcaseProduct'));
+    }
+
     /**
      * Обработка и сохранение формы «Выкупите за меня».
      */
@@ -30,6 +45,7 @@ class OrderController extends Controller
             'model' => ['nullable', 'string', 'max:100'],
             'comment' => ['nullable', 'string', 'max:1000'],
             'screenshot' => ['nullable', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:2048'],
+            'showcase_product_id' => ['nullable', 'exists:showcase_products,id'],
         ]);
 
         $user = Auth::user();
@@ -67,6 +83,7 @@ class OrderController extends Controller
                 'model' => $validated['model'] ?? null,
                 'requested_comment' => $validated['comment'] ?? null,
                 'screenshot_path' => $screenshotPath,
+                'showcase_product_id' => $validated['showcase_product_id'] ?? null,
             ]
         ];
 
@@ -124,7 +141,6 @@ class OrderController extends Controller
 
         $order->load(['items', 'activeQuote', 'payments', 'incomingPackages']);
 
-        // Выбираем активный расчет из связи либо последний по времени создания
         $quote = $order->activeQuote ?? $order->quotes()->latest()->first();
 
         return view('app.orders.show', compact('order', 'quote'));

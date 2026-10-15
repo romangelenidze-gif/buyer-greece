@@ -139,6 +139,15 @@
     }
 }
 
+/* HIDE SCROLLBAR UTILITY */
+.no-scrollbar::-webkit-scrollbar {
+    display: none;
+}
+.no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
 /* DESKTOP HERO BACKGROUND & HEIGHT */
 .apple-hero-section {
     min-height: auto;

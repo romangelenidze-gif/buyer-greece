@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\ProductSearchController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\OrderMediaController;
@@ -17,9 +18,14 @@ use Illuminate\Support\Facades\Route;
 */
 Route::view('/', 'public.home')->name('home');
 Route::view('/how-it-works', 'public.how-it-works')->name('how-it-works');
-Route::view('/buy-for-me', 'public.buy-for-me')->name('buy-for-me');
+
+// Изменили Route::view на вызов контроллера, чтобы обрабатывать параметры витрины
+Route::get('/buy-for-me', [OrderController::class, 'create'])->name('buy-for-me');
+
 Route::view('/forwarding', 'public.forwarding')->name('forwarding');
 Route::view('/help', 'public.help')->name('help');
+
+Route::get('/product-search', [ProductSearchController::class, 'index'])->name('product-search');
 
 // Переключатель языка сессии (ru / ka / en)
 Route::get('/lang/{locale}', function (string $locale) {
