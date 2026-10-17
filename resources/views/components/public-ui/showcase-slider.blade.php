@@ -38,21 +38,21 @@
 
     <div class="w-full">
         <div id="showcase-scroll-container" 
-             class="flex overflow-x-auto space-x-6 py-4 px-4 sm:px-8 lg:px-[max(2rem,calc((100vw-80rem)/2))] no-scrollbar snap-x snap-center scroll-smooth">
+             class="flex overflow-x-auto space-x-6 py-6 px-4 sm:px-8 lg:px-[max(2rem,calc((100vw-80rem)/2))] no-scrollbar snap-x snap-center scroll-smooth">
             @foreach($products as $item)
                 @php
                     $productData = [
-                        'title' => $item->name, // В миграции поле называется name
-                        'image_url' => $item->image_path, // В миграции поле называется image_path
-                        'merchant_name' => $item->partner_name ?? __('Греция'), // В миграции partner_name
-                        'product_url' => $item->partner_product_url, // В миграции partner_product_url
+                        'title' => $item->name,
+                        'image_url' => $item->image_path,
+                        'merchant_name' => $item->partner_name ?? __('Греция'),
+                        'product_url' => $item->partner_product_url,
                         'price_amount' => $item->price,
                         'price_note' => null,
                         'short_description' => $item->short_description ?? '',
                         'offers_count' => 1,
                     ];
                 @endphp
-                <div class="snap-center flex-shrink-0 w-[80%] sm:w-[40%] lg:w-[24%] min-w-[260px]">
+                <div class="snap-center flex-shrink-0 w-[260px] sm:w-[270px] py-3">
                     <x-public-ui.product-card :product="$productData" />
                 </div>
             @endforeach
