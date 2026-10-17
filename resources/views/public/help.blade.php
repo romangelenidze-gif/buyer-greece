@@ -2,154 +2,154 @@
     title="{{ __('Центр помощи и FAQ | Buyer Greece') }}"
     description="{{ __('Ответы на часто задаваемые вопросы о выкупе, оплате, форвардинге и доставке из Греции в Грузию.') }}"
 >
-    <div class="py-16 bg-[#f2f2f2] min-h-[calc(100vh-4rem)]" x-data="{ activeCategory: 'all', openFaq: null }">
+    <div class="py-16 bg-[#f2f2f2] min-h-[calc(100vh-4rem)]" x-data="{ openFaq: null }">
         <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
             
             <!-- HEADER -->
             <div class="text-center max-w-2xl mx-auto space-y-3">
-                <h1 class="apple-section-title">{{ __('Центр помощи') }}</h1>
+                <h1 class="apple-section-title">{{ __('Центр помощи Buyer Greece') }}</h1>
                 <p class="apple-section-subtitle">
-                    {{ __('Найдите ответы на популярные вопросы или обратитесь в нашу службу поддержки.') }}
+                    {{ __('Здесь собраны ответы на вопросы о покупках в греческих магазинах, оформлении заказов, оплате, доставке в Грузию и получении посылок.') }}
                 </p>
             </div>
 
-            <!-- CATEGORY FILTER BUTTONS (Apple Segmented Control) -->
-            <div class="flex flex-wrap gap-1.5 justify-center bg-black/[0.04] p-1.5 rounded-full max-w-2xl mx-auto border border-black/[0.04]">
-                <button 
-                    type="button"
-                    @click="activeCategory = 'all'" 
-                    :class="activeCategory === 'all' ? 'bg-white text-[#1d1d1f] shadow-[0_2px_8px_rgba(0,0,0,0.08)] font-medium' : 'text-[#86868b] hover:text-[#1d1d1f]'"
-                    class="px-4 py-2 rounded-full text-xs transition-all duration-200 cursor-pointer"
-                >
-                    {{ __('Все вопросы') }}
-                </button>
-                <button 
-                    type="button"
-                    @click="activeCategory = 'buying'" 
-                    :class="activeCategory === 'buying' ? 'bg-white text-[#1d1d1f] shadow-[0_2px_8px_rgba(0,0,0,0.08)] font-medium' : 'text-[#86868b] hover:text-[#1d1d1f]'"
-                    class="px-4 py-2 rounded-full text-xs transition-all duration-200 cursor-pointer"
-                >
-                    {{ __('Выкуп') }}
-                </button>
-                <button 
-                    type="button"
-                    @click="activeCategory = 'payment'" 
-                    :class="activeCategory === 'payment' ? 'bg-white text-[#1d1d1f] shadow-[0_2px_8px_rgba(0,0,0,0.08)] font-medium' : 'text-[#86868b] hover:text-[#1d1d1f]'"
-                    class="px-4 py-2 rounded-full text-xs transition-all duration-200 cursor-pointer"
-                >
-                    {{ __('Оплата') }}
-                </button>
-                <button 
-                    type="button"
-                    @click="activeCategory = 'forwarding'" 
-                    :class="activeCategory === 'forwarding' ? 'bg-white text-[#1d1d1f] shadow-[0_2px_8px_rgba(0,0,0,0.08)] font-medium' : 'text-[#86868b] hover:text-[#1d1d1f]'"
-                    class="px-4 py-2 rounded-full text-xs transition-all duration-200 cursor-pointer"
-                >
-                    {{ __('Форвардинг') }}
-                </button>
-                <button 
-                    type="button"
-                    @click="activeCategory = 'camex'" 
-                    :class="activeCategory === 'camex' ? 'bg-white text-[#1d1d1f] shadow-[0_2px_8px_rgba(0,0,0,0.08)] font-medium' : 'text-[#86868b] hover:text-[#1d1d1f]'"
-                    class="px-4 py-2 rounded-full text-xs transition-all duration-200 cursor-pointer"
-                >
-                    {{ __('Camex и Доставка') }}
-                </button>
-            </div>
+            <!-- KNOWLEDGE BASE ACCORDION SECTION -->
+            <div class="apple-card space-y-4">
+                <div class="flex items-center justify-between mb-2">
+                    <h2 class="text-xl font-semibold text-[#1d1d1f] tracking-tight">{{ __('База знаний и статьи') }}</h2>
+                    <span class="text-xs font-normal text-[#86868b]">8 найдено</span>
+                </div>
 
-            <!-- FAQ ACCORDION SECTION (Apple Style with Smooth Animations) -->
-            <div class="apple-card space-y-6">
-                <h2 class="text-xl font-semibold text-[#1d1d1f] tracking-tight mb-2">{{ __('Часто задаваемые вопросы') }}</h2>
-
-                <!-- Item 1: Buying -->
-                <div x-show="activeCategory === 'all' || activeCategory === 'buying'" class="border-b border-black/[0.06] pb-4">
+                <!-- Item 1 -->
+                <div class="border-b border-black/[0.06] pb-4">
                     <button 
                         type="button"
                         @click="openFaq = (openFaq === 1 ? null : 1)" 
                         class="w-full text-left font-semibold text-[#1d1d1f] text-sm sm:text-base flex justify-between items-center py-2 hover:text-[#0071e3] transition-colors cursor-pointer"
                     >
-                        <span>{{ __('Как происходит выкуп товара по моей ссылке?') }}</span>
-                        <span class="w-7 h-7 rounded-full bg-black/[0.04] flex items-center justify-center text-sm font-bold text-[#1d1d1f] transition-transform duration-300 flex-shrink-0 ml-4" :class="openFaq === 1 ? 'rotate-45 bg-[#0071e3] text-white' : ''">+</span>
+                        <span>{{ __('Что такое Buyer Greece и как работает сервис?') }}</span>
+                        <span class="w-7 h-7 rounded-full bg-black/[0.06] flex items-center justify-center text-sm font-bold text-[#1d1d1f] transition-transform duration-300 flex-shrink-0 ml-4" :class="openFaq === 1 ? 'bg-[#0071e3] text-black' : ''" x-text="openFaq === 1 ? '-' : '+'"></span>
                     </button>
                     <div x-show="openFaq === 1" x-cloak class="text-sm text-[#86868b] pt-3 leading-relaxed transition-all duration-300">
-                        {{ __('Вы отправляете ссылку через форму «Выкупите за меня». Менеджер проверяет наличие товара в магазине, рассчитывает стоимость доставки по Греции и нашу комиссию, после чего формирует Quote (расчет). Вы оплачиваете банковским переводом, и мы совершаем покупку.') }}
+                        {{ __('Buyer Greece помогает клиентам в Грузии приобретать товары в греческих магазинах и организовывать их дальнейшую отправку в Грузию через Camex. В зависимости от ситуации вы можете попросить нашу команду выкупить товар за вас (Buy For Me), оформить заявку или самостоятельно приобрести товар в греческом магазине, воспользовавшись нашим складом в Греции.') }}
                     </div>
                 </div>
 
-                <!-- Item 2: Payment -->
-                <div x-show="activeCategory === 'all' || activeCategory === 'payment'" class="border-b border-black/[0.06] pb-4">
+                <!-- Item 2 -->
+                <div class="border-b border-black/[0.06] pb-4">
                     <button 
                         type="button"
                         @click="openFaq = (openFaq === 2 ? null : 2)" 
                         class="w-full text-left font-semibold text-[#1d1d1f] text-sm sm:text-base flex justify-between items-center py-2 hover:text-[#0071e3] transition-colors cursor-pointer"
                     >
-                        <span>{{ __('Как оплатить расчет (Quote)?') }}</span>
-                        <span class="w-7 h-7 rounded-full bg-black/[0.04] flex items-center justify-center text-sm font-bold text-[#1d1d1f] transition-transform duration-300 flex-shrink-0 ml-4" :class="openFaq === 2 ? 'rotate-45 bg-[#0071e3] text-white' : ''">+</span>
+                        <span>{{ __('Как оформить заявку на выкуп товара (Buy For Me)?') }}</span>
+                        <span class="w-7 h-7 rounded-full bg-black/[0.06] flex items-center justify-center text-sm font-bold text-[#1d1d1f] transition-transform duration-300 flex-shrink-0 ml-4" :class="openFaq === 2 ? 'bg-[#0071e3] text-black' : ''" x-text="openFaq === 2 ? '-' : '+'"></span>
                     </button>
                     <div x-show="openFaq === 2" x-cloak class="text-sm text-[#86868b] pt-3 leading-relaxed transition-all duration-300">
-                        {{ __('Оплата производится банковским переводом по реквизитам, указанным на странице оплаты. После перевода вы загружаете фото или PDF квитанции (чека). Менеджер подтверждает платеж, и заказ переходит в статус выкупа.') }}
+                        {{ __('1. Найдите товар в греческом интернет-магазине или воспользуйтесь умным поиском Buyer Greece.<br>2. Скопируйте ссылку на страницу нужного продукта.<br>3. Перейдите к форме Buy For Me, вставьте ссылку и укажите размер, цвет, модель или количество.<br>4. Отправьте заявку и дождитесь проверки информации менеджером.') }}
                     </div>
                 </div>
 
-                <!-- Item 3: Camex -->
-                <div x-show="activeCategory === 'all' || activeCategory === 'camex'" class="border-b border-black/[0.06] pb-4">
+                <!-- Item 3 -->
+                <div class="border-b border-black/[0.06] pb-4">
                     <button 
                         type="button"
                         @click="openFaq = (openFaq === 3 ? null : 3)" 
                         class="w-full text-left font-semibold text-[#1d1d1f] text-sm sm:text-base flex justify-between items-center py-2 hover:text-[#0071e3] transition-colors cursor-pointer"
                     >
-                        <span>{{ __('Входит ли международная доставка в Грузию в ваш расчет?') }}</span>
-                        <span class="w-7 h-7 rounded-full bg-black/[0.04] flex items-center justify-center text-sm font-bold text-[#1d1d1f] transition-transform duration-300 flex-shrink-0 ml-4" :class="openFaq === 3 ? 'rotate-45 bg-[#0071e3] text-white' : ''">+</span>
+                        <span>{{ __('Как оплатить заказ и подтвердить перевод?') }}</span>
+                        <span class="w-7 h-7 rounded-full bg-black/[0.06] flex items-center justify-center text-sm font-bold text-[#1d1d1f] transition-transform duration-300 flex-shrink-0 ml-4" :class="openFaq === 3 ? 'bg-[#0071e3] text-black' : ''" x-text="openFaq === 3 ? '-' : '+'"></span>
                     </button>
                     <div x-show="openFaq === 3" x-cloak class="text-sm text-[#86868b] pt-3 leading-relaxed transition-all duration-300">
-                        {{ __('Нет. Международная транспортировка из Греции в Грузию осуществляется службой Camex. Доставка оплачивается вами отдельно компании Camex при получении посылки согласно их тарифам.') }}
+                        {{ __('В текущей модели Buyer Greece основным способом оплаты является банковский перевод. Перевод следует выполнять после получения подтверждённой суммы и реквизитов. После отправки перевода загрузите квитанцию в систему для подтверждения платежа.') }}
                     </div>
                 </div>
 
-                <!-- Item 4: Forwarding -->
-                <div x-show="activeCategory === 'all' || activeCategory === 'forwarding'" class="pb-2">
+                <!-- Item 4 -->
+                <div class="border-b border-black/[0.06] pb-4">
                     <button 
                         type="button"
                         @click="openFaq = (openFaq === 4 ? null : 4)" 
                         class="w-full text-left font-semibold text-[#1d1d1f] text-sm sm:text-base flex justify-between items-center py-2 hover:text-[#0071e3] transition-colors cursor-pointer"
                     >
-                        <span>{{ __('Зачем нужен Camex personal number в профиле?') }}</span>
-                        <span class="w-7 h-7 rounded-full bg-black/[0.04] flex items-center justify-center text-sm font-bold text-[#1d1d1f] transition-transform duration-300 flex-shrink-0 ml-4" :class="openFaq === 4 ? 'rotate-45 bg-[#0071e3] text-white' : ''">+</span>
+                        <span>{{ __('Как правильно использовать адрес в Греции при самостоятельной покупке?') }}</span>
+                        <span class="w-7 h-7 rounded-full bg-black/[0.06] flex items-center justify-center text-sm font-bold text-[#1d1d1f] transition-transform duration-300 flex-shrink-0 ml-4" :class="openFaq === 4 ? 'bg-[#0071e3] text-black' : ''" x-text="openFaq === 4 ? '-' : '+'"></span>
                     </button>
                     <div x-show="openFaq === 4" x-cloak class="text-sm text-[#86868b] pt-3 leading-relaxed transition-all duration-300">
-                        {{ __('Персональный номер Camex необходим для идентификации вашего груза на складе и правильного оформления документов перед передачей перевозчику. Без него адрес приема в Греции не активируется.') }}
+                        {{ __('Перед оплатой товара в магазине убедитесь, что получили актуальные инструкции Buyer Greece. При оформлении внимательно проверьте адрес, имя получателя, индекс и ваш персональный идентификатор Camex для точной идентификации посылки на складе.') }}
                     </div>
                 </div>
-            </div>
 
-            <!-- KNOWLEDGE BASE CARDS -->
-            <div class="space-y-4">
-                <h2 class="text-xl font-semibold text-[#1d1d1f] tracking-tight">{{ __('База знаний') }}</h2>
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                    <a href="#" class="apple-bento-card block">
-                        <div class="text-xs font-semibold text-[#0071e3] mb-2 uppercase tracking-wide">{{ __('Инструкция') }}</div>
-                        <h3 class="text-base font-semibold text-[#1d1d1f] tracking-tight">{{ __('Как правильно заказать в греческом магазине') }}</h3>
-                        <p class="text-xs text-[#86868b] mt-2 leading-relaxed">{{ __('Особенности заполнения адреса и выбора способа оплаты.') }}</p>
-                    </a>
+                <!-- Item 5 -->
+                <div class="border-b border-black/[0.06] pb-4">
+                    <button 
+                        type="button"
+                        @click="openFaq = (openFaq === 5 ? null : 5)" 
+                        class="w-full text-left font-semibold text-[#1d1d1f] text-sm sm:text-base flex justify-between items-center py-2 hover:text-[#0071e3] transition-colors cursor-pointer"
+                    >
+                        <span>{{ __('Как работает доставка через Camex и когда появляется трек-номер?') }}</span>
+                        <span class="w-7 h-7 rounded-full bg-black/[0.06] flex items-center justify-center text-sm font-bold text-[#1d1d1f] transition-transform duration-300 flex-shrink-0 ml-4" :class="openFaq === 5 ? 'bg-[#0071e3] text-black' : ''" x-text="openFaq === 5 ? '-' : '+'"></span>
+                    </button>
+                    <div x-show="openFaq === 5" x-cloak class="text-sm text-[#86868b] pt-3 leading-relaxed transition-all duration-300">
+                        {{ __('После поступления и обработки товара на нашем складе в Греции он передается службе Camex для международной доставки в Грузию. После оформления передачи в системе появляется международный трек-номер, по которому можно отслеживать посылку на официальном сайте перевозчика.') }}
+                    </div>
+                </div>
 
-                    <a href="#" class="apple-bento-card block">
-                        <div class="text-xs font-semibold text-[#0071e3] mb-2 uppercase tracking-wide">{{ __('Оплата') }}</div>
-                        <h3 class="text-base font-semibold text-[#1d1d1f] tracking-tight">{{ __('Инструкция по загрузке чека об оплате') }}</h3>
-                        <p class="text-xs text-[#86868b] mt-2 leading-relaxed">{{ __('Требования к форматам и размерам файлов реквизитов.') }}</p>
-                    </a>
+                <!-- Item 6 -->
+                <div class="border-b border-black/[0.06] pb-4">
+                    <button 
+                        type="button"
+                        @click="openFaq = (openFaq === 6 ? null : 6)" 
+                        class="w-full text-left font-semibold text-[#1d1d1f] text-sm sm:text-base flex justify-between items-center py-2 hover:text-[#0071e3] transition-colors cursor-pointer"
+                    >
+                        <span>{{ __('Как работает умный поиск товаров и перевод запросов?') }}</span>
+                        <span class="w-7 h-7 rounded-full bg-black/[0.06] flex items-center justify-center text-sm font-bold text-[#1d1d1f] transition-transform duration-300 flex-shrink-0 ml-4" :class="openFaq === 6 ? 'bg-[#0071e3] text-black' : ''" x-text="openFaq === 6 ? '-' : '+'"></span>
+                    </button>
+                    <div x-show="openFaq === 6" x-cloak class="text-sm text-[#86868b] pt-3 leading-relaxed transition-all duration-300">
+                        {{ __('Наш умный поиск на базе ИИ принимает запросы на естественных языках (включая русский и грузинский), переводит их и адаптирует для каталога BestPrice.gr, после чего возвращает актуальные предложения с переводом названий обратно.') }}
+                    </div>
+                </div>
+
+                <!-- Item 7 -->
+                <div class="border-b border-black/[0.06] pb-4">
+                    <button 
+                        type="button"
+                        @click="openFaq = (openFaq === 7 ? null : 7)" 
+                        class="w-full text-left font-semibold text-[#1d1d1f] text-sm sm:text-base flex justify-between items-center py-2 hover:text-[#0071e3] transition-colors cursor-pointer"
+                    >
+                        <span>{{ __('Можно ли отменить заказ или вернуть товар?') }}</span>
+                        <span class="w-7 h-7 rounded-full bg-black/[0.06] flex items-center justify-center text-sm font-bold text-[#1d1d1f] transition-transform duration-300 flex-shrink-0 ml-4" :class="openFaq === 7 ? 'bg-[#0071e3] text-black' : ''" x-text="openFaq === 7 ? '-' : '+'"></span>
+                    </button>
+                    <div x-show="openFaq === 7" x-cloak class="text-sm text-[#86868b] pt-3 leading-relaxed transition-all duration-300">
+                        {{ __('Если заявка еще не оплачена и покупка не началась, обратитесь в поддержку для отмены. Если товар уже куплен или доставлен, возврат регулируется правилами продавца и может потребовать покрытия дополнительных расходов на логистику.') }}
+                    </div>
+                </div>
+
+                <!-- Item 8 -->
+                <div class="pb-2">
+                    <button 
+                        type="button"
+                        @click="openFaq = (openFaq === 8 ? null : 8)" 
+                        class="w-full text-left font-semibold text-[#1d1d1f] text-sm sm:text-base flex justify-between items-center py-2 hover:text-[#0071e3] transition-colors cursor-pointer"
+                    >
+                        <span>{{ __('Где посмотреть статусы заказа, посылки и отправки?') }}</span>
+                        <span class="w-7 h-7 rounded-full bg-black/[0.06] flex items-center justify-center text-sm font-bold text-[#1d1d1f] transition-transform duration-300 flex-shrink-0 ml-4" :class="openFaq === 8 ? 'bg-[#0071e3] text-black' : ''" x-text="openFaq === 8 ? '-' : '+'"></span>
+                    </button>
+                    <div x-show="openFaq === 8" x-cloak class="text-sm text-[#86868b] pt-3 leading-relaxed transition-all duration-300">
+                        {{ __('В вашем личном кабинете вы можете отдельно отслеживать процесс выкупа товара (заказ), физическое поступление на склад (входящая посылка) и международную транспортировку (отправка Camex).') }}
+                    </div>
                 </div>
             </div>
 
             <!-- STILL NEED HELP CTA -->
             <div class="bg-[#1d1d1f] text-white rounded-[2.5rem] p-8 sm:p-10 text-center space-y-4 shadow-xl">
-                <h3 class="text-2xl font-semibold tracking-tight">{{ __('Остались вопросы?') }}</h3>
+                <h3 class="text-2xl font-semibold tracking-tight">{{ __('Остались вопросы или нужна помощь?') }}</h3>
                 <p class="text-sm text-[#86868b] max-w-md mx-auto leading-relaxed">
-                    {{ __('Свяжитесь с нашим менеджером в мессенджерах для оперативной консультации.') }}
+                    {{ __('Свяжитесь с нашей командой в удобном мессенджере. Мы на связи и готовы помочь с любым вопросом по выкупу и доставке.') }}
                 </p>
-                <div class="flex justify-center gap-3 pt-3">
-                    <x-messenger type="telegram" size="small" />
-                    <x-messenger type="whatsapp" size="small" />
-                </div>
+                
+                <!-- Кнопки мессенджеров в ряд -->
+                <x-messenger-row align="justify-center" />
             </div>
 
         </div>

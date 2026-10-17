@@ -180,15 +180,16 @@
                     </div>
 
                 </form>
-
-                <!-- ASSISTANCE BOX -->
-                <div class="mt-6 p-4 bg-[#f5f5f7] border border-black/[0.04] rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-[#86868b]">
+                                
+                <!-- STILL NEED HELP CTA -->
+                <div class="mt-6 p-4 bg-[#1d1d1f] text-white rounded-[2.5rem] p-8 sm:p-10 text-center space-y-4 shadow-xl">
                     <span>{{ __('Затрудняетесь с заполнением ссылки или подбором товара?') }}</span>
-                    <div class="flex gap-2">
-                        <x-messenger type="telegram" size="small" />
-                        <x-messenger type="whatsapp" size="small" />
-                    </div>
+                                      
+                    <!-- Кнопки мессенджеров в ряд -->
+                                <x-messenger-row align="justify-center" />
                 </div>
+
+
             @endif
 
         </div>

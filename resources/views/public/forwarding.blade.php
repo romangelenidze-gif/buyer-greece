@@ -108,15 +108,16 @@
                 </ul>
             </div>
 
-            <!-- SUPPORT CTA -->
-            <div class="apple-card text-center space-y-3">
-                <h3 class="text-base font-semibold text-[#1d1d1f]">{{ __('Возникли сложности при заполнении адреса в магазине?') }}</h3>
-                <p class="text-xs text-[#86868b]">{{ __('Напишите менеджеру — мы поможем правильно ввести адрес на греческом сайте.') }}</p>
-                <div class="flex justify-center gap-3 pt-2">
-                    <x-messenger type="telegram" size="small" />
-                    <x-messenger type="whatsapp" size="small" />
-                </div>
-            </div>
+       
+            <!-- STILL NEED HELP CTA -->
+            <div class="bg-[#1d1d1f] text-white rounded-[2.5rem] p-8 sm:p-10 text-center space-y-4 shadow-xl">
+                <h3 class="text-2xl font-semibold tracking-tight">{{ __('Возникли сложности при заполнении адреса в магазине?') }}</h3>
+                <p class="text-sm text-[#86868b] max-w-md mx-auto leading-relaxed">{{ __('Напишите менеджеру — мы поможем правильно ввести адрес на греческом сайте.') }}</p>
+                
+                <!-- Кнопки мессенджеров в ряд -->
+                <x-messenger-row align="justify-center" />
+            </div>    
+
 
         </div>
     </div>

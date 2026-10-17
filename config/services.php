@@ -21,10 +21,19 @@ return [
         'phone' => env('WHATSAPP_SUPPORT_PHONE', '306900000000'),
     ],
 
+    'messenger' => [
+        'page' => env('FACEBOOK_SUPPORT_PAGE', 'buyer.greece'),
+    ],
+
+    'groq' => [
+        'api_key' => env('GROQ_API_KEY'),
+        'model' => env('GROQ_MODEL', 'llama-3.3-70b-versatile'),
+    ],
+
     'gemini' => [
-    'api_key' => env('GEMINI_API_KEY'),
-    'model' => env('GEMINI_MODEL', 'gemini-2.5-flash'),
-    'cache_ttl' => env('GEMINI_CACHE_TTL', 10800),
+        'api_key' => env('GEMINI_API_KEY'),
+        'model' => env('GEMINI_MODEL', 'gemini-2.5-flash'),
+        'cache_ttl' => env('GEMINI_CACHE_TTL', 10800),
     ],
     
 

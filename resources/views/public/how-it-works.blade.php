@@ -25,18 +25,19 @@
                     <p class="text-xs text-[#86868b] mt-1.5 leading-relaxed">{{ __('Подготовленный груз передается международному перевозчику Camex для отправки в Грузию. Оплата транспортировки производится компании Camex при получении.') }}</p>
                 </div>
             </div>
-
-            <!-- SUPPORT CTA -->
-            <div class="apple-card text-center space-y-3">
-                <h3 class="text-base font-semibold text-[#1d1d1f]">{{ __('Остались вопросы по процессам?') }}</h3>
-                <p class="text-xs text-[#86868b] max-w-md mx-auto">
+           
+            <!-- STILL NEED HELP CTA -->
+            <div class="bg-[#1d1d1f] text-white rounded-[2.5rem] p-8 sm:p-10 text-center space-y-4 shadow-xl">
+                <h3 class="text-2xl font-semibold tracking-tight">{{ __('Остались вопросы по процессам?') }}</h3>
+                <p class="text-sm text-[#86868b] max-w-md mx-auto leading-relaxed">
                     {{ __('Напишите нам напрямую, если вам требуется помощь с оформлением или консультация по греческим магазинам.') }}
                 </p>
-                <div class="flex justify-center gap-3 pt-2">
-                    <x-messenger type="telegram" size="small" />
-                    <x-messenger type="whatsapp" size="small" />
-                </div>
+                
+                <!-- Кнопки мессенджеров в ряд -->
+                <x-messenger-row align="justify-center" />
             </div>
+
+
         </div>
     </div>
 </x-layouts.public>
