@@ -7,7 +7,7 @@
                 <h1 class="text-2xl font-semibold text-[#1d1d1f] tracking-tight">
                     {{ __('Добро пожаловать,') }} {{ Auth::user()->name }}!
                 </h1>
-                <p class="text-xs sm:text-sm text-[#86868b] mt-1">
+                <p class="app-text-muted mt-1">
                     {{ __('Управляйте вашими выкупами в Греции и отслеживайте статус посылок.') }}
                 </p>
             </div>
@@ -22,21 +22,21 @@
         <!-- STATS OVERVIEW (Bento Grid) -->
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
             <div class="apple-bento-card">
-                <div class="text-xs font-semibold text-[#86868b] uppercase tracking-wider">{{ __('Ожидаемые посылки') }}</div>
+                <div class="app-badge-text text-[#86868b]">{{ __('Ожидаемые посылки') }}</div>
                 <div class="text-3xl font-semibold text-[#1d1d1f] mt-3">{{ $stats['expected_packages'] ?? 0 }}</div>
-                <div class="text-xs text-[#86868b] mt-1">{{ __('На складе в Афинах') }}</div>
+                <div class="app-text-muted mt-1">{{ __('На складе в Афинах') }}</div>
             </div>
 
             <div class="apple-bento-card">
-                <div class="text-xs font-semibold text-[#86868b] uppercase tracking-wider">{{ __('Прибыло на склад') }}</div>
+                <div class="app-badge-text text-[#86868b]">{{ __('Прибыло на склад') }}</div>
                 <div class="text-3xl font-semibold text-[#1d1d1f] mt-3">{{ $stats['received_packages'] ?? 0 }}</div>
-                <div class="text-xs text-[#86868b] mt-1">{{ __('Готовы к консолидации') }}</div>
+                <div class="app-text-muted mt-1">{{ __('Готовы к консолидации') }}</div>
             </div>
 
             <div class="apple-bento-card">
-                <div class="text-xs font-semibold text-[#86868b] uppercase tracking-wider">{{ __('Отправки в Грузию') }}</div>
+                <div class="app-badge-text text-[#86868b]">{{ __('Отправки в Грузию') }}</div>
                 <div class="text-3xl font-semibold text-[#1d1d1f] mt-3">{{ $stats['ready_shipments'] ?? 0 }}</div>
-                <div class="text-xs text-[#86868b] mt-1">{{ __('В пути или переданы Camex') }}</div>
+                <div class="app-text-muted mt-1">{{ __('В пути или переданы Camex') }}</div>
             </div>
         </div>
 
@@ -50,10 +50,10 @@
             <div class="flex items-center justify-between border-b border-black/[0.06] pb-4">
                 <div>
                     <h2 class="text-base font-semibold text-[#1d1d1f]">{{ __('Ваш адрес приема в Греции (Форвардинг)') }}</h2>
-                    <p class="text-xs text-[#86868b] mt-0.5">{{ __('Используйте эти реквизиты при самостоятельных покупках в магазинах Греции') }}</p>
+                    <p class="app-text-muted mt-0.5">{{ __('Используйте эти реквизиты при самостоятельных покупках в магазинах Греции') }}</p>
                 </div>
                 @if($hasCamex)
-                    <span class="px-3 py-1 text-xs font-semibold text-emerald-700 bg-emerald-50 rounded-full border border-emerald-200/60">
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full app-badge-text border bg-emerald-50 text-emerald-700 border-emerald-200/80">
                         {{ __('Адрес активен') }}
                     </span>
                 @endif
@@ -84,7 +84,7 @@
             <div class="flex items-center justify-between border-b border-black/[0.06] pb-4">
                 <div>
                     <h2 class="text-base font-semibold text-[#1d1d1f]">{{ __('Ваши заказы («Выкупите за меня»)') }}</h2>
-                    <p class="text-xs text-[#86868b] mt-0.5">{{ __('Все текущие и завершенные заявки на выкуп товаров') }}</p>
+                    <p class="app-text-muted mt-0.5">{{ __('Все текущие и завершенные заявки на выкуп товаров') }}</p>
                 </div>
             </div>
 
@@ -98,7 +98,7 @@
                                     <span class="font-mono text-xs font-semibold text-[#1d1d1f] bg-black/[0.05] px-2.5 py-0.5 rounded-full">
                                         {{ $order->public_order_number }}
                                     </span>
-                                    <span class="px-2.5 py-0.5 text-xs font-medium rounded-full bg-amber-100/80 text-amber-900 border border-amber-200/60">
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full app-badge-text border bg-amber-50 text-amber-800 border-amber-200/80 font-semibold">
                                         {{ is_object($order->status) ? $order->status->value : $order->status }}
                                     </span>
                                 </div>
@@ -120,9 +120,7 @@
                                     </div>
                                 @endif
 
-                                <x-messenger type="telegram" :orderNumber="$order->public_order_number" size="small">{{ __('Чат') }}</x-messenger>
-
-                                <a href="{{ route('orders.show', $order->id) }}" class="px-4 py-2 text-xs font-medium text-[#0071e3] bg-blue-50/70 hover:bg-blue-100/70 rounded-full transition-colors inline-flex items-center gap-1">
+                                <a href="{{ route('orders.show', $order->id) }}" class="px-4 py-2 text-xs font-semibold text-[#0071e3] bg-blue-50/70 hover:bg-blue-100/70 rounded-full transition-colors inline-flex items-center gap-1">
                                     <span>{{ __('Детали') }}</span>
                                     <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
@@ -140,7 +138,7 @@
                         </svg>
                     </div>
                     <div class="text-sm font-semibold text-[#1d1d1f]">{{ __('У вас пока нет активных заказов') }}</div>
-                    <p class="text-xs text-[#86868b] max-w-sm mx-auto">
+                    <p class="app-text-muted max-w-sm mx-auto">
                         {{ __('Отправьте ссылку на нужный товар из интернет-магазина Греции, и мы рассчитаем стоимость выкупа.') }}
                     </p>
                     <div class="pt-2">

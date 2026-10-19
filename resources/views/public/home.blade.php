@@ -6,13 +6,18 @@
     <!-- HERO SECTION -->
     <x-public-ui.hero />
 
+    <!-- БЛОК ЭТАПОВ -->
+    <x-public-ui.steps-section />
+
     <!-- POPULAR PRODUCTS SHOWCASE -->
     <x-public-ui.showcase-slider />
 
+    
+
     <!-- BENTO GRID SCENARIOS -->
-    <section class="py-20 bg-gray-50">
+    <section class="py-20 bg-[#f2f2f2]">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="text-center max-w-2xl mx-auto mb-14">
+            <div class="text-center max-w-2xl mx-auto mb-14 space-y-3">
                 <h2 class="apple-section-title">{{ __('3 формата работы') }}</h2>
                 <p class="apple-section-subtitle">{{ __('Выберите подходящий вариант сервиса') }}</p>
             </div>

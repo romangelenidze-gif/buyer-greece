@@ -2,23 +2,22 @@
     title="{{ __('Форвардинг | Греческий адрес для покупок | Buyer Greece') }}"
     description="{{ __('Покупайте в интернет-магазинах Греции самостоятельно и используйте наш адрес приема для последующей доставки в Грузию через Camex.') }}"
 >
-    <div class="py-12 bg-[#f2f2f2] min-h-[calc(100vh-4rem)]">
-        <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
+    <div class="py-6 bg-[#f2f2f2] min-h-[calc(100vh-4rem)]">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
             
             <!-- HERO -->
             <div class="text-center max-w-3xl mx-auto space-y-4">
-                
-                <h1 class="apple-section-title">
+                <h1 class="apple-section-title text-left sm:text-center">
                     {{ __('Покупайте сами в магазинах Греции — мы примем и подготовим посылку') }}
                 </h1>
-                <p class="apple-hero-subtitle mx-auto">
+                <p class="apple-hero-subtitle text-left sm:text-center mx-auto">
                     {{ __('Используйте наш виртуальный адрес в Греции при оформлении заказов. После приема на складе мы подготавливаем посылку и передаем её компании Camex для международной доставки.') }}
                 </p>
             </div>
 
             <!-- 7 STEPS FLOW -->
             <div class="apple-card">
-                <h2 class="text-xl font-semibold text-[#1d1d1f] mb-6">{{ __('Как работает форвардинг (7 шагов)') }}</h2>
+                <h2 class="text-base font-semibold text-[#1d1d1f] mb-6">{{ __('Как работает форвардинг (7 шагов)') }}</h2>
                 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div class="flex gap-4">
@@ -88,11 +87,11 @@
                     </p>
                 </div>
                 @auth
-                    <a href="{{ route('dashboard') }}" class="px-5 py-2.5 bg-amber-600 hover:bg-amber-700 text-white font-medium text-sm rounded-full flex-shrink-0 transition-colors">
+                    <a href="{{ route('dashboard') }}" class="px-5 py-2.5 bg-amber-600 hover:bg-amber-700 text-white font-medium text-xs sm:text-sm rounded-full flex-shrink-0 transition-colors">
                         {{ __('Открыть мой адрес') }}
                     </a>
                 @else
-                    <a href="{{ route('register') }}" class="px-5 py-2.5 bg-amber-600 hover:bg-amber-700 text-white font-medium text-sm rounded-full flex-shrink-0 transition-colors">
+                    <a href="{{ route('register') }}" class="px-5 py-2.5 bg-amber-600 hover:bg-amber-700 text-white font-medium text-xs sm:text-sm rounded-full flex-shrink-0 transition-colors">
                         {{ __('Зарегистрироваться') }}
                     </a>
                 @endauth
@@ -108,16 +107,12 @@
                 </ul>
             </div>
 
-       
             <!-- STILL NEED HELP CTA -->
-            <div class="bg-[#1d1d1f] text-white rounded-[2.5rem] p-8 sm:p-10 text-center space-y-4 shadow-xl">
-                <h3 class="text-2xl font-semibold tracking-tight">{{ __('Возникли сложности при заполнении адреса в магазине?') }}</h3>
-                <p class="text-sm text-[#86868b] max-w-md mx-auto leading-relaxed">{{ __('Напишите менеджеру — мы поможем правильно ввести адрес на греческом сайте.') }}</p>
-                
-                <!-- Кнопки мессенджеров в ряд -->
+            <div class="bg-[#1d1d1f] text-white rounded-4xl p-8 sm:p-10 text-center space-y-4 shadow-xl">
+                <h3 class="text-xl sm:text-2xl font-semibold tracking-tight">{{ __('Возникли сложности при заполнении адреса в магазине?') }}</h3>
+                <p class="text-xs sm:text-sm text-[#86868b] max-w-md mx-auto leading-relaxed">{{ __('Напишите менеджеру — мы поможем правильно ввести адрес на греческом сайте.') }}</p>
                 <x-messenger-row align="justify-center" />
-            </div>    
-
+            </div>
 
         </div>
     </div>

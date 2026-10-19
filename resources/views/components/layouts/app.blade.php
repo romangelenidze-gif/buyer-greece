@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="h-full bg-[#f2f2f2]">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="h-full bg-[#f2f2f2] scroll-smooth">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -19,7 +19,7 @@
 
     <!-- SYSTEM ALERTS -->
     @if(session('success'))
-        <div class="bg-emerald-600 text-white text-xs font-medium py-2.5 px-4 text-center shadow-inner">
+        <div class="bg-emerald-600 text-white text-xs font-medium py-2.5 px-4 text-center shadow-inner tracking-wide">
             {{ session('success') }}
         </div>
     @endif

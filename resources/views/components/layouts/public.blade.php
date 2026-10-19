@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="h-full bg-[#f2f2f2]">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="h-full bg-[#f2f2f2] scroll-smooth">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -12,7 +12,7 @@
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="flex flex-col min-h-full text-[#1d1d1f] antialiased font-sans bg-[#f2f2f2]" x-data="{ mobileNavOpen: false }">
+<body class="flex flex-col min-h-full text-[#1d1d1f] antialiased font-sans bg-[#f2f2f2]" x-data="{ mobileNavOpen: false, searchOpen: false }">
 
     <!-- Header + Drawer -->
     <x-layouts.header />
@@ -25,6 +25,5 @@
     <!-- Footer -->
     <x-layouts.footer />
 
-    
 </body>
 </html>

@@ -4,9 +4,9 @@
             
             <!-- Logo (Extreme Left) -->
             <div class="flex items-center">
-                <a href="{{ route('dashboard') }}" class="font-bold text-lg tracking-tight text-white flex items-center gap-1.5">
+                <a href="{{ route('dashboard') }}" class="font-bold text-base tracking-tight text-white flex items-center gap-1.5">
                     <span class="text-[#0071e3]">Buyer</span>Greece
-                    <span class="hidden sm:inline-block text-xs font-normal text-gray-400 bg-white/10 px-2.5 py-0.5 rounded-full ml-1">{{ __('Личный кабинет') }}</span>
+                    <span class="hidden sm:inline-block app-badge-text text-gray-400 bg-white/10 px-2.5 py-0.5 rounded-full ml-1">{{ __('Личный кабинет') }}</span>
                 </a>
             </div>
 

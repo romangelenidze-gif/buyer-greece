@@ -4,36 +4,86 @@
     display: none !important;
 }
 
-/* APPLE TYPOGRAPHY */
+/* =========================================
+   APPLE TYPOGRAPHY & DESIGN SYSTEM CLASSES
+   (Масштаб шрифтов адаптирован под реальные мобильные экраны)
+   ========================================= */
+
 .apple-hero-title {
     font-size: clamp(2.25rem, 4.5vw, 3.75rem);
     font-weight: 600;
     color: #1d1d1f;
     letter-spacing: -0.025em;
-    line-height: 1.08;
+    line-height: 1.3;
+    text-align: left;
 }
 
+/* Основной текст / Подзаголовок Hero (Уровень Normal: 16px - 20px) */
 .apple-hero-subtitle {
-    font-size: clamp(1rem, 1.25vw, 1.25rem);
-    color: #86868b;
+    font-size: clamp(1.1rem, 1.35vw, 1.25rem);
+    color: #424245; /* Сделали контрастнее для лучшей читаемости */
     line-height: 1.5;
     font-weight: 400;
+    text-align: left;
+}
+
+/* Предотвращение сдвига страницы при открытии модалок и шторок */
+body.overflow-hidden {
+    overflow: hidden;
+    padding-right: var(--scrollbar-width, 0px);
 }
 
 .apple-section-title {
-    font-size: clamp(1.75rem, 3vw, 2.5rem);
+    font-size: clamp(2rem, 3.5vw, 2.75rem);
     font-weight: 600;
     color: #1d1d1f;
     letter-spacing: -0.02em;
 }
 
+/* Подзаголовок секций (Уровень Normal) */
 .apple-section-subtitle {
-    font-size: 1rem;
-    color: #86868b;
+    font-size: clamp(1.1rem, 1.25vw, 1.2rem); 
+    color: #424245;
+    font-weight: 400;
+    line-height: 1.5;
+}
+
+/* Заголовки в карточках, шагах и преимуществах */
+.app-card-title,
+.apple-hero-feature-title {
+    font-size: clamp(1rem, 1.1vw, 1.125rem); /* 16px - 18px */
+    font-weight: 600;
+    color: #1d1d1f;
+    letter-spacing: -0.01em;
+    line-height: 1.35;
+}
+
+.app-price {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #1d1d1f;
+    letter-spacing: -0.02em;
+}
+
+/* Второстепенный текст и описания (Уровень Minimum — строго не ниже 14px) */
+.app-text-muted,
+.apple-hero-note {
+    font-size: clamp(0.875rem, 1vw, 0.95rem); /* 14px - 15px, отлично читается на телефонах */
+    color: #515154;
+    line-height: 1.5;
     font-weight: 400;
 }
 
-/* APPLE CARDS & BENTO */
+.app-badge-text {
+    font-size: 0.75rem; /* 12px */
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+}
+
+/* =========================================
+   APPLE CARDS & BENTO
+   ========================================= */
 .apple-card {
     background-color: #ffffff;
     border: 1px solid rgba(0, 0, 0, 0.06);
@@ -77,11 +127,11 @@
     background-color: #ffffff;
     border: 1px solid rgba(0, 0, 0, 0.12) !important;
     border-radius: 9999px;
-    padding-top: 0.875rem;
-    padding-bottom: 0.875rem;
+    padding-top: 1rem;
+    padding-bottom: 1rem;
     padding-left: 1.5rem;
-    padding-right: 8.5rem;
-    font-size: 0.95rem;
+    padding-right: 9rem;
+    font-size: 1rem; /* 16px предотвращает автозум на iOS */
     color: #1d1d1f;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.03);
     transition: all 0.25s ease;
@@ -104,9 +154,9 @@
     transform: translateY(-50%);
     background-color: #0071e3;
     color: #ffffff;
-    font-size: 0.875rem;
+    font-size: 0.9375rem;
     font-weight: 500;
-    padding: 0.625rem 1.5rem;
+    padding: 0.75rem 1.6rem;
     border-radius: 9999px;
     border: none;
     cursor: pointer;
@@ -148,9 +198,22 @@
     scrollbar-width: none;
 }
 
-/* DESKTOP HERO BACKGROUND & HEIGHT */
+/* =========================================
+   APPLE HERO SECTION STYLES (Геометрия и высота)
+   ========================================= */
+
 .apple-hero-section {
-    min-height: auto;
+    position: relative;
+    background-color: #f2f2f2;
+    overflow: hidden;
+    padding-top: 2.5rem;
+    padding-bottom: 5.5rem; 
+}
+
+@media (min-width: 640px) {
+    .apple-hero-section {
+        padding-bottom: 6.5rem;
+    }
 }
 
 @media (min-width: 1024px) {
@@ -165,8 +228,239 @@
     }
 
     .apple-hero-section {
-        min-height: 800px;
+        min-height: 700px;
         display: flex;
         align-items: center;
+        padding-top: 0;
+        padding-bottom: 0;
+    }
+}
+
+/* =========================================
+   APPLE MOBILE SHEET ANIMATIONS & STYLES
+   ========================================= */
+
+.apple-sheet {
+    min-height: 100vh;
+    min-height: 100dvh;
+    background-color: #fbfbfd;
+    color: #1d1d1f;
+    overscroll-behavior: contain;
+    will-change: clip-path, opacity;
+}
+
+.apple-sheet-enter {
+    transition: clip-path 0.56s cubic-bezier(0.32, 0.08, 0.24, 1), opacity 0.24s ease-out;
+}
+.apple-sheet-enter-start {
+    clip-path: inset(0 0 100% 0);
+    opacity: 0;
+}
+.apple-sheet-enter-end {
+    clip-path: inset(0 0 0 0);
+    opacity: 1;
+}
+
+.apple-sheet-leave {
+    transition: clip-path 0.4s cubic-bezier(0.4, 0, 0.6, 1), opacity 0.24s ease-in 0.16s;
+}
+.apple-sheet-leave-start {
+    clip-path: inset(0 0 0 0);
+    opacity: 1;
+}
+.apple-sheet-leave-end {
+    clip-path: inset(0 0 100% 0);
+    opacity: 0;
+}
+
+@keyframes apple-item-in {
+    from { opacity: 0; transform: translate3d(0, -12px, 0); }
+    to   { opacity: 1; transform: translate3d(0, 0, 0); }
+}
+.apple-item {
+    animation: apple-item-in 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+    animation-delay: calc(0.12s + var(--i, 0) * 0.04s);
+}
+
+/* Дополнительные семантические классы для Hero */
+.apple-hero-feature-title {
+    font-size: 1rem; /* 16px */
+    font-weight: 600;
+    color: #1d1d1f;
+    letter-spacing: -0.01em;
+    line-height: 1.35;
+}
+
+.apple-hero-note {
+    font-size: 0.9rem; /* 14.4px — комфортный минимум */
+    color: #515154;
+    line-height: 1.45;
+    font-weight: 400;
+}
+
+
+/* =========================================
+   APPLE MENU ITEM STYLE
+   ========================================= */
+.apple-nav-link {
+    align-items: center;
+    font-size: clamp(0.875rem, 0.5vw, 1rem); /* 15px - 16px */
+    font-weight:400;
+    color: #1d1d1f;
+    padding: 0.5rem 0.5rem; /* Увеличенные отступы внутри каждого пункта */
+    border-radius: 9999px;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    cursor: pointer;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+/* Эффект при наведении */
+.apple-nav-link:hover {
+    color: #0071e3;
+}
+
+/* Активный пункт меню */
+.apple-nav-link.active,
+a.apple-nav-link.active {
+    color: #0071e3 !important;
+    font-weight: 400;
+}
+
+/* =========================================
+   HOW IT WORKS / PROCESS SECTION STYLES
+   ========================================= */
+
+/* Контейнер карточки шага */
+.apple-step-card {
+    background-color: #f8fbfc;
+    border: 1px solid rgba(0, 0, 0, 0.04);
+    border-radius: 1.75rem; /* 28px */
+    padding: 1.75rem 1.25rem;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.apple-step-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.05);
+    background-color: #ffffff;
+}
+
+/* Бейдж с цифрой шага */
+.apple-step-number {
+    position: absolute;
+    top: 1.25rem;
+    left: 1.25rem;
+    width: 2.25rem;
+    height: 2.25rem;
+    border-radius: 9999px;
+    background-color: #e1eeff;
+    color: #0071e3;
+    font-size: 1rem; /* 16px */
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Обертка для иконки */
+.apple-step-icon-wrapper {
+    width: 4rem;
+    height: 4rem;
+    border-radius: 9999px;
+    background-color: #f8fbfc;
+    color: #0071e3;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 0.5rem;
+    margin-bottom: 1.25rem;
+}
+
+/* --- ТИПОГРАФИКА (РАЗДЕЛЕНИЕ ДЛЯ МОБИЛЬНЫХ И ПК) --- */
+
+/* Заголовок шага */
+.apple-step-title {
+    font-weight: 600;
+    color: #1d1d1f;
+    letter-spacing: -0.01em;
+    line-height: 1.35;
+    margin-bottom: 0.5rem;
+    
+    /* Размеры для Мобильных (по умолчанию) */
+    font-size: 1.5rem;
+}
+
+/* Размеры заголовка для ПК (экран от 1024px) */
+@media (min-width: 1024px) {
+    .apple-step-title {
+        font-size: 1.0625rem; /* 17px — аккуратно помещается в 5 колонок */
+    }
+}
+
+/* Описание шага */
+.apple-step-description {
+    color: #86868b;
+    line-height: 1.4;
+    
+    /* Размеры для Мобильных (по умолчанию) */
+    font-size: 1.1rem; /* 15px */
+}
+
+/* Размеры описания для ПК (экран от 1024px) */
+@media (min-width: 1024px) {
+    .apple-step-description {
+        font-size: 1rem; /* 14px */
+    }
+}
+
+/* =========================================
+   APPLE FEATURE ITEM STYLE (Зелёные галочки)
+   ========================================= */
+
+.apple-feature-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem; /* gap-3 (12px) */
+}
+
+/* Круглая обёртка для зелёной галочки */
+.apple-feature-icon {
+    width: 1.25rem; /* 20px */
+    height: 1.25rem; /* 20px */
+    border-radius: 9999px;
+    background-color: rgba(16, 185, 129, 0.1); /* bg-emerald-500/10 */
+    color: #059669; /* text-emerald-600 */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.apple-feature-icon svg {
+    width: 0.875rem; /* 14px */
+    height: 0.875rem; /* 14px */
+    stroke-width: 3;
+}
+
+/* Текст преимущества */
+.apple-feature-text {
+    font-weight: 500;
+    color: #1d1d1f;
+    line-height: 1.4;
+    
+    /* Мобильный размер */
+    font-size: 1.1rem; /* 14px */
+}
+
+/* Размер для ПК (экран от 1024px) */
+@media (min-width: 1024px) {
+    .apple-feature-text {
+        font-size: 1rem; /* 16px */
     }
 }

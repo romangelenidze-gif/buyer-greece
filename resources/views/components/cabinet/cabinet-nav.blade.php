@@ -93,7 +93,7 @@
     <!-- Bottom: Language Switcher -->
     <div class="pt-4 border-t border-white/10">
         <div class="bg-white/5 p-3 rounded-2xl border border-white/10 flex items-center justify-between">
-            <span class="text-xs text-gray-400 font-medium">{{ __('Язык интерфейса') }}</span>
+            <span class="app-badge-text text-gray-400">{{ __('Язык интерфейса') }}</span>
             <x-language-switcher theme="dark" direction="up" />
         </div>
     </div>

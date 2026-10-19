@@ -2,8 +2,8 @@
     <div class="max-w-4xl mx-auto space-y-6">
 
         <div>
-            <h1 class="apple-section-title">{{ __('Настройки профиля') }}</h1>
-            <p class="apple-section-subtitle">{{ __('Управляйте личными данными и персональным кодом Camex для доставки в Грузию.') }}</p>
+            <h1 class="apple-section-title text-left">{{ __('Настройки профиля') }}</h1>
+            <p class="apple-section-subtitle text-left">{{ __('Управляйте личными данными и персональным кодом Camex для доставки в Грузию.') }}</p>
         </div>
 
         <form action="{{ route('profile.update') }}" method="POST" class="apple-card space-y-6">
@@ -98,7 +98,7 @@
                             placeholder="{{ __('например: CAMEX-12345') }}" 
                             class="apple-search-input !px-4 !py-3 !rounded-2xl w-full sm:w-1/2"
                         >
-                        <p class="text-xs text-[#86868b] mt-1.5">{{ __('Указывается при отправке посылок со склада в Греции в филиал Camex в Тбилиси/Батуми.') }}</p>
+                        <p class="app-text-muted mt-1.5">{{ __('Указывается при отправке посылок со склада в Греции в филиал Camex в Тбилиси/Батуми.') }}</p>
                         @error('camex_personal_number')
                             <p class="text-xs text-rose-600 mt-1">{{ $message }}</p>
                         @enderror

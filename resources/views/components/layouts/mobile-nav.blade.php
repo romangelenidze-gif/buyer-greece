@@ -1,69 +1,109 @@
-<!-- RIGHT SIDEBAR / APPLE DRAWER -->
-<div 
-    x-show="mobileNavOpen" 
-    x-transition:enter="transition-opacity ease-linear duration-300" 
-    x-transition:enter-start="opacity-0" 
-    x-transition:enter-end="opacity-100" 
-    x-transition:leave="transition-opacity ease-linear duration-300" 
-    x-transition:leave-start="opacity-100" 
-    x-transition:leave-end="opacity-0" 
-    x-cloak 
-    class="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm"
-    @click="mobileNavOpen = false"
-></div>
+@php
+    $primaryLinks = [
+        ['route' => 'home',         'label' => __('Главная')],
+        ['route' => 'how-it-works', 'label' => __('Как это работает')],
+        ['route' => 'buy-for-me',   'label' => __('Выкупите за меня')],
+        ['route' => 'forwarding',   'label' => __('Форвардинг')],
+    ];
+    $offset = count($primaryLinks);
+@endphp
 
-<div 
-    x-show="mobileNavOpen" 
-    x-transition:enter="transition ease-in-out duration-300 transform" 
-    x-transition:enter-start="translate-x-full" 
-    x-transition:enter-end="translate-x-0" 
-    x-transition:leave="transition ease-in-out duration-300 transform" 
-    x-transition:leave-start="translate-x-0" 
-    x-transition:leave-end="translate-x-full" 
-    x-cloak 
-    class="fixed inset-y-0 right-0 z-50 w-full sm:w-80 bg-white/95 backdrop-blur-2xl border-l border-black/[0.08] shadow-2xl flex flex-col justify-between py-5 px-5"
+<div x-show="mobileNavOpen"
+    x-effect="mobileNavOpen ? document.body.classList.add('overflow-hidden') : document.body.classList.remove('overflow-hidden')"
+    @keydown.escape.window="mobileNavOpen = false"
+    @resize.window="if (window.innerWidth >= 1024) mobileNavOpen = false"
+    class="lg:hidden"
 >
-    <!-- Top: Compact Menu with Close Button beside the first item -->
-    <div class="space-y-3">
-        <div class="flex items-center gap-2">
-            <a href="{{ route('home') }}" @click="mobileNavOpen = false" class="flex-grow flex items-center gap-3 px-4 py-3 rounded-2xl transition-all {{ request()->routeIs('home') ? 'bg-[#0071e3] text-white font-semibold shadow-xs' : 'text-[#1d1d1f] hover:bg-black/[0.04]' }}">
-                {{ __('Главная') }}
-            </a>
-            <button @click="mobileNavOpen = false" type="button" class="p-2 text-gray-500 hover:text-[#1d1d1f] rounded-full hover:bg-black/[0.04] transition-colors cursor-pointer shrink-0" aria-label="Закрыть">
-                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-            </button>
+    <div
+        x-show="mobileNavOpen"
+        x-cloak
+        x-transition:enter="apple-sheet-enter"
+        x-transition:enter-start="apple-sheet-enter-start"
+        x-transition:enter-end="apple-sheet-enter-end"
+        x-transition:leave="apple-sheet-leave"
+        x-transition:leave-start="apple-sheet-leave-start"
+        x-transition:leave-end="apple-sheet-leave-end"
+        class="apple-sheet fixed inset-0 z-[100] flex flex-col overflow-y-auto !bg-[#fbfbfd]"
+        role="dialog"
+        aria-modal="true"
+        aria-label="{{ __('Меню') }}"
+    >
+        <!-- Шапка шторки точно повторяет сетку хедера, чтобы крестик встал пиксель в пиксель на место гамбургера -->
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full shrink-0">
+            <div class="flex items-center justify-end h-20">
+                <button type="button" @click="mobileNavOpen = false" aria-label="{{ __('Закрыть') }}"
+                        class="p-2 text-gray-700 rounded-full hover:bg-gray-100 transition-colors cursor-pointer focus:outline-none">
+                    <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
         </div>
 
-        <!-- Navigation Links inside Drawer -->
-        <nav class="space-y-1 text-sm font-medium">
-            <a href="{{ route('how-it-works') }}" @click="mobileNavOpen = false" class="flex items-center gap-3 px-4 py-3 rounded-2xl transition-all {{ request()->routeIs('how-it-works') ? 'bg-[#0071e3] text-white font-semibold shadow-xs' : 'text-[#1d1d1f] hover:bg-black/[0.04]' }}">
-                {{ __('Как это работает') }}
-            </a>
-            <a href="{{ route('buy-for-me') }}" @click="mobileNavOpen = false" class="flex items-center gap-3 px-4 py-3 rounded-2xl transition-all {{ request()->routeIs('buy-for-me') ? 'bg-[#0071e3] text-white font-semibold shadow-xs' : 'text-[#1d1d1f] hover:bg-black/[0.04]' }}">
-                {{ __('Выкупите за меня') }}
-            </a>
-            <a href="{{ route('forwarding') }}" @click="mobileNavOpen = false" class="flex items-center gap-3 px-4 py-3 rounded-2xl transition-all {{ request()->routeIs('forwarding') ? 'bg-[#0071e3] text-white font-semibold shadow-xs' : 'text-[#1d1d1f] hover:bg-black/[0.04]' }}">
-                {{ __('Форвардинг (Адрес в Греции)') }}
-            </a>
-            <a href="{{ route('help') }}" @click="mobileNavOpen = false" class="flex items-center gap-3 px-4 py-3 rounded-2xl transition-all {{ request()->routeIs('help') ? 'bg-[#0071e3] text-white font-semibold shadow-xs' : 'text-[#1d1d1f] hover:bg-black/[0.04]' }}">
-                {{ __('Помощь / FAQ') }}
-            </a>
+        <!-- Контейнер пунктов меню: подняты высоко вверх под шапку (как на эталоне Apple) -->
+        <div class="max-w-7xl mx-auto px-10 sm:px-12 lg:px-8 w-full flex-1 flex flex-col pb-8 pt-0 -mt-3 sm:-mt-4">
+            <nav class="flex flex-1 flex-col">
+                <!-- Основные пункты меню с надежным синим выделением активного роута -->
+                <ul class="space-y-1">
+                    @foreach ($primaryLinks as $link)
+                        @php 
+                            $active = request()->routeIs($link['route']); 
+                            $linkStyle = $active ? 'color: #0071e3; font-weight: 700;' : 'color: #1d1d1f;';
+                        @endphp
+                        <li class="apple-item" style="--i: {{ $loop->index }}">
+                            <a href="{{ route($link['route']) }}" @click="mobileNavOpen = false"
+                               @if ($active) aria-current="page" @endif
+                               class="apple-section-title block py-1.5 !text-2xl sm:!text-3xl transition-colors hover:opacity-60"
+                               style="{{ $linkStyle }}">
+                                {{ $link['label'] }}
+                            </a>
+                        </li>
+                    @endforeach
+                </ul>
 
-            @guest
-                <a href="{{ route('login') }}" @click="mobileNavOpen = false" class="flex items-center gap-3 px-4 py-3 rounded-2xl transition-all text-[#1d1d1f] hover:bg-black/[0.04]">
-                    {{ __('Войти в аккаунт') }}
-                </a>
-            @endguest
-        </nav>
-    </div>
+                <!-- Вторичные ссылки -->
+                <ul class="apple-item mt-6 space-y-1 border-t border-black/[0.08] pt-4" style="--i: {{ $offset }}">
+                    <li>
+                        @php 
+                            $helpActive = request()->routeIs('help'); 
+                            $helpStyle = $helpActive ? 'color: #0071e3; font-weight: 700;' : 'color: #1d1d1f;';
+                        @endphp
+                        <a href="{{ route('help') }}" @click="mobileNavOpen = false"
+                           @if ($helpActive) aria-current="page" @endif
+                           class="app-card-title block py-1.5 transition-colors hover:opacity-60"
+                           style="{{ $helpStyle }}">
+                            {{ __('Помощь / FAQ') }}
+                        </a>
+                    </li>
+                    <li>
+                        @auth
+                            @php 
+                                $dashActive = request()->routeIs('dashboard'); 
+                                $dashStyle = $dashActive ? 'color: #0071e3; font-weight: 700;' : 'color: #1d1d1f;';
+                            @endphp
+                            <a href="{{ route('dashboard') }}" @click="mobileNavOpen = false"
+                               @if ($dashActive) aria-current="page" @endif
+                               class="app-card-title block py-1.5 transition-colors hover:opacity-60"
+                               style="{{ $dashStyle }}">
+                                {{ __('Личный кабинет') }}
+                            </a>
+                        @else
+                            <a href="{{ route('login') }}" @click="mobileNavOpen = false"
+                               class="app-card-title block py-1.5 transition-colors hover:opacity-60"
+                               style="color: #0071e3; font-weight: 700;">
+                                {{ __('Войти в аккаунт') }}
+                            </a>
+                        @endauth
+                    </li>
+                </ul>
 
-    <!-- Bottom: Language Switcher as the very last element -->
-    <div class="pt-4 border-t border-black/[0.08]">
-        <div class="bg-black/[0.03] p-3 rounded-2xl border border-black/[0.06] flex items-center justify-between">
-            <span class="text-xs text-[#86868b] font-medium">{{ __('Язык интерфейса') }}</span>
-            <x-language-switcher theme="light" direction="up" />
+                <!-- Нижняя панель переключения языка -->
+                <div class="apple-item mt-auto pt-4 flex items-center justify-between border-t border-black/[0.08]"
+                     style="--i: {{ $offset + 1 }}; padding-bottom: max(1rem, env(safe-area-inset-bottom))">
+                    <span class="app-badge-text text-[#86868b]">{{ __('Язык интерфейса') }}</span>
+                    <x-language-switcher theme="light" direction="up" />
+                </div>
+            </nav>
         </div>
     </div>
 </div>

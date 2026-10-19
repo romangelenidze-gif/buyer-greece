@@ -2,11 +2,11 @@
     title="{{ __('Как это работает | Buyer Greece') }}"
     description="{{ __('Пошаговое руководство по выкупу товаров и форвардингу из Греции в Грузию.') }}"
 >
-    <div class="py-12 bg-[#f2f2f2] min-h-[calc(100vh-4rem)]">
+    <div class="py-6 bg-[#f2f2f2] min-h-[calc(100vh-4rem)]">
         <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
             <div class="text-center space-y-2">
-                <h1 class="apple-section-title">{{ __('Как работает сервис') }}</h1>
-                <p class="apple-section-subtitle">{{ __('Простой и прозрачный процесс от заявки до получения') }}</p>
+                <h1 class="apple-section-title text-left sm:text-center">{{ __('Как работает сервис') }}</h1>
+                <p class="apple-section-subtitle text-left sm:text-center">{{ __('Простой и прозрачный процесс от заявки до получения') }}</p>
             </div>
 
             <div class="apple-card space-y-6">
@@ -27,16 +27,13 @@
             </div>
            
             <!-- STILL NEED HELP CTA -->
-            <div class="bg-[#1d1d1f] text-white rounded-[2.5rem] p-8 sm:p-10 text-center space-y-4 shadow-xl">
-                <h3 class="text-2xl font-semibold tracking-tight">{{ __('Остались вопросы по процессам?') }}</h3>
-                <p class="text-sm text-[#86868b] max-w-md mx-auto leading-relaxed">
+            <div class="bg-[#1d1d1f] text-white rounded-4xl p-8 sm:p-10 text-center space-y-4 shadow-xl">
+                <h3 class="text-xl sm:text-2xl font-semibold tracking-tight">{{ __('Остались вопросы по процессам?') }}</h3>
+                <p class="text-xs sm:text-sm text-[#86868b] max-w-md mx-auto leading-relaxed">
                     {{ __('Напишите нам напрямую, если вам требуется помощь с оформлением или консультация по греческим магазинам.') }}
                 </p>
-                
-                <!-- Кнопки мессенджеров в ряд -->
                 <x-messenger-row align="justify-center" />
             </div>
-
 
         </div>
     </div>
