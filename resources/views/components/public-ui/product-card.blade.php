@@ -1,23 +1,26 @@
 @props(['product'])
 
-<div class="relative h-[460px] w-full rounded-[28px] overflow-hidden shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-500 group flex flex-col justify-between bg-[#f5f5f7] border border-black/[0.06]">
+@php
+    $rawImg = $product['image_url'] ?? $product['image_path'] ?? $product['image'] ?? null;
+    if (is_array($rawImg)) {
+        $rawImg = reset($rawImg);
+    }
+    
+    $imgUrl = null;
+    if (!empty($rawImg)) {
+        $imgUrl = filter_var($rawImg, FILTER_VALIDATE_URL) 
+            ? $rawImg 
+            : (\Illuminate\Support\Facades\Storage::disk('public')->exists($rawImg) 
+                ? \Illuminate\Support\Facades\Storage::url($rawImg) 
+                : asset('storage/' . $rawImg));
+    }
+@endphp
+
+<div class="apple-product-card group">
     
     <!-- Верхний белый блок под фото -->
-    <div class="relative h-[320px] w-full bg-white rounded-b-[24px] p-5 flex items-center justify-center overflow-hidden shrink-0">
+    <div class="apple-product-card-top">
         
-        @php
-            $rawImg = $product['image_url'] ?? $product['image_path'] ?? $product['image'] ?? null;
-            if (is_array($rawImg)) {
-                $rawImg = reset($rawImg);
-            }
-            if (!empty($rawImg)) {
-                $imgUrl = filter_var($rawImg, FILTER_VALIDATE_URL) ? $rawImg : (\Illuminate\Support\Facades\Storage::disk('public')->exists($rawImg) ? \Illuminate\Support\Facades\Storage::url($rawImg) : asset('storage/' . $rawImg));
-            } else {
-                $imgUrl = null;
-            }
-        @endphp
-
-        <!-- Изображение товара -->
         <div class="w-full h-full flex items-center justify-center relative">
             @if(!empty($imgUrl))
                 <img src="{{ $imgUrl }}" 
@@ -32,7 +35,7 @@
             @endif
         </div>
 
-        <!-- Бейдж магазина и ссылка -->
+        <!-- Бейдж магазина и внешняя ссылка -->
         <div class="absolute inset-x-0 top-0 p-3.5 flex items-center justify-between z-10 pointer-events-none">
             <span class="inline-flex items-center px-2.5 py-1 rounded-full app-badge-text bg-white/80 backdrop-blur-md text-[#1d1d1f] shadow-2xs pointer-events-auto">
                 {{ $product['merchant_name'] ?? __('Греция') }}
@@ -47,31 +50,33 @@
         </div>
     </div>
 
-    <!-- Текстовый блок внизу на сером фоне -->
-    <div class="p-4 flex-1 flex items-end justify-between gap-2 bg-[#f5f5f7]">
+    <!-- Текстовый блок внизу на серой плашке -->
+    <div class="apple-product-card-bottom">
+        
+        <!-- Левая колонка: Название, рейтинг, описание -->
         <div class="space-y-1.5 flex-1 pr-1 min-w-0">
-            <h3 class="app-card-title line-clamp-2">
+            <h3 class="apple-product-title">
                 {{ $product['title'] ?? '' }}
             </h3>
             
-            <div class="flex items-center gap-1 text-xs text-[#86868b]">
-                <span class="text-amber-500 font-medium">★★★★☆</span>
-                <span class="ml-0.5 font-normal">({{ $product['offers_count'] ?? 1 }})</span>
+            <div class="apple-product-rating">
+                <span class="apple-product-stars">★★★★☆</span>
+                <span>({{ $product['offers_count'] ?? 1 }})</span>
             </div>
 
-            <p class="app-text-muted line-clamp-2">
+            <p class="apple-product-desc">
                 {{ $product['short_description'] ?? '' }}
             </p>
         </div>
 
-        <!-- Цена и кнопка заказа -->
+        <!-- Правая колонка: Цена и синяя кнопка -->
         <div class="flex flex-col items-end justify-between space-y-3 shrink-0">
             <div class="text-right">
-                <div class="app-price">
+                <div class="apple-product-price">
                     @if(!empty($product['price_amount']))
                         €{{ number_format($product['price_amount'], 2) }}
                     @else
-                        {{ $product['price_note'] ?? __('Уточняется') }}
+                        <span class="apple-product-price-note">{{ $product['price_note'] ?? __('Уточняется') }}</span>
                     @endif
                 </div>
             </div>
@@ -79,12 +84,13 @@
             <div class="flex flex-col space-y-2">
                 <a href="{{ route('buy-for-me') }}?url={{ urlencode($product['product_url'] ?? '') }}" 
                    title="{{ __('Оформить заказ') }}"
-                   class="w-10 h-10 rounded-full bg-[#1d1d1f] hover:bg-black text-white shadow-md hover:shadow-lg hover:scale-105 active:scale-95 flex items-center justify-center transition-all">
+                   class="apple-product-cart-btn">
                     <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
                     </svg>
                 </a>
             </div>
         </div>
+
     </div>
 </div>

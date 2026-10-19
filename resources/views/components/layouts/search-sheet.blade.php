@@ -22,12 +22,12 @@
         x-transition:leave="apple-sheet-leave"
         x-transition:leave-start="apple-sheet-leave-start"
         x-transition:leave-end="apple-sheet-leave-end"
-        class="apple-sheet fixed inset-0 z-[100] flex flex-col overflow-y-auto !bg-[#fbfbfd]"
+        class="apple-sheet fixed inset-0 z-[100] flex flex-col overflow-y-auto bg-[#fbfbfd]"
         role="dialog"
         aria-modal="true"
         aria-label="{{ __('Поиск') }}"
     >
-        <!-- Шапка шторки: увеличенные отступы по бокам (px-6 sm:px-8), чтобы крестик не прилипал к краю -->
+        <!-- Шапка шторки -->
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full shrink-0">
             <div class="flex items-center justify-end h-20">
                 <button type="button" @click="searchOpen = false" aria-label="{{ __('Закрыть поиск') }}"
@@ -39,22 +39,22 @@
             </div>
         </div>
 
-        <!-- Контент умного поиска с комфортными отступами слева и справа -->
+        <!-- Контент умного поиска -->
         <div class="max-w-3xl mx-auto px-6 sm:px-8 lg:px-8 w-full flex-1 flex flex-col pb-12 pt-2">
             <div class="space-y-6">
                 
                 <!-- Заголовок -->
                 <div class="text-center space-y-2">
-                    <h2 class="apple-section-title !text-2xl sm:!text-3xl">
+                    <h2 class="apple-section-title">
                         {{ __('Умный поиск в Греции') }}
                     </h2>
-                    <p class="app-text-muted text-sm">
+                    <p class="app-text-sub">
                         {{ __('Опишите любой товар на вашем языке. ИИ подберет предложения в греческих магазинах.') }}
                     </p>
                 </div>
 
-                <!-- Поисковая строка (капсула с крупным текстом ввода) -->
-                <div class="bg-white p-3 sm:p-4 rounded-full shadow-[0_10px_30px_rgba(0,0,0,0.05)] border border-black/[0.08]">
+                <!-- Поисковая строка -->
+                <div class="bg-white p-3.5 sm:p-4 rounded-full shadow-[0_10px_30px_rgba(0,0,0,0.05)] border border-black/[0.08]">
                     <form action="{{ route('product-search') }}" method="GET" class="flex items-center gap-2" x-data="{ loading: false }" @submit="loading = true">
                         <div class="relative flex-1 w-full flex items-center">
                             <span class="absolute left-3.5 pointer-events-none text-[#86868b] flex items-center">
@@ -71,7 +71,7 @@
                                 maxlength="200"
                                 x-ref="searchInput"
                                 x-effect="if (searchOpen) setTimeout(() => $refs.searchInput.focus(), 100)"
-                                class="w-full pl-12 pr-4 py-2 bg-transparent border-0 text-xl sm:text-xl font-semibold text-[#1d1d1f] placeholder-[#86868b] focus:outline-none focus:ring-0"
+                                class="w-full pl-12 pr-4 py-2 bg-transparent border-0 app-text-title text-xl text-[#1d1d1f] placeholder-[#86868b] focus:outline-none focus:ring-0"
                             >
                         </div>
                     </form>
@@ -79,10 +79,10 @@
 
                 <!-- Быстрые подсказки -->
                 <div class="pt-4 space-y-3">
-                    <h3 class="app-badge-text text-[#86868b] tracking-wider">{{ __('Быстрый поиск и категории') }}</h3>
+                    <h3 class="app-badge-text text-[#86868b]">{{ __('Быстрый поиск и категории') }}</h3>
                     <div class="flex flex-wrap gap-2">
                         @foreach($quickQueries as $item)
-                            <a href="{{ route('product-search', ['q' => $item['query']]) }}" @click="searchOpen = false" class="px-4 py-2 rounded-full bg-black/[0.04] hover:bg-black/[0.08] text-xs font-medium text-[#1d1d1f] transition-colors">
+                            <a href="{{ route('product-search', ['q' => $item['query']]) }}" @click="searchOpen = false" class="px-4 py-2 rounded-full bg-black/[0.04] hover:bg-black/[0.08] app-text-sub font-medium text-[#1d1d1f] transition-colors">
                                 {{ $item['label'] }}
                             </a>
                         @endforeach

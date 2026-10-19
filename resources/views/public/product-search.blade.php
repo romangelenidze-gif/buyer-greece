@@ -6,7 +6,7 @@
 <div class="min-h-[calc(100vh-4rem)] bg-[#fbfbfd] text-[#1d1d1f] antialiased selection:bg-[#0071e3] selection:text-white py-12 px-6 sm:px-8 lg:px-8">
     <div class="max-w-7xl mx-auto space-y-10">
         
-        <!-- APPLE HERO HEADER (Показываем только до выполнения поиска) -->
+        <!-- APPLE HERO HEADER -->
         @if(is_null($searchResult))
             <div class="text-center space-y-3 max-w-2xl mx-auto">
                 <h1 class="apple-section-title text-left sm:text-center">
@@ -35,7 +35,7 @@
                             placeholder="{{ __('Например: оливковое масло 5л или кроссовки Adidas...') }}" 
                             required
                             maxlength="200"
-                            class="w-full pl-12 pr-4 py-2 bg-transparent border-0 text-lg sm:text-xl font-semibold text-[#1d1d1f] placeholder-[#86868b] focus:outline-none focus:ring-0"
+                            class="w-full pl-12 pr-4 py-2 bg-transparent border-0 app-text-title text-[#1d1d1f] placeholder-[#86868b] focus:outline-none focus:ring-0"
                         >
                     </div>
                 </form>
@@ -48,12 +48,12 @@
                 
                 <!-- RECOMMENDATION BANNER -->
                 <div class="max-w-3xl flex items-center gap-3">
-                    <div class="w-7 h-7 rounded-full bg-[#0071e3]/10 text-[#0071e3] flex items-center justify-center flex-shrink-0">
+                    <div class="w-7 h-7 rounded-full bg-[#0071e3]/10 text-[#0071e3] flex items-center justify-center shrink-0">
                         <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
                     </div>
-                    <p class="text-xs sm:text-sm text-[#86868b] leading-relaxed m-0">{{ $searchResult['recommendation'] }}</p>
+                    <p class="text-[#86868b] m-0">{{ $searchResult['recommendation'] }}</p>
                 </div>
 
                 <!-- PRODUCTS GRID -->
@@ -65,8 +65,8 @@
                     </div>
                 @else
                     <div class="apple-card text-center max-w-md mx-auto space-y-2 py-10 bg-white">
-                        <h4 class="text-sm font-semibold text-[#1d1d1f]">{{ __('Ничего не найдено') }}</h4>
-                        <p class="text-xs text-[#86868b]">{{ __('По вашему запросу ничего не найдено. Попробуйте изменить формулировку.') }}</p>
+                        <h4 class="app-text-title">{{ __('Ничего не найдено') }}</h4>
+                        <p class="app-text-sub">{{ __('По вашему запросу ничего не найдено. Попробуйте изменить формулировку.') }}</p>
                     </div>
                 @endif
 

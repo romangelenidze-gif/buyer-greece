@@ -1,11 +1,13 @@
 @props(['theme' => 'light', 'direction' => 'down'])
 
 <div x-data="{ open: false }" class="relative inline-block text-left" @click.outside="open = false">
-    <button @click="open = !open" type="button" class="apple-nav-link flex items-center gap-1.5">
-        <svg class="w-4 h-4 opacity-70" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+    <button @click="open = !open" 
+            type="button" 
+            class="apple-lang-btn theme-{{ $theme }}">
+        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
         </svg>
-        <span class="uppercase tracking-wide">{{ app()->getLocale() }}</span>
+        <span class="uppercase tracking-wide font-semibold">{{ app()->getLocale() }}</span>
     </button>
 
     <div x-show="open" 

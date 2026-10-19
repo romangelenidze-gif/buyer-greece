@@ -4,7 +4,7 @@
         <!-- HEADER & BACK BUTTON -->
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
-                <a href="{{ route('dashboard') }}" class="inline-flex items-center gap-1 text-xs text-[#86868b] hover:text-[#1d1d1f] transition-colors mb-2">
+                <a href="{{ route('dashboard') }}" class="inline-flex items-center gap-1 app-text-sub hover:text-[#1d1d1f] transition-colors mb-2">
                     <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
                     </svg>
@@ -14,49 +14,49 @@
                     <h1 class="apple-section-title">
                         {{ __('Заказ №') }} {{ $order->public_order_number }}
                     </h1>
-                    <span class="px-3 py-1 text-xs font-medium rounded-full bg-amber-100/80 text-amber-900 border border-amber-200/60">
+                    <span class="px-3 py-1 app-text-sub font-medium rounded-full bg-amber-100/80 text-amber-900 border border-amber-200/60">
                         {{ is_object($order->status) ? $order->status->value : $order->status }}
                     </span>
                 </div>
             </div>
             
-            <div class="text-xs text-[#86868b]">
+            <div class="app-text-sub">
                 {{ __('Создан:') }} {{ $order->created_at ? $order->created_at->format('d.m.Y H:i') : now()->format('d.m.Y') }}
             </div>
         </div>
 
         <!-- SECTION 1: ORDER ITEMS -->
         <div class="apple-card space-y-4">
-            <h2 class="text-base font-semibold text-[#1d1d1f] border-b border-black/[0.06] pb-3">{{ __('Товары в заказе') }}</h2>
+            <h2 class="app-text-title border-b border-black/[0.06] pb-3">{{ __('Товары в заказе') }}</h2>
 
             @forelse($order->items as $item)
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 py-3 border-b border-black/[0.06] last:border-0">
                     <div class="space-y-1">
-                        <h3 class="font-semibold text-[#1d1d1f] text-sm">{{ $item->product_name }}</h3>
+                        <h3 class="app-text-title">{{ $item->product_name }}</h3>
                         @if($item->product_url)
-                            <a href="{{ $item->product_url }}" target="_blank" class="text-xs text-[#0071e3] hover:underline inline-flex items-center gap-1">
+                            <a href="{{ $item->product_url }}" target="_blank" class="app-text-sub text-[#0071e3] hover:underline inline-flex items-center gap-1">
                                 <span>{{ __('Открыть ссылку на товар') }}</span>
                                 <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                                 </svg>
                             </a>
                         @endif
-                        <div class="flex flex-wrap gap-2 text-xs text-[#86868b] pt-1">
+                        <div class="flex flex-wrap gap-2 app-text-sub pt-1">
                             @if($item->size) <span>{{ __('Размер:') }} <strong class="text-[#1d1d1f]">{{ $item->size }}</strong></span> @endif
                             @if($item->color) <span>{{ __('Цвет:') }} <strong class="text-[#1d1d1f]">{{ $item->color }}</strong></span> @endif
                             @if($item->model) <span>{{ __('Модель:') }} <strong class="text-[#1d1d1f]">{{ $item->model }}</strong></span> @endif
                         </div>
                     </div>
 
-                    <div class="text-right flex sm:flex-col justify-between items-center sm:items-end text-xs">
-                        <span class="text-[#86868b]">{{ __('Количество:') }} <strong>{{ $item->quantity }} {{ __('шт.') }}</strong></span>
+                    <div class="text-right flex sm:flex-col justify-between items-center sm:items-end app-text-sub">
+                        <span>{{ __('Количество:') }} <strong>{{ $item->quantity }} {{ __('шт.') }}</strong></span>
                         @if($item->total_price)
-                            <span class="text-sm font-semibold text-[#1d1d1f]">€{{ number_format($item->total_price, 2) }}</span>
+                            <span class="app-text-title font-semibold">€{{ number_format($item->total_price, 2) }}</span>
                         @endif
                     </div>
                 </div>
             @empty
-                <div class="text-sm text-[#86868b] py-4 text-center">
+                <div class="app-text-sub py-4 text-center">
                     {{ __('Информация о позициях обновляется менеджером.') }}
                 </div>
             @endforelse
@@ -72,25 +72,25 @@
 
             <div class="apple-card space-y-6">
                 <div class="flex items-center justify-between border-b border-black/[0.06] pb-3">
-                    <h2 class="text-base font-semibold text-[#1d1d1f]">{{ __('Расчет стоимости (Quote)') }}</h2>
+                    <h2 class="app-text-title">{{ __('Расчет стоимости (Quote)') }}</h2>
                     
                     @if($isAccepted)
-                        <span class="text-xs text-emerald-700 font-medium bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200/60">
+                        <span class="app-text-sub text-emerald-700 font-medium bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200/60">
                             {{ __('Расчет принят') }}
                         </span>
                     @elseif($isRejected)
-                        <span class="text-xs text-rose-700 font-medium bg-rose-50 px-3 py-1 rounded-full border border-rose-200/60">
+                        <span class="app-text-sub text-rose-700 font-medium bg-rose-50 px-3 py-1 rounded-full border border-rose-200/60">
                             {{ __('Расчет отклонен') }}
                         </span>
                     @else
-                        <span class="text-xs text-amber-700 font-medium bg-amber-50 px-3 py-1 rounded-full border border-amber-200/60">
+                        <span class="app-text-sub text-amber-700 font-medium bg-amber-50 px-3 py-1 rounded-full border border-amber-200/60">
                             {{ __('Ожидает вашего подтверждения') }}
                         </span>
                     @endif
                 </div>
 
                 <!-- PRICE BREAKDOWN TABLE -->
-                <div class="space-y-2 text-sm text-[#86868b]">
+                <div class="space-y-2 app-text-body text-[#86868b]">
                     <div class="flex justify-between">
                         <span>{{ __('Стоимость товаров:') }}</span>
                         <span class="font-medium text-[#1d1d1f]">€{{ number_format($quote->product_total, 2) }}</span>
@@ -118,7 +118,7 @@
                         </div>
                     @endif
 
-                    <div class="flex justify-between pt-3 border-t border-black/[0.06] text-base font-semibold text-[#1d1d1f]">
+                    <div class="flex justify-between pt-3 border-t border-black/[0.06] app-text-title">
                         <span>{{ __('Итого к оплате:') }}</span>
                         <span class="text-[#0071e3]">€{{ number_format($quote->total, 2) }}</span>
                     </div>
@@ -127,21 +127,21 @@
                 <!-- ACCEPT / REJECT BUTTONS -->
                 @if(!$isAccepted && !$isRejected)
                     <div class="p-4 bg-[#f5f5f7] border border-black/[0.04] rounded-2xl space-y-3">
-                        <p class="text-xs text-[#86868b]">
+                        <p class="app-text-sub">
                             {{ __('Пожалуйста, проверьте итоговую стоимость. После принятия расчета станет доступна форма загрузки чека оплаты.') }}
                         </p>
                         
                         <div class="flex flex-col sm:flex-row gap-3 pt-1">
                             <form action="{{ route('orders.quotes.accept', [$order->id, $quote->id]) }}" method="POST" class="w-full sm:w-auto">
                                 @csrf
-                                <button type="submit" class="apple-search-button !relative !right-auto !top-auto !transform-none w-full py-3 text-center text-xs font-semibold cursor-pointer">
+                                <button type="submit" class="apple-btn-primary w-full text-center">
                                     {{ __('Принять расчет и перейти к оплате') }}
                                 </button>
                             </form>
 
                             <form action="{{ route('orders.quotes.reject', [$order->id, $quote->id]) }}" method="POST" class="w-full sm:w-auto">
                                 @csrf
-                                <button type="submit" class="w-full px-5 py-3 text-xs font-medium text-rose-700 bg-rose-50 hover:bg-rose-100/70 border border-rose-200/60 rounded-full transition-colors text-center cursor-pointer">
+                                <button type="submit" class="w-full px-5 py-3 app-text-sub font-medium text-rose-700 bg-rose-50 hover:bg-rose-100/70 border border-rose-200/60 rounded-full transition-colors text-center cursor-pointer">
                                     {{ __('Отклонить расчет') }}
                                 </button>
                             </form>
@@ -152,8 +152,8 @@
                 <!-- BANK TRANSFER PAYMENT FORM -->
                 @if($isAccepted || $order->active_quote_id === $quote->id)
                     <div class="bg-[#f5f5f7] border border-black/[0.04] rounded-2xl p-5 space-y-4">
-                        <h3 class="text-sm font-semibold text-[#1d1d1f]">{{ __('Оплата банковским переводом (Bank Transfer)') }}</h3>
-                        <p class="text-xs text-[#86868b] leading-relaxed">
+                        <h3 class="app-text-title">{{ __('Оплата банковским переводом (Bank Transfer)') }}</h3>
+                        <p class="app-text-sub leading-relaxed">
                             {{ __('Переведите итоговую сумму') }} <strong>€{{ number_format($quote->total, 2) }}</strong> {{ __('на банковские реквизиты сервиса и загрузите квитанцию об оплате ниже.') }}
                         </p>
 
@@ -176,7 +176,7 @@
                         <form action="{{ route('orders.payments.store', $order->id) }}" method="POST" enctype="multipart/form-data" class="space-y-4 pt-3 border-t border-black/[0.06]">
                             @csrf
                             <div>
-                                <label for="receipt" class="block text-xs font-semibold text-[#1d1d1f] mb-1.5">
+                                <label for="receipt" class="block app-text-sub font-semibold mb-1.5">
                                     {{ __('Квитанция / Чек оплаты (PDF, JPG, PNG до 10MB)') }} <span class="text-rose-500">*</span>
                                 </label>
                                 <input 
@@ -185,14 +185,14 @@
                                     id="receipt" 
                                     accept="image/*,.pdf" 
                                     required 
-                                    class="block w-full text-xs text-[#86868b] file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-black/[0.05] file:text-[#1d1d1f] hover:file:bg-black/[0.1] cursor-pointer"
+                                    class="block w-full app-text-sub file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:app-text-sub file:font-semibold file:bg-black/[0.05] file:text-[#1d1d1f] hover:file:bg-black/[0.1] cursor-pointer"
                                 >
                                 @error('receipt')
-                                    <p class="text-xs text-rose-600 mt-1">{{ $message }}</p>
+                                    <p class="app-text-sub text-rose-600 mt-1">{{ $message }}</p>
                                 @enderror
                             </div>
 
-                            <button type="submit" class="apple-search-button !relative !right-auto !top-auto !transform-none px-6 py-2.5 text-xs font-semibold cursor-pointer">
+                            <button type="submit" class="apple-btn-primary">
                                 {{ __('Отправить чек на проверку') }}
                             </button>
                         </form>
@@ -201,8 +201,8 @@
             </div>
         @else
             <div class="apple-card bg-blue-50/70 border-blue-200/60 text-center space-y-2">
-                <h3 class="text-sm font-semibold text-blue-900">{{ __('Расчет готовится менеджером') }}</h3>
-                <p class="text-xs text-blue-800">
+                <h3 class="app-text-title text-blue-900">{{ __('Расчет готовится менеджером') }}</h3>
+                <p class="app-text-sub text-blue-800">
                     {{ __('Мы проверяем наличие товара в греческом магазине. Когда расчет будет готов, здесь появится итоговая сумма и кнопка подтверждения.') }}
                 </p>
             </div>
@@ -211,10 +211,10 @@
         <!-- SUPPORT BOX -->
         <div class="apple-card flex flex-col sm:flex-row items-center justify-between gap-4">
             <div>
-                <h3 class="text-sm font-semibold text-[#1d1d1f]">{{ __('Нужна консультация по заказу?') }}</h3>
-                <p class="text-xs text-[#86868b] mt-0.5">{{ __('Менеджер ответит на любой вопрос по покупке, доставке или оплате.') }}</p>
+                <h3 class="app-text-title">{{ __('Нужна консультация по заказу?') }}</h3>
+                <p class="app-text-sub mt-0.5">{{ __('Менеджер ответит на любой вопрос по покупке, доставке или оплате.') }}</p>
             </div>
-            <div class="flex items-center gap-2 flex-shrink-0">
+            <div class="flex items-center gap-2 shrink-0">
                 <x-messenger type="telegram" :orderNumber="$order->public_order_number" size="small" />
                 <x-messenger type="whatsapp" :orderNumber="$order->public_order_number" size="small" />
             </div>

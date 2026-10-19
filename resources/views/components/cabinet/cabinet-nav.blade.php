@@ -25,7 +25,7 @@
     x-cloak 
     class="fixed inset-y-0 right-0 z-50 w-80 bg-[#1d1d1f]/95 backdrop-blur-2xl border-l border-white/10 shadow-2xl flex flex-col justify-between py-5 px-5"
 >
-    <!-- Top: User info & Close Button beside it -->
+    <!-- Top: User info & Close Button -->
     <div class="space-y-4">
         <div class="flex items-center justify-between pb-3 border-b border-white/10 gap-2">
             <div class="flex items-center gap-2.5 flex-grow min-w-0">
@@ -90,11 +90,6 @@
         </nav>
     </div>
 
-    <!-- Bottom: Language Switcher -->
-    <div class="pt-4 border-t border-white/10">
-        <div class="bg-white/5 p-3 rounded-2xl border border-white/10 flex items-center justify-between">
-            <span class="app-badge-text text-gray-400">{{ __('Язык интерфейса') }}</span>
-            <x-language-switcher theme="dark" direction="up" />
-        </div>
-    </div>
+    <!-- Пустой низ панели (без языкового переключателя) -->
+    <div></div>
 </div>

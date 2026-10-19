@@ -12,13 +12,13 @@
             <div class="lg:col-span-7 text-center lg:text-left space-y-6">
                 
                 <!-- Главный заголовок -->
-                <h1 class="apple-hero-title">
+                <h1 class="apple-hero-title text-left">
                     {{ __('Покупка и доставка любых товаров') }} 
                     <span class="text-[#0071e3]">{{ __('из магазинов Греции') }}</span>
                 </h1>
 
                 <!-- Подзаголовок (Normal уровень, 16px - 20px) -->
-                <p class="apple-hero-subtitle max-w-2xl">
+                <p class="apple-hero-subtitle max-w-2xl text-left">
                     {{ __('Находите нужные товары, мы поможем купить их в греческих магазинах и доставим в Грузию через надёжного партнёра Camex.') }}
                 </p>
 

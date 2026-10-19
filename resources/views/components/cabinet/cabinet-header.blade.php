@@ -10,7 +10,7 @@
                 </a>
             </div>
 
-            <!-- Right Actions: Profile & Hamburger (Extreme Right) -->
+            <!-- Right Actions: Profile, Language Switcher & Hamburger -->
             <div class="flex items-center gap-3">
                 <a href="{{ route('profile.show') }}" class="hidden sm:flex items-center gap-2 text-xs font-medium text-gray-300 hover:text-white bg-white/5 hover:bg-white/10 px-3.5 py-1.5 rounded-full border border-white/10 transition-colors">
                     <span class="w-5 h-5 rounded-full bg-[#0071e3] text-white font-bold flex items-center justify-center text-[10px]">
@@ -18,6 +18,9 @@
                     </span>
                     <span class="max-w-[120px] truncate">{{ Auth::user()->name ?? __('Клиент') }}</span>
                 </a>
+
+                <!-- Language Switcher (между профилем и гамбургером) -->
+                <x-language-switcher theme="dark" direction="down" />
 
                 <!-- Hamburger Button -->
                 <button @click="sidebarOpen = true" type="button" class="p-2 text-gray-300 hover:text-white rounded-xl hover:bg-white/5 transition-colors focus:outline-none cursor-pointer" aria-label="Открыть меню">
