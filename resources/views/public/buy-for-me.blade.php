@@ -46,19 +46,6 @@
                 </div>
             @else
 
-                <!-- GUEST NOTICE -->
-                @guest
-                    <div class="mb-6 p-4 bg-amber-50/70 border border-amber-200/60 rounded-2xl app-text-sub flex flex-col sm:flex-row items-center justify-between gap-4">
-                        <div>
-                            <strong>{{ __('Требуется авторизация:') }}</strong> {{ __('Чтобы отправить заявку и отслеживать её статус, войдите в аккаунт или зарегистрируйтесь.') }}
-                        </div>
-                        <div class="flex gap-2 w-full sm:w-auto">
-                            <a href="{{ route('login') }}" class="px-4 py-1.5 bg-[#0071e3] text-white app-text-xs rounded-full">{{ __('Войти') }}</a>
-                            <a href="{{ route('register') }}" class="px-4 py-1.5 bg-black/[0.05] text-[#1d1d1f] app-text-xs rounded-full">{{ __('Регистрация') }}</a>
-                        </div>
-                    </div>
-                @endguest
-
                 <!-- ORDER FORM -->
                 <form action="{{ route('orders.store') }}" method="POST" enctype="multipart/form-data" class="apple-card space-y-6">
                     @csrf
@@ -67,7 +54,68 @@
                         <input type="hidden" name="showcase_product_id" value="{{ $showcaseProduct->id ?? request('showcase_product_id') }}">
                     @endif
 
-                    <!-- SECTION 1: PRODUCT INFO -->
+                    <!-- SECTION 1: GUEST CONTACT INFO (ONLY FOR UNAUTHENTICATED USERS) -->
+                    @guest
+                        <div>
+                            <h2 class="app-text-title border-b border-black/[0.06] pb-3 mb-4">{{ __('Контактные данные') }}</h2>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div class="sm:col-span-2">
+                                    <label for="name" class="block app-text-sub font-semibold mb-1.5">
+                                        {{ __('Ваше имя и фамилия') }} <span class="text-rose-500">*</span>
+                                    </label>
+                                    <input 
+                                        type="text" 
+                                        name="name" 
+                                        id="name" 
+                                        value="{{ old('name') }}" 
+                                        required 
+                                        placeholder="{{ __('Иван Иванов') }}" 
+                                        class="w-full px-4 py-3 rounded-2xl bg-black/[0.03] border border-black/[0.08] app-text-body focus:bg-white focus:border-[#0071e3] focus:ring-4 focus:ring-[#0071e3]/10 transition-all outline-none"
+                                    >
+                                    @error('name')
+                                        <p class="app-text-sub text-rose-600 mt-1">{{ $message }}</p>
+                                    @enderror
+                                </div>
+
+                                <div>
+                                    <label for="email" class="block app-text-sub font-semibold mb-1.5">
+                                        {{ __('Ваш Email (для входа в кабинет)') }} <span class="text-rose-500">*</span>
+                                    </label>
+                                    <input 
+                                        type="email" 
+                                        name="email" 
+                                        id="email" 
+                                        value="{{ old('email') }}" 
+                                        required 
+                                        placeholder="user@example.com" 
+                                        class="w-full px-4 py-3 rounded-2xl bg-black/[0.03] border border-black/[0.08] app-text-body focus:bg-white focus:border-[#0071e3] focus:ring-4 focus:ring-[#0071e3]/10 transition-all outline-none"
+                                    >
+                                    @error('email')
+                                        <p class="app-text-sub text-rose-600 mt-1">{{ $message }}</p>
+                                    @enderror
+                                </div>
+
+                                <div>
+                                    <label for="phone" class="block app-text-sub font-semibold mb-1.5">
+                                        {{ __('Номер телефона (необязательно)') }}
+                                    </label>
+                                    <input 
+                                        type="tel" 
+                                        name="phone" 
+                                        id="phone" 
+                                        value="{{ old('phone') }}" 
+                                        placeholder="+995..." 
+                                        class="w-full px-4 py-3 rounded-2xl bg-black/[0.03] border border-black/[0.08] app-text-body focus:bg-white focus:border-[#0071e3] focus:ring-4 focus:ring-[#0071e3]/10 transition-all outline-none"
+                                    >
+                                    @error('phone')
+                                        <p class="app-text-sub text-rose-600 mt-1">{{ $message }}</p>
+                                    @enderror
+                                </div>
+                            </div>
+                        </div>
+                    @endguest
+
+                    <!-- SECTION 2: PRODUCT INFO -->
                     <div>
                         <h2 class="app-text-title border-b border-black/[0.06] pb-3 mb-4">{{ __('Информация о товаре') }}</h2>
                         
@@ -81,7 +129,7 @@
                                     type="url" 
                                     name="product_url" 
                                     id="product_url" 
-                                    value="{{ old('product_url', $showcaseProduct->partner_product_url ?? request('url')) }}"
+                                    value="{{ old('product_url', $showcaseProduct->partner_product_url ?? ($prefilled['url'] ?? request('url'))) }}"
                                     required 
                                     placeholder="https://www.zara.com/gr/..." 
                                     class="w-full px-4 py-3 rounded-2xl bg-black/[0.03] border border-black/[0.08] app-text-body focus:bg-white focus:border-[#0071e3] focus:ring-4 focus:ring-[#0071e3]/10 transition-all outline-none"
@@ -101,7 +149,7 @@
                                         type="text" 
                                         name="product_name" 
                                         id="product_name" 
-                                        value="{{ old('product_name', $showcaseProduct->name ?? '') }}"
+                                        value="{{ old('product_name', $showcaseProduct->name ?? ($prefilled['name'] ?? request('name'))) }}"
                                         required 
                                         placeholder="{{ __('например: Leather Jacket') }}" 
                                         class="w-full px-4 py-3 rounded-2xl bg-black/[0.03] border border-black/[0.08] app-text-body focus:bg-white focus:border-[#0071e3] focus:ring-4 focus:ring-[#0071e3]/10 transition-all outline-none"
@@ -130,25 +178,65 @@
                                 </div>
                             </div>
 
-                            <!-- Optional Attributes -->
-                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
+                            <!-- Attributes (Price, Size, Color, Model) -->
+                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-2">
+                                <div>
+                                    <label for="unit_price" class="block app-text-sub mb-1.5">{{ __('Цена за ед. (€)') }}</label>
+                                    <input 
+                                        type="number" 
+                                        step="0.01" 
+                                        min="0" 
+                                        name="unit_price" 
+                                        id="unit_price" 
+                                        value="{{ old('unit_price', $prefilled['price'] ?? ($showcaseProduct->price ?? request('price'))) }}" 
+                                        placeholder="0.00" 
+                                        class="w-full px-4 py-3 rounded-2xl bg-black/[0.03] border border-black/[0.08] app-text-body focus:bg-white focus:border-[#0071e3] focus:ring-4 focus:ring-[#0071e3]/10 transition-all outline-none"
+                                    >
+                                    @error('unit_price')
+                                        <p class="app-text-sub text-rose-600 mt-1">{{ $message }}</p>
+                                    @enderror
+                                </div>
+
                                 <div>
                                     <label for="size" class="block app-text-sub mb-1.5">{{ __('Размер (необязательно)') }}</label>
-                                    <input type="text" name="size" id="size" value="{{ old('size') }}" placeholder="M, L, 42..." class="w-full px-4 py-3 rounded-2xl bg-black/[0.03] border border-black/[0.08] app-text-body focus:bg-white focus:border-[#0071e3] focus:ring-4 focus:ring-[#0071e3]/10 transition-all outline-none">
+                                    <input 
+                                        type="text" 
+                                        name="size" 
+                                        id="size" 
+                                        value="{{ old('size') }}" 
+                                        placeholder="M, L, 42..." 
+                                        class="w-full px-4 py-3 rounded-2xl bg-black/[0.03] border border-black/[0.08] app-text-body focus:bg-white focus:border-[#0071e3] focus:ring-4 focus:ring-[#0071e3]/10 transition-all outline-none"
+                                    >
                                 </div>
+
                                 <div>
                                     <label for="color" class="block app-text-sub mb-1.5">{{ __('Цвет (необязательно)') }}</label>
-                                    <input type="text" name="color" id="color" value="{{ old('color') }}" placeholder="Black, Blue..." class="w-full px-4 py-3 rounded-2xl bg-black/[0.03] border border-black/[0.08] app-text-body focus:bg-white focus:border-[#0071e3] focus:ring-4 focus:ring-[#0071e3]/10 transition-all outline-none">
+                                    <input 
+                                        type="text" 
+                                        name="color" 
+                                        id="color" 
+                                        value="{{ old('color') }}" 
+                                        placeholder="Black, Blue..." 
+                                        class="w-full px-4 py-3 rounded-2xl bg-black/[0.03] border border-black/[0.08] app-text-body focus:bg-white focus:border-[#0071e3] focus:ring-4 focus:ring-[#0071e3]/10 transition-all outline-none"
+                                    >
                                 </div>
+
                                 <div>
                                     <label for="model" class="block app-text-sub mb-1.5">{{ __('Модель / Артикул') }}</label>
-                                    <input type="text" name="model" id="model" value="{{ old('model') }}" placeholder="Art. 12345" class="w-full px-4 py-3 rounded-2xl bg-black/[0.03] border border-black/[0.08] app-text-body focus:bg-white focus:border-[#0071e3] focus:ring-4 focus:ring-[#0071e3]/10 transition-all outline-none">
+                                    <input 
+                                        type="text" 
+                                        name="model" 
+                                        id="model" 
+                                        value="{{ old('model') }}" 
+                                        placeholder="Art. 12345" 
+                                        class="w-full px-4 py-3 rounded-2xl bg-black/[0.03] border border-black/[0.08] app-text-body focus:bg-white focus:border-[#0071e3] focus:ring-4 focus:ring-[#0071e3]/10 transition-all outline-none"
+                                    >
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- SECTION 2: ADDITIONAL INFO -->
+                    <!-- SECTION 3: ADDITIONAL INFO -->
                     <div>
                         <h2 class="app-text-title border-b border-black/[0.06] pb-3 mb-4">{{ __('Дополнительно') }}</h2>
                         
@@ -174,7 +262,7 @@
                             {{ __('Нажимая кнопку, вы отправляете товар на бесплатную проверку менеджером.') }}
                         </div>
 
-                        <button type="submit" @guest disabled @endguest class="apple-btn-primary w-full sm:w-auto">
+                        <button type="submit" class="apple-btn-primary w-full sm:w-auto">
                             {{ __('Отправить') }}
                         </button>
                     </div>

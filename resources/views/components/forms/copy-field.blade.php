@@ -3,7 +3,23 @@
     'label' => null,
 ])
 
-<div x-data="{ copied: false }" class="w-full">
+<div x-data="{ 
+    copied: false,
+    copyText(text) {
+        if (navigator.clipboard && window.isSecureContext) {
+            navigator.clipboard.writeText(text);
+        } else {
+            let input = document.createElement('textarea');
+            input.value = text;
+            document.body.appendChild(input);
+            input.select();
+            document.execCommand('copy');
+            document.body.removeChild(input);
+        }
+        this.copied = true;
+        setTimeout(() => this.copied = false, 2000);
+    }
+}" class="w-full">
     @if($label)
         <label class="block text-xs font-medium text-slate-500 mb-1">{{ $label }}</label>
     @endif
@@ -11,7 +27,7 @@
         <span class="truncate select-all">{{ $value }}</span>
         <button 
             type="button" 
-            @click="navigator.clipboard.writeText('{{ $value }}'); copied = true; setTimeout(() => copied = false, 2000)"
+            @click="copyText('{{ $value }}')"
             class="ml-2 text-xs font-sans bg-white px-2.5 py-1 rounded border border-slate-300 hover:bg-slate-50 text-slate-700 transition-all focus:outline-none flex-shrink-0"
         >
             <span x-show="!copied">Скопировать</span>

@@ -28,12 +28,13 @@ class CreateOrderAction
                     'product_url' => $item['product_url'] ?? null,
                     'product_name' => $item['product_name'],
                     'quantity' => $item['quantity'] ?? 1,
+                    'unit_price' => $item['unit_price'] ?? null,
                     'size' => $item['size'] ?? null,
                     'color' => $item['color'] ?? null,
                     'model' => $item['model'] ?? null,
                     'options' => $item['options'] ?? null,
                     'requested_comment' => $item['requested_comment'] ?? null,
-                    'screenshot_path' => $item['screenshot_path'] ?? null, // Добавлено сохранение пути скриншота
+                    'screenshot_path' => $item['screenshot_path'] ?? null,
                 ]);
             }
 

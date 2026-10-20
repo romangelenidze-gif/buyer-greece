@@ -10,15 +10,18 @@ use App\Models\Customer;
 use App\Models\Order;
 use App\Models\Quote;
 use App\Models\ShowcaseProduct;
+use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 use Illuminate\View\View;
 
 class OrderController extends Controller
 {
     /**
-     * Отображение страницы/формы «Выкупите за меня» с автозаполнением из витрины.
+     * Отображение страницы/формы «Выкупите за меня» с автозаполнением из витрины или поиска.
      */
     public function create(Request $request): View
     {
@@ -28,7 +31,14 @@ class OrderController extends Controller
             $showcaseProduct = ShowcaseProduct::find($request->input('showcase_product_id'));
         }
 
-        return view('public.buy-for-me', compact('showcaseProduct'));
+        // Автозаполнение из параметров URL (из поиска SmartProductSearchManager)
+        $prefilled = [
+            'url' => $request->query('url'),
+            'name' => $request->query('name'),
+            'price' => $request->query('price'),
+        ];
+
+        return view('public.buy-for-me', compact('showcaseProduct', 'prefilled'));
     }
 
     /**
@@ -36,23 +46,46 @@ class OrderController extends Controller
      */
     public function store(Request $request, CreateOrderAction $createOrderAction): RedirectResponse
     {
-        $validated = $request->validate([
+        $rules = [
             'product_url' => ['required', 'url', 'max:2048'],
             'product_name' => ['required', 'string', 'max:255'],
             'quantity' => ['required', 'integer', 'min:1', 'max:100'],
+            'unit_price' => ['nullable', 'numeric', 'min:0'],
             'size' => ['nullable', 'string', 'max:50'],
             'color' => ['nullable', 'string', 'max:50'],
             'model' => ['nullable', 'string', 'max:100'],
             'comment' => ['nullable', 'string', 'max:1000'],
             'screenshot' => ['nullable', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:2048'],
             'showcase_product_id' => ['nullable', 'exists:showcase_products,id'],
-        ]);
+        ];
 
-        $user = Auth::user();
+        if (!Auth::check()) {
+            $rules['name'] = ['required', 'string', 'max:255'];
+            $rules['email'] = ['required', 'email', 'max:255'];
+            $rules['phone'] = ['nullable', 'string', 'max:50'];
+        }
+
+        $validated = $request->validate($rules);
+
+        if (Auth::check()) {
+            $user = Auth::user();
+        } else {
+            $user = User::firstOrCreate(
+                ['email' => strtolower(trim($validated['email']))],
+                [
+                    'name' => trim($validated['name']),
+                    'password' => Hash::make(Str::random(16)),
+                ]
+            );
+
+            Auth::login($user, remember: true);
+        }
+
         $customer = $user->customer;
 
         if (!$customer) {
-            $nameParts = explode(' ', trim($user->name ?? 'Пользователь'), 2);
+            $fullName = $validated['name'] ?? $user->name ?? 'Пользователь';
+            $nameParts = explode(' ', trim($fullName), 2);
             $firstName = $nameParts[0] ?? 'Пользователь';
             $lastName = $nameParts[1] ?? '';
 
@@ -60,7 +93,7 @@ class OrderController extends Controller
                 'first_name' => $firstName,
                 'last_name' => $lastName,
                 'email' => $user->email,
-                'phone' => '',
+                'phone' => $validated['phone'] ?? '',
                 'status' => 'active',
             ]);
 
@@ -78,6 +111,7 @@ class OrderController extends Controller
                 'product_url' => $validated['product_url'],
                 'product_name' => $validated['product_name'],
                 'quantity' => $validated['quantity'],
+                'unit_price' => $validated['unit_price'] ?? null,
                 'size' => $validated['size'] ?? null,
                 'color' => $validated['color'] ?? null,
                 'model' => $validated['model'] ?? null,
@@ -94,7 +128,7 @@ class OrderController extends Controller
             internalNote: $validated['comment'] ?? null
         );
 
-        return redirect()->back()->with([
+        return redirect()->route('orders.show', $order->id)->with([
             'order_created' => true,
             'order_number' => $order->public_order_number,
             'order_id' => $order->id,

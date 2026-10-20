@@ -208,17 +208,7 @@
             </div>
         @endif
 
-        <!-- SUPPORT BOX -->
-        <div class="apple-card flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div>
-                <h3 class="app-text-title">{{ __('Нужна консультация по заказу?') }}</h3>
-                <p class="app-text-sub mt-0.5">{{ __('Менеджер ответит на любой вопрос по покупке, доставке или оплате.') }}</p>
-            </div>
-            <div class="flex items-center gap-2 shrink-0">
-                <x-messenger type="telegram" :orderNumber="$order->public_order_number" size="small" />
-                <x-messenger type="whatsapp" :orderNumber="$order->public_order_number" size="small" />
-            </div>
-        </div>
+       
 
     </div>
 </x-layouts.app>

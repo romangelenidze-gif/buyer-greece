@@ -14,6 +14,9 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // Доверяем всем прокси для корректной работы через Cloudflare Tunnel (HTTPS)
+        $middleware->trustProxies(at: '*');
+
         $middleware->web(append: [
             SetLocale::class,
         ]);

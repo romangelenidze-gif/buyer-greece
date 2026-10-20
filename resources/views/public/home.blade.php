@@ -6,12 +6,11 @@
     <!-- HERO SECTION -->
     <x-public-ui.hero />
 
-    <!-- БЛОК ЭТАПОВ -->
-    <x-public-ui.steps-section />
-
     <!-- POPULAR PRODUCTS SHOWCASE -->
     <x-public-ui.showcase-slider />
 
+    <!-- БЛОК ЭТАПОВ -->
+    <x-public-ui.steps-section />
     
 
 </x-layouts.public>

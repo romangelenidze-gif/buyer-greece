@@ -82,7 +82,7 @@
             </div>
 
             <div class="flex flex-col space-y-2">
-                <a href="{{ route('buy-for-me') }}?url={{ urlencode($product['product_url'] ?? '') }}" 
+                <a href="{{ route('buy-for-me') }}?url={{ urlencode($product['product_url'] ?? '') }}&name={{ urlencode($product['title'] ?? '') }}&price={{ $product['price_amount'] ?? '' }}"
                    title="{{ __('Оформить заказ') }}"
                    class="apple-product-cart-btn">
                     <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">

@@ -14,12 +14,18 @@ class OrderItem extends Model
     protected $fillable = [
         'order_id',
         'product_name',
-        'url',
+        'product_url',       // Исправлено с 'url' на 'product_url'
         'quantity',
+        'size',              // Добавлено
+        'color',             // Добавлено
+        'model',             // Добавлено
+        'options',
+        'requested_comment', // Добавлено (сюда попадет комментарий клиента)
         'unit_price',
         'price_per_item',
         'total_price',
         'notes',
+        'admin_comment',
         'screenshot_path',
     ];
 
