@@ -9,14 +9,18 @@ class BestPriceMcpService
 {
     protected string $mcpEndpoint = 'https://mcp.bestprice.gr/mcp';
 
-    public function searchProducts(string $greekQuery): array
+    /**
+     * Поиск товаров через BestPrice MCP с поддержкой официальных параметров фильтрации и лимита до 8 результатов.
+     */
+    public function searchProducts(string $greekQuery, array $options = []): array
     {
         Log::info('BestPrice MCP: Starting search request', [
-            'query' => $greekQuery
+            'query' => $greekQuery,
+            'options' => $options
         ]);
 
         try {
-            // 1. Инициализация сессии MCP
+            // 1. Инициализация сессии MCP по спецификации JSON-RPC
             $initPayload = [
                 'jsonrpc' => '2.0',
                 'method' => 'initialize',
@@ -31,24 +35,51 @@ class BestPriceMcpService
                 'id' => 1,
             ];
 
-            Http::timeout(10)->withoutVerifying()->post($this->mcpEndpoint, $initPayload);
+            // Используем штатную проверку TLS согласно требованиям безопасности
+            Http::timeout(10)->post($this->mcpEndpoint, $initPayload);
 
-            // 2. Вызов инструмента поиска товаров
+            // 2. Формируем аргументы для инструмента search_products согласно ТЗ
+            $arguments = [
+                'query' => $greekQuery,
+            ];
+
+            if (!empty($options['price_min'])) {
+                $arguments['price_min'] = (float)$options['price_min'];
+            }
+
+            if (!empty($options['price_max'])) {
+                $arguments['price_max'] = (float)$options['price_max'];
+            }
+
+            // Допустимые значения сортировки по API BestPrice: relevance, price_asc, price_desc
+            if (!empty($options['sort']) && in_array($options['sort'], ['relevance', 'price_asc', 'price_desc'])) {
+                $arguments['sort'] = $options['sort'];
+            }
+
+            if (!empty($options['required_features']) && is_array($options['required_features'])) {
+                $arguments['required_features'] = $options['required_features'];
+            }
+
+            // Жесткое ограничение MCP: не более 8 результатов за один вызов
+            $arguments['limit'] = min(8, (int)($options['limit'] ?? 8));
+
             $payload = [
                 'jsonrpc' => '2.0',
                 'method' => 'tools/call',
                 'params' => [
                     'name' => 'search_products',
-                    'arguments' => [
-                        'query' => $greekQuery,
-                    ]
+                    'arguments' => $arguments
                 ],
                 'id' => 2,
             ];
 
-            $response = Http::timeout(20)
-                ->withoutVerifying()
-                ->post($this->mcpEndpoint, $payload);
+            $response = Http::timeout(20)->post($this->mcpEndpoint, $payload);
+
+            // Добавьте этот блок для отладки
+Log::info('BestPrice MCP RAW JSON Response:', [
+    'status' => $response->status(),
+    'body' => $response->json()
+]);
 
             if ($response->successful()) {
                 $data = $response->json();
@@ -62,7 +93,6 @@ class BestPriceMcpService
                 if (isset($data['result']['content'])) {
                     foreach ($data['result']['content'] as $contentBlock) {
                         if (isset($contentBlock['text'])) {
-                            // Пытаемся найти JSON внутри текста, если structuredContent отсутствует
                             if (preg_match('/Structured result \(JSON\):\s*(\{.*\})/s', $contentBlock['text'], $matches)) {
                                 $jsonDecoded = json_decode($matches[1], true);
                                 if (isset($jsonDecoded['products']) && is_array($jsonDecoded['products'])) {
@@ -72,6 +102,10 @@ class BestPriceMcpService
                         }
                     }
                 }
+            } else {
+                Log::error('BestPrice MCP HTTP error: ' . $response->status(), [
+                    'body' => $response->body()
+                ]);
             }
 
         } catch (\Exception $e) {

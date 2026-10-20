@@ -20,12 +20,24 @@ class ProductSearchController extends Controller
         $query = trim($request->input('q', ''));
         $searchResult = null;
 
+        // Собираем и валидируем пользовательские фильтры из запроса
+        $filters = [
+            'min_price' => $request->filled('min_price') ? (float)$request->input('min_price') : null,
+            'max_price' => $request->filled('max_price') ? (float)$request->input('max_price') : null,
+            'sort'      => in_array($request->input('sort'), ['relevance', 'price_asc', 'price_desc']) 
+                           ? $request->input('sort') 
+                           : 'relevance',
+        ];
+
+        // Убираем пустые фильтры, чтобы не засорять логику поиска
+        $filters = array_filter($filters, fn($val) => !is_null($val) && $val !== '');
+
         if (!empty($query)) {
             $query = mb_substr($query, 0, 200);
-            $searchResult = $this->searchManager->search($query, app()->getLocale());
+            // Передаем запрос, текущую локаль и собранные фильтры в модернизированный менеджер поиска
+            $searchResult = $this->searchManager->search($query, app()->getLocale(), $filters);
         }
 
-        // Возвращаем правильный путь к шаблону в папке public
-        return view('public.product-search', compact('query', 'searchResult'));
+        return view('public.product-search', compact('query', 'searchResult', 'filters'));
     }
 }
