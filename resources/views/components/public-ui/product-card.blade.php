@@ -14,13 +14,14 @@
                 ? \Illuminate\Support\Facades\Storage::url($rawImg) 
                 : asset('storage/' . $rawImg));
     }
+    
+    $productJson = htmlspecialchars(json_encode($product, JSON_UNESCAPED_UNICODE), ENT_QUOTES, 'UTF-8');
 @endphp
 
-<div class="apple-product-card group">
+<div class="apple-product-card group relative">
     
-    <!-- Верхний белый блок под фото -->
+    <!-- Верхний блок под фото (белый закругленный) -->
     <div class="apple-product-card-top">
-        
         <div class="w-full h-full flex items-center justify-center relative">
             @if(!empty($imgUrl))
                 <img src="{{ $imgUrl }}" 
@@ -35,44 +36,44 @@
             @endif
         </div>
 
-        <!-- Бейдж магазина и внешняя ссылка -->
+        <!-- Кнопки вверху с серым фоном -->
         <div class="absolute inset-x-0 top-0 p-3.5 flex items-center justify-between z-10 pointer-events-none">
-            <span class="inline-flex items-center px-2.5 py-1 rounded-full app-badge-text bg-white/80 backdrop-blur-md text-[#1d1d1f] shadow-2xs pointer-events-auto">
-                {{ $product['merchant_name'] ?? __('Греция') }}
-            </span>
-            <a href="{{ $product['product_url'] ?? '#' }}" target="_blank" rel="noopener noreferrer" 
-               title="{{ __('Перейти в магазин') }}"
-               class="w-8 h-8 rounded-full bg-white/80 backdrop-blur-md flex items-center justify-center text-[#1d1d1f] shadow-2xs hover:bg-white transition-colors pointer-events-auto">
-                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                </svg>
-            </a>
+            <!-- Левая сторона: Кнопка сравнения -->
+            <div class="pointer-events-auto">               
+            </div>
+            
+            <!-- Правая сторона: Ссылка на магазин -->
+            <div class="pointer-events-auto">
+                <a href="{{ $product['product_url'] ?? '#' }}" target="_blank" rel="noopener noreferrer" 
+                   title="{{ __('Перейти в магазин') }}"
+                   class="w-8 h-8 rounded-full bg-black/5 hover:bg-black/10 backdrop-blur-md flex items-center justify-center text-[#1d1d1f] transition-colors">
+                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                    </svg>
+                </a>
+            </div>
         </div>
     </div>
 
-    <!-- Текстовый блок внизу на серой плашке -->
-    <div class="apple-product-card-bottom">
+    <!-- Нижняя серая плашка -->
+    <div class="apple-product-card-bottom flex flex-col justify-between">
         
-        <!-- Левая колонка: Название, рейтинг, описание -->
-        <div class="space-y-1.5 flex-1 pr-1 min-w-0">
-            <h3 class="apple-product-title">
+        <!-- Название товара (до 2 полноценных строк) -->
+        <div>
+            <h3 class="apple-product-title line-clamp-2 leading-snug">
                 {{ $product['title'] ?? '' }}
             </h3>
-            
-            <div class="apple-product-rating">
-                <span class="apple-product-stars">★★★★☆</span>
-                <span>({{ $product['offers_count'] ?? 1 }})</span>
-            </div>
-
-            <p class="apple-product-desc">
-                {{ $product['short_description'] ?? '' }}
-            </p>
         </div>
 
-        <!-- Правая колонка: Цена и синяя кнопка -->
-        <div class="flex flex-col items-end justify-between space-y-3 shrink-0">
-            <div class="text-right">
-                <div class="apple-product-price">
+        <!-- Нижняя зона: рейтинг и цена слева, кнопка корзины справа (выровнены по низу) -->
+        <div class="w-full flex items-end justify-between mt-3">
+            <div class="space-y-1">
+                <div class="apple-product-rating">
+                    <span class="apple-product-stars">★★★★☆</span>
+                    <span>({{ $product['offers_count'] ?? 1 }})</span>
+                </div>
+                
+                <div class="apple-product-price text-left leading-none">
                     @if(!empty($product['price_amount']))
                         €{{ number_format($product['price_amount'], 2) }}
                     @else
@@ -81,7 +82,7 @@
                 </div>
             </div>
 
-            <div class="flex flex-col space-y-2">
+            <div>
                 <a href="{{ route('buy-for-me') }}?url={{ urlencode($product['product_url'] ?? '') }}&name={{ urlencode($product['title'] ?? '') }}&price={{ $product['price_amount'] ?? '' }}"
                    title="{{ __('Оформить заказ') }}"
                    class="apple-product-cart-btn">

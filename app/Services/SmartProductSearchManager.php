@@ -3,7 +3,6 @@
 namespace App\Services;
 
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Log;
 
 class SmartProductSearchManager
 {
@@ -31,7 +30,6 @@ class SmartProductSearchManager
 
         return Cache::store('file')->remember($cacheKey, 10800, function () use ($userQuery, $targetLang, $userFilters) {
             
-            // 1. Получаем глубокий анализ от Groq (греческий запрос, альтернативы, фильтры)
             $analysis = $this->groqService->analyzeQuery($userQuery);
             $greekQuery = $analysis['greek_query'] ?? $userQuery;
             $alternativeQueries = $analysis['alternative_queries'] ?? [];
@@ -56,7 +54,6 @@ class SmartProductSearchManager
                 $mcpOptions['required_features'] = (array)$activeFilters['required_features'];
             }
 
-            // 2. Запускаем планировщик многошагового поиска через MCP
             $rawProducts = $this->searchPlanner->planAndExecuteSearch($greekQuery, $alternativeQueries, $mcpOptions);
 
             if (empty($rawProducts)) {
@@ -68,7 +65,6 @@ class SmartProductSearchManager
                 ];
             }
 
-            // 3. Пакетный перевод названий обратно на язык пользователя
             $titlesToTranslate = array_map(fn($item) => $item['title'] ?? 'Product', $rawProducts);
             $translatedTitles = $this->groqService->translateProductsBack($titlesToTranslate, $targetLang);
 
@@ -76,24 +72,28 @@ class SmartProductSearchManager
             foreach ($rawProducts as $index => $item) {
                 $priceAmount = isset($item['price_from']) ? (float)$item['price_from'] : (isset($item['price']) ? (float)$item['price'] : null);
                 $displayTitle = $translatedTitles[$index] ?? ($item['title'] ?? 'Товар');
-
-                $estimatedWeightKg = $this->estimateProductWeight($displayTitle);
-                $estimatedCamexShippingGEL = round($estimatedWeightKg * 9.0, 2);
+                
+                $formattedPrice = $priceAmount ? '€' . number_format($priceAmount, 2, '.', ' ') : __('По запросу');
 
                 $products[] = [
                     'title' => $displayTitle,
                     'original_title' => $item['title'] ?? '',
+                    'merchant' => $item['brand'] ?? $item['merchant_name'] ?? 'BestPrice Store',
                     'merchant_name' => $item['brand'] ?? $item['merchant_name'] ?? 'BestPrice Store',
+                    
+                    // Дублируем все возможные варианты ключей цен для совместимости с любым шаблоном
+                    'price' => $priceAmount,
+                    'price_from' => $priceAmount,
                     'price_amount' => $priceAmount,
+                    'price_formatted' => $formattedPrice,
+                    'price_note' => $formattedPrice,
+                    'formatted_price' => $formattedPrice,
+                    
                     'currency' => 'EUR',
-                    'price_note' => $priceAmount ? '€' . number_format($priceAmount, 2) : '',
                     'offers_count' => $item['offer_count'] ?? $item['offers_count'] ?? 1,
-                    'availability' => $item['availability'] ?? null,
+                    'rating' => $item['rating']['average'] ?? null,
                     'image_url' => filter_var($item['image_url'] ?? '', FILTER_VALIDATE_URL) ?: null,
                     'product_url' => filter_var($item['bestprice_url'] ?? $item['product_url'] ?? '', FILTER_VALIDATE_URL) ?: '#',
-                    'short_description' => $item['category_title'] ?? ('Предложений магазинов: ' . ($item['offer_count'] ?? 1)),
-                    'shipping_estimate' => "~{$estimatedWeightKg} кг (~{$estimatedCamexShippingGEL} GEL до Тбилиси)",
-                    'match_reason' => __('Проверено каталогом BestPrice.gr'),
                 ];
             }
 
@@ -105,14 +105,5 @@ class SmartProductSearchManager
                 'intent_analysis' => $analysis,
             ];
         });
-    }
-
-    protected function estimateProductWeight(string $title): float
-    {
-        $t = mb_strtolower($title);
-        if (str_contains($t, 'μπουφάν') || str_contains($t, 'jacket') || str_contains($t, 'пальто')) return 1.2;
-        if (str_contains($t, 'λάδι') || str_contains($t, '5l') || str_contains($t, 'oil')) return 4.8;
-        if (str_contains($t, 'παπούτσια') || str_contains($t, 'shoes') || str_contains($t, 'кроссовки')) return 0.9;
-        return 0.6;
     }
 }

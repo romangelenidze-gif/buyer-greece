@@ -3,8 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Services\SmartProductSearchManager;
+use App\Services\ProductAutocompleteService;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
+use Illuminate\Http\JsonResponse;
 
 class ProductSearchController extends Controller
 {
@@ -39,5 +41,18 @@ class ProductSearchController extends Controller
         }
 
         return view('public.product-search', compact('query', 'searchResult', 'filters'));
+    }
+
+    /**
+     * Обработка AJAX-запросов автокомплита.
+     */
+    public function autocomplete(Request $request, ProductAutocompleteService $autocompleteService): JsonResponse
+    {
+        $query = trim($request->input('q', ''));
+        $suggestions = $autocompleteService->getSuggestions($query, app()->getLocale());
+
+        return response()->json([
+            'suggestions' => $suggestions
+        ]);
     }
 }

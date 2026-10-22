@@ -26,6 +26,7 @@ Route::view('/forwarding', 'public.forwarding')->name('forwarding');
 Route::view('/help', 'public.help')->name('help');
 
 Route::get('/product-search', [ProductSearchController::class, 'index'])->name('product-search');
+Route::get('/api/autocomplete', [ProductSearchController::class, 'autocomplete'])->name('api.autocomplete');
 
 // Переключатель языка сессии (ru / ka / en)
 Route::get('/lang/{locale}', function (string $locale) {

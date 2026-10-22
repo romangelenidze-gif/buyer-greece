@@ -3,10 +3,75 @@
     description="{{ __('Найдите нужный товар на естественном языке с помощью ИИ и отправьте его на выкуп.') }}"
 >
 
-<div class="min-h-[calc(100vh-4rem)] bg-[#fbfbfd] text-[#1d1d1f] antialiased selection:bg-[#0071e3] selection:text-white py-12 px-6 sm:px-8 lg:px-8">
-    <div class="max-w-7xl mx-auto space-y-10">
+<div class="min-h-[calc(100vh-4rem)] bg-[#fbfbfd] text-[#1d1d1f] antialiased selection:bg-[#0071e3] selection:text-white py-12 px-6 sm:px-8 lg:px-8 relative" 
+     x-data="{ 
+        loading: false, 
+        sortModalOpen: false,
+        query: '{{ $query ?? '' }}',
+        suggestions: [],
+        loadingSuggestions: false,
+        activeSort: '{{ request('sort', $filters['sort'] ?? 'relevance') }}',
+        fetchSuggestions() {
+            if (this.query.length < 2) {
+                this.suggestions = [];
+                return;
+            }
+            this.loadingSuggestions = true;
+            fetch(`{{ route('api.autocomplete') }}?q=${encodeURIComponent(this.query)}`)
+                .then(res => res.json())
+                .then(data => {
+                    this.suggestions = data.suggestions || [];
+                    this.loadingSuggestions = false;
+                })
+                .catch(() => {
+                    this.suggestions = [];
+                    this.loadingSuggestions = false;
+                });
+        },
+        selectSuggestion(val) {
+            this.query = val;
+            this.suggestions = [];
+            this.loading = true;
+            window.location.href = `{{ route('product-search') }}?q=${encodeURIComponent(val)}`;
+        },
+        sortProducts(sortType) {
+            this.activeSort = sortType;
+            this.sortModalOpen = false;
+            
+            const grid = document.getElementById('products-grid');
+            if (!grid) return;
+            
+            const cards = Array.from(grid.children);
+            cards.sort((a, b) => {
+                const priceA = parseFloat(a.dataset.price || 0);
+                const priceB = parseFloat(b.dataset.price || 0);
+                const indexA = parseInt(a.dataset.index || 0);
+                const indexB = parseInt(b.dataset.index || 0);
+                
+                if (sortType === 'price_asc') return priceA - priceB;
+                if (sortType === 'price_desc') return priceB - priceA;
+                return indexA - indexB;
+            });
+            
+            cards.forEach(card => grid.appendChild(card));
+        }
+     }"
+     x-init="loading = false"
+     @pageshow.window="loading = false"
+>
+    
+    <!-- МГНОВЕННЫЙ ПОЛНОЭКРАННЫЙ ОВЕРЛЕЙ ЗАГРУЗКИ ПРИ ПОИСКЕ -->
+    <div x-show="loading" x-cloak class="fixed inset-0 z-[100] bg-white/80 backdrop-blur-md flex flex-col items-center justify-center space-y-4">
+        <svg class="animate-spin h-10 w-10 text-[#0071e3]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+        <span class="text-base font-semibold text-[#1d1d1f] animate-pulse">{{ __('Ищем предложения в магазинах Греции...') }}</span>
+    </div>
+
+    <div class="max-w-7xl mx-auto space-y-8">
         
-        <!-- APPLE HERO HEADER -->
+        <!-- HEADER -->
         @if(is_null($searchResult))
             <div class="text-center space-y-3 max-w-2xl mx-auto">
                 <h1 class="apple-section-title text-left sm:text-center">
@@ -18,94 +83,115 @@
             </div>
         @endif
 
-        <!-- SEARCH BAR & FILTERS FORM -->
+        <!-- SEARCH FORM & FILTERS -->
         <div class="max-w-3xl mx-auto space-y-4">
-            <form action="{{ route('product-search') }}" method="GET" x-data="{ loading: false }" @submit="loading = true">
-                
-                <!-- MAIN SEARCH INPUT -->
-                <div class="bg-white p-3.5 sm:p-4 rounded-full shadow-[0_10px_30px_rgba(0,0,0,0.05)] border border-black/[0.08] flex items-center">
-                    <div class="relative flex-1 w-full flex items-center">
-                        <span class="absolute left-3.5 pointer-events-none text-[#86868b] flex items-center">
-                            <svg class="w-5 h-5 sm:w-6 sm:h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                            </svg>
-                        </span>
+            <form action="{{ route('product-search') }}" method="GET" x-ref="searchForm" @submit="loading = true">
+                <input type="hidden" name="sort" :value="activeSort">
+
+                <!-- SEARCH INPUT WITH AUTOCOMPLETE & SUBMIT BUTTON -->
+                <div class="relative">
+                    <div class="apple-search-bar flex items-center justify-between">
                         <input 
                             type="text" 
                             name="q" 
-                            value="{{ $query ?? '' }}"
-                            placeholder="{{ __('Например: оливковое масло 5л или кроссовки Adidas...') }}" 
+                            x-model="query"
+                            @input.debounce.300ms="fetchSuggestions()"
+                            placeholder="{{ __('Назовите товар и нажмите Enter...') }}" 
                             required
                             maxlength="200"
-                            class="w-full pl-12 pr-4 py-2 bg-transparent border-0 app-text-title text-[#1d1d1f] placeholder-[#86868b] focus:outline-none focus:ring-0"
+                            autofocus
+                            class="apple-search-input flex-1"
                         >
+                        <button type="submit" aria-label="{{ __('Найти') }}" class="p-2 text-[#0071e3] hover:opacity-85 transition-opacity cursor-pointer shrink-0">
+                            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                            </svg>
+                        </button>
                     </div>
-                    <button 
-                        type="submit" 
-                        class="apple-button-primary shrink-0 ml-2 !py-2.5 !px-5"
-                    >
-                        <span x-show="!loading">{{ __('Искать') }}</span>
-                        <span x-show="loading" x-cloak>{{ __('Поиск...') }}</span>
-                    </button>
+
+                    <!-- ВЫПАДАЮЩИЙ СПИСОК АВТОКОМПЛИТА НА СТРАНИЦЕ ПОИСКА -->
+                    <div x-show="suggestions.length > 0" x-cloak class="absolute left-0 right-0 mt-2 bg-white rounded-2xl shadow-xl border border-black/[0.06] overflow-hidden z-50">
+                        <template x-for="item in suggestions" :key="item.value">
+                            <div @click="selectSuggestion(item.value)" class="px-5 py-3 hover:bg-[#f5f5f7] flex items-center justify-between cursor-pointer transition-colors border-b border-black/[0.03] last:border-b-0">
+                                <span class="app-text-body font-medium text-[#1d1d1f]" x-text="item.label"></span>
+                                <span class="text-xs px-2.5 py-1 bg-[#0071e3]/10 text-[#0071e3] rounded-full font-semibold" x-text="item.badge"></span>
+                            </div>
+                        </template>
+                    </div>
                 </div>
 
-                <!-- DYNAMIC FILTERS PANEL -->
-                <div class="bg-white/80 backdrop-blur-md p-4 rounded-2xl border border-black/[0.06] shadow-sm flex flex-wrap items-center justify-between gap-4 mt-4">
+                <!-- FILTERS BAR -->
+                <div class="flex items-center gap-2 pt-3 text-xs overflow-x-auto no-scrollbar">
                     
-                    <!-- PRICE RANGE -->
-                    <div class="flex items-center gap-2">
-                        <span class="app-text-sub text-[#6e6e73] font-medium">{{ __('Цена (€):') }}</span>
+                    <!-- MIN PRICE -->
+                    <div class="apple-filter-pill shrink-0">
                         <input 
                             type="number" 
                             name="min_price" 
                             value="{{ request('min_price', $filters['min_price'] ?? '') }}" 
-                            placeholder="{{ __('От') }}" 
+                            placeholder="{{ __('от') }}" 
                             step="0.01" 
                             min="0"
-                            class="w-20 px-3 py-1.5 text-sm rounded-xl border border-black/[0.1] bg-[#fbfbfd] focus:outline-none focus:ring-2 focus:ring-[#0071e3]/30"
+                            @change="loading = true; $refs.searchForm.submit()"
+                            class="apple-filter-input"
                         >
-                        <span class="text-[#86868b]">—</span>
+                        <span class="text-[#86868b] text-xs ml-1.5 font-normal">€</span>
+                    </div>
+
+                    <!-- MAX PRICE -->
+                    <div class="apple-filter-pill shrink-0">
                         <input 
                             type="number" 
                             name="max_price" 
                             value="{{ request('max_price', $filters['max_price'] ?? '') }}" 
-                            placeholder="{{ __('До') }}" 
+                            placeholder="{{ __('до') }}" 
                             step="0.01" 
                             min="0"
-                            class="w-20 px-3 py-1.5 text-sm rounded-xl border border-black/[0.1] bg-[#fbfbfd] focus:outline-none focus:ring-2 focus:ring-[#0071e3]/30"
+                            @change="loading = true; $refs.searchForm.submit()"
+                            class="apple-filter-input"
                         >
+                        <span class="text-[#86868b] text-xs ml-1.5 font-normal">€</span>
                     </div>
 
-                    <!-- SORTING -->
-                    <div class="flex items-center gap-2">
-                        <span class="app-text-sub text-[#6e6e73] font-medium">{{ __('Сортировка:') }}</span>
-                        <select 
-                            name="sort" 
-                            onchange="this.form.submit()"
-                            class="px-3 py-1.5 text-sm rounded-xl border border-black/[0.1] bg-[#fbfbfd] focus:outline-none focus:ring-2 focus:ring-[#0071e3]/30 text-[#1d1d1f] cursor-pointer"
-                        >
-                            <option value="relevance" {{ request('sort', $filters['sort'] ?? '') === 'relevance' ? 'selected' : '' }}>
-                                {{ __('По релевантности') }}
-                            </option>
-                            <option value="price_asc" {{ request('sort', $filters['sort'] ?? '') === 'price_asc' ? 'selected' : '' }}>
-                                {{ __('Сначала дешевле') }}
-                            </option>
-                            <option value="price_desc" {{ request('sort', $filters['sort'] ?? '') === 'price_desc' ? 'selected' : '' }}>
-                                {{ __('Сначала дороже') }}
-                            </option>
-                        </select>
-                    </div>
-
-                    <!-- RESET FILTERS -->
-                    @if(request()->hasAny(['min_price', 'max_price', 'sort']) && (request('min_price') || request('max_price') || request('sort') !== 'relevance'))
-                        <div>
-                            <a 
-                                href="{{ route('product-search', ['q' => $query]) }}" 
-                                class="text-xs font-medium text-[#0071e3] hover:underline"
+                    <!-- ДЕСКТОП: СЕЛЕКТ (СКРЫТ НА МОБИЛЬНЫХ) -->
+                    <div class="hidden sm:flex ml-auto items-center">
+                        <div class="apple-filter-pill shrink-0 px-4 py-2">
+                            <select 
+                                x-model="activeSort"
+                                @change="sortProducts(activeSort)"
+                                class="bg-transparent border-0 p-0 text-xs font-medium text-[#1d1d1f] focus:outline-none focus:ring-0 cursor-pointer pr-1"
                             >
-                                {{ __('Сбросить фильтры') }}
-                            </a>
+                                <option value="relevance">{{ __('По релевантности') }}</option>
+                                <option value="price_asc">{{ __('Сначала дешевле') }}</option>
+                                <option value="price_desc">{{ __('Сначала дороже') }}</option>
+                            </select>
                         </div>
+                    </div>
+
+                    <!-- МОБИЛКА: КНОПКА СО СТРЕЛОЧКАМИ (ОТКРЫВАЕТ ШТОРКУ) -->
+                    <button 
+                        type="button" 
+                        @click="sortModalOpen = true"
+                        class="flex sm:hidden w-8 h-8 rounded-full bg-[#e5e5ea] active:bg-[#d1d1d6] items-center justify-center text-[#1d1d1f] transition-all shrink-0 ml-auto"
+                        title="{{ __('Сортировка') }}"
+                    >
+                        <svg class="w-4 h-4 text-[#1d1d1f]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
+                        </svg>
+                    </button>
+
+                    <!-- RESET FILTERS BUTTON -->
+                    @if(request()->hasAny(['min_price', 'max_price']) || (request('sort') && request('sort') !== 'relevance'))
+                        <a 
+                            href="{{ route('product-search', ['q' => $query]) }}" 
+                            @click="loading = true"
+                            class="w-8 h-8 rounded-full bg-[#f2f2f7] hover:bg-[#e5e5ea] text-[#86868b] hover:text-[#1d1d1f] flex items-center justify-center transition-all shrink-0 ml-1"
+                            title="{{ __('Сбросить фильтры') }}"
+                        >
+                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </a>
                     @endif
 
                 </div>
@@ -113,43 +199,52 @@
             </form>
         </div>
 
+        <!-- MOBILE SORT MODAL COMPONENT -->
+        <x-public-ui.sort-modal />
+
         <!-- RESULTS SECTION -->
-        @if(!is_null($searchResult))
-            <div class="space-y-6 animate-fade-in">
-                
-                <!-- RECOMMENDATION BANNER -->
-                <div class="max-w-3xl flex items-center gap-3 bg-white/60 backdrop-blur-sm p-3.5 rounded-2xl border border-black/[0.04]">
-                    <div class="w-8 h-8 rounded-full bg-[#0071e3]/10 text-[#0071e3] flex items-center justify-center shrink-0">
-                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
+        <div>
+            @if(!is_null($searchResult))
+                <div class="space-y-6">
+                    
+                    <!-- RECOMMENDATION BANNER -->
+                    <div class="apple-recommendation-box">
+                        <div class="w-8 h-8 rounded-full bg-[#0071e3]/10 text-[#0071e3] flex items-center justify-center shrink-0">
+                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                        </div>
+                        <div class="text-sm">
+                            <p class="text-[#1d1d1f] font-medium m-0">{{ $searchResult['recommendation'] }}</p>
+                            @if(!empty($searchResult['intent_analysis']['brand']))
+                                <p class="text-[#86868b] text-xs m-0 mt-0.5">
+                                    {{ __('Уточнен бренд:') }} <span class="font-semibold text-[#1d1d1f]">{{ $searchResult['intent_analysis']['brand'] }}</span>
+                                </p>
+                            @endif
+                        </div>
                     </div>
-                    <div class="text-sm">
-                        <p class="text-[#1d1d1f] font-medium m-0">{{ $searchResult['recommendation'] }}</p>
-                        @if(!empty($searchResult['intent_analysis']['brand']))
-                            <p class="text-[#86868b] text-xs m-0 mt-0.5">
-                                {{ __('Уточнен бренд:') }} <span class="font-semibold text-[#1d1d1f]">{{ $searchResult['intent_analysis']['brand'] }}</span>
-                            </p>
-                        @endif
-                    </div>
+
+                    <!-- PRODUCTS GRID -->
+                    @if(!empty($searchResult['products']))
+                        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6" id="products-grid">
+                            @foreach($searchResult['products'] as $product)
+                                <x-public-ui.product-card 
+                                    :product="$product" 
+                                    data-price="{{ $product['price_amount'] ?? $product['price'] ?? 0 }}" 
+                                    data-index="{{ $loop->index }}" 
+                                />
+                            @endforeach
+                        </div>
+                    @else
+                        <div class="apple-card text-center max-w-md mx-auto space-y-2 py-10 bg-white rounded-3xl border border-black/[0.06]">
+                            <h4 class="app-text-title font-semibold">{{ __('Ничего не найдено') }}</h4>
+                            <p class="app-text-sub text-sm text-[#86868b]">{{ __('По вашему запросу ничего не найдено в каталоге BestPrice. Попробуйте изменить параметры поиска или ценовой диапазон.') }}</p>
+                        </div>
+                    @endif
+
                 </div>
-
-                <!-- PRODUCTS GRID -->
-                @if(!empty($searchResult['products']))
-                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                        @foreach($searchResult['products'] as $product)
-                            <x-public-ui.product-card :product="$product" />
-                        @endforeach
-                    </div>
-                @else
-                    <div class="apple-card text-center max-w-md mx-auto space-y-2 py-10 bg-white">
-                        <h4 class="app-text-title">{{ __('Ничего не найдено') }}</h4>
-                        <p class="app-text-sub">{{ __('По вашему запросу ничего не найдено в каталоге BestPrice. Попробуйте изменить параметры поиска или ценовой диапазон.') }}</p>
-                    </div>
-                @endif
-
-            </div>
-        @endif
+            @endif
+        </div>
 
     </div>
 </div>

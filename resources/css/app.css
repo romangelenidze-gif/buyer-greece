@@ -583,3 +583,143 @@ a.apple-nav-link.active {
 .cubic-bezier-apple {
     transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
 }
+
+
+/* ==========================================================================
+   8. APPLE SEARCH INTERFACE (Умный поиск и фильтры)
+   ========================================================================== */
+
+/* Главная поисковая капсула */
+.apple-search-bar {
+    background-color: #ffffff;
+    padding: 0.4rem 1.5rem;
+    border-radius: 9999px;
+    box-shadow: 0 4px 25px rgba(0, 0, 0, 0.04);
+    border: 1px solid rgba(0, 0, 0, 0.06);
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.apple-search-bar:hover {
+    border-color: rgba(0, 0, 0, 0.12);
+}
+
+.apple-search-bar:focus-within {
+    border-color: #0071e3;
+    box-shadow: 0 0 0 4px rgba(0, 113, 227, 0.1), 0 4px 25px rgba(0, 0, 0, 0.04);
+}
+
+/* Поле ввода поискового запроса */
+.apple-search-input {
+    width: 100%;
+    background-color: transparent;
+    border: none;
+    padding: 0;
+    font-size: 1.3rem;
+    color: #1d1d1f;
+    outline: none;
+}
+
+.apple-search-input::placeholder {
+    color: #86868b;
+}
+
+/* Капсула инпута цены */
+.apple-filter-pill {
+    display: flex;
+    align-items: center;
+    background-color: #f2f2f7;
+    padding: 0.5rem 1rem;
+    border-radius: 9999px;
+    border: 1px solid rgba(0, 0, 0, 0.04);
+    transition: all 0.2s ease;
+}
+
+.apple-filter-pill:hover {
+    background-color: #e5e5ea;
+}
+
+.apple-filter-pill:focus-within {
+    background-color: #ffffff;
+    box-shadow: 0 0 0 2px rgba(0, 113, 227, 0.2);
+}
+
+/* Числовой инпут цены без стрелочек */
+.apple-filter-input {
+    width: 2.5rem;
+    background-color: transparent;
+    border: none;
+    padding: 0;
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: #1d1d1f;
+    text-align: right;
+    outline: none;
+    appearance: textfield;
+}
+
+.apple-filter-input::-webkit-outer-spin-button,
+.apple-filter-input::-webkit-inner-spin-button {
+    appearance: none;
+    margin: 0;
+}
+
+.apple-filter-input::placeholder {
+    color: #86868b;
+}
+
+/* Блок рекомендаций ИИ */
+.apple-recommendation-box {
+    max-width: 48rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    background-color: rgba(255, 255, 255, 0.6);
+    backdrop-filter: blur(12px);
+    padding: 0.875rem 1rem;
+    border-radius: 1rem;
+    border: 1px solid rgba(0, 0, 0, 0.04);
+}
+
+
+/* ==========================================================================
+   APPLE MOBILE SORT SHEET (Мобильная шторка сортировки)
+   ========================================================================== */
+
+.apple-sheet-container {
+    position: relative;
+    width: 100%;
+    background-color: #ffffff;
+    border-top-left-radius: 1.75rem;
+    border-top-right-radius: 1.75rem;
+    padding-top: 1.5rem;
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+    padding-bottom: max(1.5rem, env(safe-area-inset-bottom));
+    box-shadow: 0 -20px 40px rgba(0, 0, 0, 0.15);
+    z-index: 10;
+    border-top: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.apple-sheet-option {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+    cursor: pointer;
+}
+
+.apple-sheet-option:active {
+    opacity: 0.7;
+}
+
+.apple-radio-circle {
+    width: 1.25rem;
+    height: 1.25rem;
+    border-radius: 9999px;
+    border-width: 2px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
