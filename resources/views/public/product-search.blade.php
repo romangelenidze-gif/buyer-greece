@@ -41,8 +41,8 @@
             const grid = document.getElementById('products-grid');
             if (!grid) return;
             
-            const cards = Array.from(grid.children);
-            cards.sort((a, b) => {
+            const wrappers = Array.from(grid.children);
+            wrappers.sort((a, b) => {
                 const priceA = parseFloat(a.dataset.price || 0);
                 const priceB = parseFloat(b.dataset.price || 0);
                 const indexA = parseInt(a.dataset.index || 0);
@@ -53,7 +53,7 @@
                 return indexA - indexB;
             });
             
-            cards.forEach(card => grid.appendChild(card));
+            wrappers.forEach(wrapper => grid.appendChild(wrapper));
         }
      }"
      x-init="loading = false"
@@ -61,13 +61,15 @@
 >
     
     <!-- МГНОВЕННЫЙ ПОЛНОЭКРАННЫЙ ОВЕРЛЕЙ ЗАГРУЗКИ ПРИ ПОИСКЕ -->
-    <div x-show="loading" x-cloak class="fixed inset-0 z-[100] bg-white/80 backdrop-blur-md flex flex-col items-center justify-center space-y-4">
-        <svg class="animate-spin h-10 w-10 text-[#0071e3]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-        </svg>
-        <span class="text-base font-semibold text-[#1d1d1f] animate-pulse">{{ __('Ищем предложения в магазинах Греции...') }}</span>
-    </div>
+    <template x-teleport="body">
+        <div x-show="loading" x-cloak class="fixed inset-0 z-[9999] bg-white/80 backdrop-blur-md flex flex-col items-center justify-center space-y-4">
+            <svg class="animate-spin h-10 w-10 text-[#0071e3]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <span class="text-base font-semibold text-[#1d1d1f] animate-pulse">{{ __('Ищем предложения в магазинах Греции...') }}</span>
+        </div>
+    </template>
 
     <div class="max-w-7xl mx-auto space-y-8">
         
@@ -83,8 +85,8 @@
             </div>
         @endif
 
-        <!-- SEARCH FORM & FILTERS -->
-        <div class="max-w-3xl mx-auto space-y-4">
+        <!-- SEARCH FORM & FILTERS (ДОБАВЛЕН ОТСТУП СНИЗУ MB-10) -->
+        <div class="max-w-3xl mx-auto mb-1 space-y-4">
             <form action="{{ route('product-search') }}" method="GET" x-ref="searchForm" @submit="loading = true">
                 <input type="hidden" name="sort" :value="activeSort">
 
@@ -121,7 +123,7 @@
                 </div>
 
                 <!-- FILTERS BAR -->
-                <div class="flex items-center gap-2 pt-3 text-xs overflow-x-auto no-scrollbar">
+                <div class="flex items-center gap-2 pt-3 pb-2 text-xs overflow-x-auto no-scrollbar">
                     
                     <!-- MIN PRICE -->
                     <div class="apple-filter-pill shrink-0">
@@ -224,15 +226,13 @@
                         </div>
                     </div>
 
-                    <!-- PRODUCTS GRID -->
+                    <!-- PRODUCTS GRID WITH ROBUST SORTING WRAPPERS -->
                     @if(!empty($searchResult['products']))
                         <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6" id="products-grid">
                             @foreach($searchResult['products'] as $product)
-                                <x-public-ui.product-card 
-                                    :product="$product" 
-                                    data-price="{{ $product['price_amount'] ?? $product['price'] ?? 0 }}" 
-                                    data-index="{{ $loop->index }}" 
-                                />
+                                <div data-price="{{ $product['price_amount'] ?? $product['price'] ?? 0 }}" data-index="{{ $loop->index }}">
+                                    <x-public-ui.product-card :product="$product" />
+                                </div>
                             @endforeach
                         </div>
                     @else

@@ -16,10 +16,14 @@
     }
     
     $productJson = htmlspecialchars(json_encode($product, JSON_UNESCAPED_UNICODE), ENT_QUOTES, 'UTF-8');
+    $productUrl = $product['product_url'] ?? '#';
 @endphp
 
 <div class="apple-product-card group relative">
     
+    <!-- Растянутая ссылка на всю карточку -->
+    <a href="{{ $productUrl }}" target="_blank" rel="noopener noreferrer" class="absolute inset-0 z-10" aria-label="{{ $product['title'] ?? '' }}"></a>
+
     <!-- Верхний блок под фото (белый закругленный) -->
     <div class="apple-product-card-top">
         <div class="w-full h-full flex items-center justify-center relative">
@@ -36,15 +40,15 @@
             @endif
         </div>
 
-        <!-- Кнопки вверху с серым фоном -->
-        <div class="absolute inset-x-0 top-0 p-3.5 flex items-center justify-between z-10 pointer-events-none">
+<!-- Кнопки вверху с серым фоном (z-20 выше ссылки карточки) -->
+        <div class="absolute inset-x-0 top-0 p-3.5 flex items-center justify-between z-20 pointer-events-none">
             <!-- Левая сторона: Кнопка сравнения -->
             <div class="pointer-events-auto">               
             </div>
             
             <!-- Правая сторона: Ссылка на магазин -->
             <div class="pointer-events-auto">
-                <a href="{{ $product['product_url'] ?? '#' }}" target="_blank" rel="noopener noreferrer" 
+                <a href="{{ $productUrl }}" target="_blank" rel="noopener noreferrer" 
                    title="{{ __('Перейти в магазин') }}"
                    class="w-8 h-8 rounded-full bg-black/5 hover:bg-black/10 backdrop-blur-md flex items-center justify-center text-[#1d1d1f] transition-colors">
                     <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -82,7 +86,8 @@
                 </div>
             </div>
 
-            <div>
+            <!-- Кнопка заказа с повышенным z-index, чтобы перекрывать ссылку карточки -->
+            <div class="relative z-20">
                 <a href="{{ route('buy-for-me') }}?url={{ urlencode($product['product_url'] ?? '') }}&name={{ urlencode($product['title'] ?? '') }}&price={{ $product['price_amount'] ?? '' }}"
                    title="{{ __('Оформить заказ') }}"
                    class="apple-product-cart-btn">

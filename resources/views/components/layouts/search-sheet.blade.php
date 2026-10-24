@@ -97,7 +97,7 @@
 
                 <!-- Поисковая строка и автокомплит -->
                 <div class="relative">
-                    <div class="bg-white p-3.5 sm:p-4 rounded-full shadow-[0_10px_30px_rgba(0,0,0,0.05)] border border-black/[0.08]">
+                    <div class="bg-white p-2 sm:p-4 rounded-full shadow-[0_10px_30px_rgba(0,0,0,0.05)] border border-black/[0.08]">
                         <form action="{{ route('product-search') }}" method="GET" class="flex items-center gap-2" @submit="loading = true">
                             <div class="relative flex-1 w-full flex items-center">
                                 <span class="absolute left-3.5 pointer-events-none text-[#86868b] flex items-center">

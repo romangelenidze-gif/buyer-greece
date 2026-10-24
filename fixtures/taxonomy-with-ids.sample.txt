@@ -1,0 +1,5 @@
+# Sample fixture only; not the full Google taxonomy.
+222 - Apparel & Accessories
+1604 - Apparel & Accessories > Clothing
+187 - Apparel & Accessories > Shoes
+1871 - Apparel & Accessories > Shoes > Athletic Shoes

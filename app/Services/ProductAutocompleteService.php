@@ -2,7 +2,7 @@
 
 namespace App\Services;
 
-use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
@@ -16,9 +16,6 @@ class ProductAutocompleteService
         $this->apiKey = config('services.groq.api_key', env('GROQ_API_KEY', ''));
     }
 
-    /**
-     * Возвращает список умных подсказок на основе запроса с привлечением ИИ.
-     */
     public function getSuggestions(string $query, string $locale = 'ru'): array
     {
         $rawQuery = trim($query);
@@ -28,53 +25,50 @@ class ProductAutocompleteService
             return [];
         }
 
-        // 1. Быстрый локальный словарь брендов и категорий
-        $dictionary = [
-            ['label' => 'New Balance 574', 'value' => 'New Balance 574', 'badge' => 'Модель'],
-            ['label' => 'New Balance 990', 'value' => 'New Balance 990', 'badge' => 'Модель'],
-            ['label' => 'Adidas', 'value' => 'Adidas', 'badge' => 'Бренд'],
-            ['label' => 'Nike', 'value' => 'Nike', 'badge' => 'Бренд'],
-            ['label' => 'Apple iPhone', 'value' => 'iPhone', 'badge' => 'Бренд'],
-            ['label' => 'Samsung', 'value' => 'Samsung', 'badge' => 'Бренд'],
-            ['label' => 'Смартфоны', 'value' => 'смартфон', 'badge' => 'Категория'],
-            ['label' => 'Кроссовки', 'value' => 'кроссовки', 'badge' => 'Категория'],
-            ['label' => 'Ноутбуки', 'value' => 'ноутбук', 'badge' => 'Категория'],
-        ];
+        // 1. Умный поиск в собственной базе (частичное совпадение / ассоциация)
+        // Ищем запросы, которые содержат введенный текст или начинаются с него
+        $learned = DB::table('learned_autocomplete')
+            ->where('query', 'LIKE', '%' . $normalized . '%')
+            ->orderBy('hits', 'desc')
+            ->first();
 
-        $localMatches = [];
-        foreach ($dictionary as $item) {
-            if (mb_strpos(mb_strtolower($item['label']), $normalized) !== false || mb_strpos(mb_strtolower($item['value']), $normalized) !== false) {
-                $localMatches[] = $item;
+        if ($learned) {
+            // Увеличиваем счетчик популярности и обновляем время в фоновом режиме
+            DB::table('learned_autocomplete')->where('id', $learned->id)->update([
+                'hits' => DB::raw('hits + 1'),
+                'last_used_at' => now(),
+            ]);
+
+            $suggestions = json_decode($learned->suggestions_json, true);
+            if (is_array($suggestions) && !empty($suggestions)) {
+                return $suggestions;
             }
         }
 
-        if (count($localMatches) >= 3) {
-            return array_slice($localMatches, 0, 5);
-        }
+        // 2. Если в базе ничего похожего нет — запрашиваем у Groq AI (первое торможение)
+        $aiSuggestions = $this->fetchAiSuggestions($rawQuery, $locale);
 
-        // 2. Умная обработка через Groq AI (с кэшированием на 24 часа)
-        $cacheKey = 'autocomplete_ai_' . md5($normalized . '_' . $locale);
-
-        $aiSuggestions = Cache::remember($cacheKey, 86400, function () use ($rawQuery, $locale) {
-            return $this->fetchAiSuggestions($rawQuery, $locale);
-        });
-
-        $all = array_merge($localMatches, $aiSuggestions);
-
-        $unique = [];
-        foreach ($all as $item) {
-            $key = mb_strtolower($item['value']);
-            if (!isset($unique[$key])) {
-                $unique[$key] = $item;
+        if (!empty($aiSuggestions)) {
+            // Сохраняем в собственную базу для мгновенного ответа в будущем
+            try {
+                DB::table('learned_autocomplete')->updateOrInsert(
+                    ['query' => $normalized],
+                    [
+                        'suggestions_json' => json_encode($aiSuggestions, JSON_UNESCAPED_UNICODE),
+                        'hits' => 1,
+                        'last_used_at' => now(),
+                        'updated_at' => now(),
+                        'created_at' => now(),
+                    ]
+                );
+            } catch (\Exception $e) {
+                Log::warning('Failed to save learned autocomplete: ' . $e->getMessage());
             }
         }
 
-        return array_values(array_slice($unique, 0, 6));
+        return $aiSuggestions;
     }
 
-    /**
-     * Вызов Groq AI: поле value теперь содержит чистый поисковый запрос (без греческого алфавита в инпуте).
-     */
     protected function fetchAiSuggestions(string $query, string $locale): array
     {
         if (empty($this->apiKey)) {
