@@ -1,10 +1,9 @@
 @php
-    $quickQueries = [
-        ['label' => 'оливковое масло', 'query' => 'оливковое масло 5л'],
-        ['label' => 'Nike кроссовки', 'query' => 'кроссовки nike'],
-        ['label' => 'греческий мед', 'query' => 'греческий мед'],
-        ['label' => 'Apivita', 'query' => 'косметика apivita'],
-    ];
+    // Берем реальные популярные запросы из таблицы кэша автокомплита learned_autocomplete по количеству хитов
+    $quickQueries = \Illuminate\Support\Facades\DB::table('learned_autocomplete')
+        ->orderByDesc('hits')
+        ->limit(6)
+        ->get();
 @endphp
 
 <div x-show="searchOpen"
@@ -44,7 +43,7 @@
     x-init="$watch('searchOpen', value => { if(value) { setTimeout(() => $refs.searchInput.focus(), 100); } })"
     @pageshow.window="loading = false"
 >
-    <!-- ТЕЛЕПОРТ ОВЕРЛЕЯ ЗАГРУЗКИ В BODY (ОБХОД ОГРАНИЧЕНИЙ BACKDROP-BLUR ХЕДЕРА) -->
+    <!-- ТЕЛЕПОРТ ОВЕРЛЕЯ ЗАГРУЗКИ В BODY -->
     <template x-teleport="body">
         <div x-show="loading" x-cloak class="fixed inset-0 z-[9999] bg-white/80 backdrop-blur-md flex flex-col items-center justify-center space-y-4">
             <svg class="animate-spin h-10 w-10 text-[#0071e3]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -88,7 +87,7 @@
                 <!-- Заголовок -->
                 <div class="text-center space-y-2">
                     <h2 class="apple-section-title">
-                        {{ __('Умный поиск в Греции') }}
+                        {{ __('Умный поиск') }}
                     </h2>
                     <p class="app-text-sub">
                         {{ __('Опишите любой товар на вашем языке. ИИ подберет предложения в греческих магазинах.') }}
@@ -136,17 +135,21 @@
                     </div>
                 </div>
 
-                <!-- Быстрые подсказки -->
-                <div class="pt-4 space-y-3">
-                    <h3 class="app-badge-text text-[#86868b]">{{ __('Быстрый поиск и категории') }}</h3>
-                    <div class="flex flex-wrap gap-2">
-                        @foreach($quickQueries as $item)
-                            <a href="{{ route('product-search', ['q' => $item['query']]) }}" @click="searchOpen = false; loading = true;" class="px-4 py-2 rounded-full bg-black/[0.04] hover:bg-black/[0.08] app-text-sub font-medium text-[#1d1d1f] transition-colors">
-                                {{ $item['label'] }}
-                            </a>
-                        @endforeach
+                <!-- Динамические популярные запросы из learned_autocomplete -->
+                @if($quickQueries->isNotEmpty())
+                    <div class="pt-4 space-y-3 items-center">
+                        <h3 class="app-badge-text text-[#86868b] text-center">{{ __('Популярные запросы') }}</h3>
+                        <div class="flex flex-wrap gap-2 justify-center">
+                            @foreach($quickQueries as $item)
+                                <a href="{{ route('product-search', ['q' => $item->query]) }}" 
+                                @click="searchOpen = false; loading = true;" 
+                                class="px-4 py-2 rounded-full bg-black/[0.04] hover:bg-black/[0.08] app-text-sub font-medium text-[#1d1d1f] transition-colors">
+                                    {{ $item->query }}
+                                </a>
+                            @endforeach
+                        </div>
                     </div>
-                </div>
+                @endif
 
             </div>
         </div>

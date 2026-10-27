@@ -1,4 +1,4 @@
-@props(['product'])
+@props(['product', 'isFirst' => false])
 
 @php
     $rawImg = $product['image_url'] ?? $product['image_path'] ?? $product['image'] ?? null;
@@ -15,7 +15,6 @@
                 : asset('storage/' . $rawImg));
     }
     
-    $productJson = htmlspecialchars(json_encode($product, JSON_UNESCAPED_UNICODE), ENT_QUOTES, 'UTF-8');
     $productUrl = $product['product_url'] ?? '#';
 @endphp
 
@@ -24,7 +23,7 @@
     <!-- Растянутая ссылка на всю карточку -->
     <a href="{{ $productUrl }}" target="_blank" rel="noopener noreferrer" class="absolute inset-0 z-10" aria-label="{{ $product['title'] ?? '' }}"></a>
 
-    <!-- Верхний блок под фото (белый закругленный) -->
+    <!-- Верхний блок под фото -->
     <div class="apple-product-card-top">
         <div class="w-full h-full flex items-center justify-center relative">
             @if(!empty($imgUrl))
@@ -40,13 +39,8 @@
             @endif
         </div>
 
-<!-- Кнопки вверху с серым фоном (z-20 выше ссылки карточки) -->
         <div class="absolute inset-x-0 top-0 p-3.5 flex items-center justify-between z-20 pointer-events-none">
-            <!-- Левая сторона: Кнопка сравнения -->
-            <div class="pointer-events-auto">               
-            </div>
-            
-            <!-- Правая сторона: Ссылка на магазин -->
+            <div class="pointer-events-auto"></div>
             <div class="pointer-events-auto">
                 <a href="{{ $productUrl }}" target="_blank" rel="noopener noreferrer" 
                    title="{{ __('Перейти в магазин') }}"
@@ -62,14 +56,12 @@
     <!-- Нижняя серая плашка -->
     <div class="apple-product-card-bottom flex flex-col justify-between">
         
-        <!-- Название товара (до 2 полноценных строк) -->
         <div>
             <h3 class="apple-product-title line-clamp-2 leading-snug">
                 {{ $product['title'] ?? '' }}
             </h3>
         </div>
 
-        <!-- Нижняя зона: рейтинг и цена слева, кнопка корзины справа (выровнены по низу) -->
         <div class="w-full flex items-end justify-between mt-3">
             <div class="space-y-1">
                 <div class="apple-product-rating">
@@ -86,8 +78,8 @@
                 </div>
             </div>
 
-            <!-- Кнопка заказа с повышенным z-index, чтобы перекрывать ссылку карточки -->
-            <div class="relative z-20">
+            <!-- Кнопка заказа с изолированным тултипом -->
+            <div class="relative z-30">
                 <a href="{{ route('buy-for-me') }}?url={{ urlencode($product['product_url'] ?? '') }}&name={{ urlencode($product['title'] ?? '') }}&price={{ $product['price_amount'] ?? '' }}"
                    title="{{ __('Оформить заказ') }}"
                    class="apple-product-cart-btn">
@@ -95,6 +87,10 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
                     </svg>
                 </a>
+
+                @if($isFirst)
+                    <x-public-ui.onboarding-tooltip show="showTooltip" />
+                @endif
             </div>
         </div>
 

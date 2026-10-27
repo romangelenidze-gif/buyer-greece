@@ -7,6 +7,8 @@ use Illuminate\Support\Facades\Schedule;
 
 Schedule::command('quotes:expire')->hourly();
 
+Schedule::command('autocomplete:sync-hits')->everyTenMinutes();
+
 // Ежемесячная чистка и продвижение популярный запросов автокомплита
 Schedule::call(function () {
     // 1. Автоматически переводим в постоянные запросы с частыми переходами (hits > 5)

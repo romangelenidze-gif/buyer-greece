@@ -15,6 +15,7 @@ return new class extends Migration {
             $table->boolean('is_permanent')->default(0); // Статус постоянного (неудаляемого)
             $table->timestamp('last_used_at')->nullable(); // Дата последнего использования
             $table->timestamps();
+            $table->index(['query', 'hits']);
         });
     }
 

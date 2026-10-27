@@ -19,14 +19,17 @@ use Illuminate\Support\Facades\Route;
 Route::view('/', 'public.home')->name('home');
 Route::view('/how-it-works', 'public.how-it-works')->name('how-it-works');
 
-// Изменили Route::view на вызов контроллера, чтобы обрабатывать параметры витрины
 Route::get('/buy-for-me', [OrderController::class, 'create'])->name('buy-for-me');
 
 Route::view('/forwarding', 'public.forwarding')->name('forwarding');
 Route::view('/help', 'public.help')->name('help');
 
 Route::get('/product-search', [ProductSearchController::class, 'index'])->name('product-search');
-Route::get('/api/autocomplete', [ProductSearchController::class, 'autocomplete'])->name('api.autocomplete');
+
+// ПУБЛИЧНЫЙ МАРШРУТ АВТОКОМПЛИТА С ТРОТТЛИНГОМ (30 запросов в минуту)
+Route::get('/api/autocomplete', [ProductSearchController::class, 'autocomplete'])
+    ->middleware('throttle:30,1')
+    ->name('api.autocomplete');
 
 // Переключатель языка сессии (ru / ka / en)
 Route::get('/lang/{locale}', function (string $locale) {

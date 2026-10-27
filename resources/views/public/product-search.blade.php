@@ -10,14 +10,21 @@
         query: '{{ $query ?? '' }}',
         suggestions: [],
         loadingSuggestions: false,
-        activeSort: '{{ request('sort', $filters['sort'] ?? 'relevance') }}',
+        showTooltip: false,
+        activeSort: localStorage.getItem('product_search_sort') || 'relevance',
         fetchSuggestions() {
             if (this.query.length < 2) {
                 this.suggestions = [];
                 return;
             }
             this.loadingSuggestions = true;
-            fetch(`{{ route('api.autocomplete') }}?q=${encodeURIComponent(this.query)}`)
+            fetch(`{{ route('api.autocomplete') }}?q=${encodeURIComponent(this.query)}`, {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept-Language': '{{ app()->getLocale() }}'
+                },
+                credentials: 'same-origin'
+            })
                 .then(res => res.json())
                 .then(data => {
                     this.suggestions = data.suggestions || [];
@@ -36,6 +43,7 @@
         },
         sortProducts(sortType) {
             this.activeSort = sortType;
+            localStorage.setItem('product_search_sort', sortType);
             this.sortModalOpen = false;
             
             const grid = document.getElementById('products-grid');
@@ -54,9 +62,25 @@
             });
             
             wrappers.forEach(wrapper => grid.appendChild(wrapper));
+        },
+        dismissTooltip() {
+            this.showTooltip = false;
+            localStorage.setItem('cart_tooltip_shown', 'true');
         }
      }"
-     x-init="loading = false"
+     x-init="
+        loading = false;
+        if (activeSort !== 'relevance') {
+            setTimeout(() => sortProducts(activeSort), 50);
+        }
+        @if(!empty($searchResult['products']))
+            if (!localStorage.getItem('cart_tooltip_shown')) {
+                setTimeout(() => {
+                    showTooltip = true;
+                }, 800);
+            }
+        @endif
+     "
      @pageshow.window="loading = false"
 >
     
@@ -85,11 +109,10 @@
             </div>
         @endif
 
-        <!-- SEARCH FORM & FILTERS (ДОБАВЛЕН ОТСТУП СНИЗУ MB-10) -->
+        <!-- SEARCH FORM & FILTERS CONTAINER -->
         <div class="max-w-3xl mx-auto mb-1 space-y-4">
             <form action="{{ route('product-search') }}" method="GET" x-ref="searchForm" @submit="loading = true">
-                <input type="hidden" name="sort" :value="activeSort">
-
+                
                 <!-- SEARCH INPUT WITH AUTOCOMPLETE & SUBMIT BUTTON -->
                 <div class="relative">
                     <div class="apple-search-bar flex items-center justify-between">
@@ -122,81 +145,8 @@
                     </div>
                 </div>
 
-                <!-- FILTERS BAR -->
-                <div class="flex items-center gap-2 pt-3 pb-2 text-xs overflow-x-auto no-scrollbar">
-                    
-                    <!-- MIN PRICE -->
-                    <div class="apple-filter-pill shrink-0">
-                        <input 
-                            type="number" 
-                            name="min_price" 
-                            value="{{ request('min_price', $filters['min_price'] ?? '') }}" 
-                            placeholder="{{ __('от') }}" 
-                            step="0.01" 
-                            min="0"
-                            @change="loading = true; $refs.searchForm.submit()"
-                            class="apple-filter-input"
-                        >
-                        <span class="text-[#86868b] text-xs ml-1.5 font-normal">€</span>
-                    </div>
-
-                    <!-- MAX PRICE -->
-                    <div class="apple-filter-pill shrink-0">
-                        <input 
-                            type="number" 
-                            name="max_price" 
-                            value="{{ request('max_price', $filters['max_price'] ?? '') }}" 
-                            placeholder="{{ __('до') }}" 
-                            step="0.01" 
-                            min="0"
-                            @change="loading = true; $refs.searchForm.submit()"
-                            class="apple-filter-input"
-                        >
-                        <span class="text-[#86868b] text-xs ml-1.5 font-normal">€</span>
-                    </div>
-
-                    <!-- ДЕСКТОП: СЕЛЕКТ (СКРЫТ НА МОБИЛЬНЫХ) -->
-                    <div class="hidden sm:flex ml-auto items-center">
-                        <div class="apple-filter-pill shrink-0 px-4 py-2">
-                            <select 
-                                x-model="activeSort"
-                                @change="sortProducts(activeSort)"
-                                class="bg-transparent border-0 p-0 text-xs font-medium text-[#1d1d1f] focus:outline-none focus:ring-0 cursor-pointer pr-1"
-                            >
-                                <option value="relevance">{{ __('По релевантности') }}</option>
-                                <option value="price_asc">{{ __('Сначала дешевле') }}</option>
-                                <option value="price_desc">{{ __('Сначала дороже') }}</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <!-- МОБИЛКА: КНОПКА СО СТРЕЛОЧКАМИ (ОТКРЫВАЕТ ШТОРКУ) -->
-                    <button 
-                        type="button" 
-                        @click="sortModalOpen = true"
-                        class="flex sm:hidden w-8 h-8 rounded-full bg-[#e5e5ea] active:bg-[#d1d1d6] items-center justify-center text-[#1d1d1f] transition-all shrink-0 ml-auto"
-                        title="{{ __('Сортировка') }}"
-                    >
-                        <svg class="w-4 h-4 text-[#1d1d1f]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
-                        </svg>
-                    </button>
-
-                    <!-- RESET FILTERS BUTTON -->
-                    @if(request()->hasAny(['min_price', 'max_price']) || (request('sort') && request('sort') !== 'relevance'))
-                        <a 
-                            href="{{ route('product-search', ['q' => $query]) }}" 
-                            @click="loading = true"
-                            class="w-8 h-8 rounded-full bg-[#f2f2f7] hover:bg-[#e5e5ea] text-[#86868b] hover:text-[#1d1d1f] flex items-center justify-center transition-all shrink-0 ml-1"
-                            title="{{ __('Сбросить фильтры') }}"
-                        >
-                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-                            </svg>
-                        </a>
-                    @endif
-
-                </div>
+                <!-- ПОДКЛЮЧЕНИЕ ОТДЕЛЬНОГО КОМПОНЕНТА ФИЛЬТРОВ -->
+                <x-public-ui.filter-bar :filters="$filters ?? []" :query="$query ?? ''" />
 
             </form>
         </div>
@@ -209,38 +159,29 @@
             @if(!is_null($searchResult))
                 <div class="space-y-6">
                     
-                    <!-- RECOMMENDATION BANNER -->
-                    <div class="apple-recommendation-box">
-                        <div class="w-8 h-8 rounded-full bg-[#0071e3]/10 text-[#0071e3] flex items-center justify-center shrink-0">
-                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                        </div>
-                        <div class="text-sm">
-                            <p class="text-[#1d1d1f] font-medium m-0">{{ $searchResult['recommendation'] }}</p>
-                            @if(!empty($searchResult['intent_analysis']['brand']))
-                                <p class="text-[#86868b] text-xs m-0 mt-0.5">
-                                    {{ __('Уточнен бренд:') }} <span class="font-semibold text-[#1d1d1f]">{{ $searchResult['intent_analysis']['brand'] }}</span>
-                                </p>
-                            @endif
-                        </div>
-                    </div>
+                    @php
+                        $products = $searchResult['products'] ?? [];
+                        $categoryHandoff = $searchResult['category_handoff'] ?? null;
+                    @endphp
 
-                    <!-- PRODUCTS GRID WITH ROBUST SORTING WRAPPERS -->
-                    @if(!empty($searchResult['products']))
-                        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6" id="products-grid">
-                            @foreach($searchResult['products'] as $product)
-                                <div data-price="{{ $product['price_amount'] ?? $product['price'] ?? 0 }}" data-index="{{ $loop->index }}">
-                                    <x-public-ui.product-card :product="$product" />
+                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6" id="products-grid">
+                        
+                        @if(!empty($categoryHandoff))
+                            @include('search.partials.category-handoff', ['categoryHandoff' => $categoryHandoff])
+                        @elseif(!empty($products))
+                            @foreach($products as $product)
+                                <div data-price="{{ $product['price_amount'] ?? $product['price'] ?? 0 }}" data-index="{{ $loop->index }}" class="contents">
+                                    <x-public-ui.product-card :product="$product" :is-first="$loop->first" />
                                 </div>
                             @endforeach
-                        </div>
-                    @else
-                        <div class="apple-card text-center max-w-md mx-auto space-y-2 py-10 bg-white rounded-3xl border border-black/[0.06]">
-                            <h4 class="app-text-title font-semibold">{{ __('Ничего не найдено') }}</h4>
-                            <p class="app-text-sub text-sm text-[#86868b]">{{ __('По вашему запросу ничего не найдено в каталоге BestPrice. Попробуйте изменить параметры поиска или ценовой диапазон.') }}</p>
-                        </div>
-                    @endif
+                        @else
+                            <div class="col-span-full apple-card text-center max-w-md mx-auto space-y-2 py-10 bg-white rounded-3xl border border-black/[0.06]">
+                                <h4 class="app-text-title font-semibold">{{ __('Ничего не найдено') }}</h4>
+                                <p class="app-text-sub text-sm text-[#86868b]">{{ __('По вашему запросу ничего не найдено в каталоге BestPrice. Попробуйте изменить параметры поиска или ценовой диапазон.') }}</p>
+                            </div>
+                        @endif
+
+                    </div>
 
                 </div>
             @endif
@@ -249,4 +190,4 @@
     </div>
 </div>
 
-</x-layouts.public>
+</x-layouts.public>s
