@@ -27,8 +27,19 @@ return [
 
     'groq' => [
         'api_key' => env('GROQ_API_KEY'),
-        'model' => env('GROQ_MODEL', 'llama-3.3-70b-versatile'),
+        'model' => env('GROQ_MODEL', 'openai/gpt-oss-20b'),
+        'fallback_models' => env('GROQ_FALLBACK_MODELS', ''),
+        'model_ka' => env('GROQ_MODEL_KA'),
+        'model_translate' => env('GROQ_MODEL_TRANSLATE'),
     ],
+
+    'bestprice' => [
+        'max_queries' => env('SEARCH_MAX_QUERIES', 1),
+        'cache_ttl' => env('BESTPRICE_CACHE_TTL', 10800),
+        'cooldown' => env('BESTPRICE_COOLDOWN', 20),
+    ],
+
+    'currency_rates' => ['USD' => 0.92, 'RUB' => 0.010, 'GEL' => 0.34], // ориентировочно, обновите
 
     'gemini' => [
         'api_key' => env('GEMINI_API_KEY'),

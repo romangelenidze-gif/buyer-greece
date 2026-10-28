@@ -30,7 +30,7 @@
                         </svg>
                     </div>
 
-                    <span class="text-xs font-bold text-[#00A896] uppercase tracking-wider">Шаг 1</span>
+                    <span class="text-xs font-bold text-[#00A896] uppercase tracking-wider">{{ __('Шаг') }} 1</span>
                     <h3 class="apple-step-title mt-1 mb-2">
                         {{ __('Вы оставляете запрос') }}
                     </h3>
@@ -40,7 +40,7 @@
                 </div>
 
                 <div class="mt-6 pt-4 border-t border-gray-50 flex items-center text-xs font-medium text-[#00A896]">
-                    <span>Старт процесса</span>
+                    <span>{{ __('Старт процесса') }}</span>
                 </div>
             </div>
 
@@ -55,7 +55,7 @@
                         </svg>
                     </div>
 
-                    <span class="text-xs font-bold text-indigo-600 uppercase tracking-wider">Шаг 2</span>
+                    <span class="text-xs font-bold text-indigo-600 uppercase tracking-wider">{{ __('Шаг') }} 2</span>
                     <h3 class="apple-step-title mt-1 mb-2">
                         {{ __('Мы подбираем лучшие варианты') }}
                     </h3>
@@ -65,7 +65,7 @@
                 </div>
 
                 <div class="mt-6 pt-4 border-t border-gray-50 flex items-center text-xs font-medium text-indigo-600">
-                    <span>Умный анализ ИИ</span>
+                    <span>{{ __('Умный анализ ИИ') }}</span>
                 </div>
             </div>
 
@@ -80,7 +80,7 @@
                         </svg>
                     </div>
 
-                    <span class="text-xs font-bold text-amber-600 uppercase tracking-wider">Шаг 3</span>
+                    <span class="text-xs font-bold text-amber-600 uppercase tracking-wider">{{ __('Шаг') }} 3</span>
                     <h3 class="apple-step-title mt-1 mb-2">
                         {{ __('Покупаем в Греции') }}
                     </h3>
@@ -90,7 +90,7 @@
                 </div>
 
                 <div class="mt-6 pt-4 border-t border-gray-50 flex items-center text-xs font-medium text-amber-600">
-                    <span>Выкуп товаров</span>
+                    <span>{{ __('Выкуп товаров') }}</span>
                 </div>
             </div>
 
@@ -105,7 +105,7 @@
                         </svg>
                     </div>
 
-                    <span class="text-xs font-bold text-blue-600 uppercase tracking-wider">Шаг 4</span>
+                    <span class="text-xs font-bold text-blue-600 uppercase tracking-wider">{{ __('Шаг') }} 4</span>
                     <h3 class="apple-step-title mt-1 mb-2">
                         {{ __('Принимаем и отправляем') }}
                     </h3>
@@ -115,7 +115,7 @@
                 </div>
 
                 <div class="mt-6 pt-4 border-t border-gray-50 flex items-center text-xs font-medium text-blue-600">
-                    <span>Склад в Греции</span>
+                    <span>{{ __('Склад в Греции') }}</span>
                 </div>
             </div>
 
@@ -130,7 +130,7 @@
                         </svg>
                     </div>
 
-                    <span class="text-xs font-bold text-sky-600 uppercase tracking-wider">Шаг 5</span>
+                    <span class="text-xs font-bold text-sky-600 uppercase tracking-wider">{{ __('Шаг') }} 5</span>
                     <h3 class="apple-step-title mt-1 mb-2">
                         {{ __('Доставка в Грузию') }}
                     </h3>
@@ -140,7 +140,7 @@
                 </div>
 
                 <div class="mt-6 pt-4 border-t border-gray-50 flex items-center text-xs font-medium text-sky-600">
-                    <span>Получение дома</span>
+                    <span>{{ __('Получение дома') }}</span>
                 </div>
             </div>
 

@@ -7,7 +7,7 @@
      x-data="{ 
         loading: false, 
         sortModalOpen: false,
-        query: '{{ $query ?? '' }}',
+        query: @js($query ?? ''),
         suggestions: [],
         loadingSuggestions: false,
         showTooltip: false,
@@ -166,7 +166,9 @@
 
                     <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6" id="products-grid">
                         
-                        @if(!empty($categoryHandoff))
+                        @if(!empty($searchResult['needs_clarification']) && !empty($searchResult['clarification']))
+                            @include('search.partials.clarification', ['clarification' => $searchResult['clarification']])
+                        @elseif(!empty($categoryHandoff))
                             @include('search.partials.category-handoff', ['categoryHandoff' => $categoryHandoff])
                         @elseif(!empty($products))
                             @foreach($products as $product)
@@ -177,7 +179,7 @@
                         @else
                             <div class="col-span-full apple-card text-center max-w-md mx-auto space-y-2 py-10 bg-white rounded-3xl border border-black/[0.06]">
                                 <h4 class="app-text-title font-semibold">{{ __('Ничего не найдено') }}</h4>
-                                <p class="app-text-sub text-sm text-[#86868b]">{{ __('По вашему запросу ничего не найдено в каталоге BestPrice. Попробуйте изменить параметры поиска или ценовой диапазон.') }}</p>
+                                <p class="app-text-sub text-sm text-[#86868b]">{{ $searchResult['recommendation'] ?? __('По вашему запросу ничего не найдено в каталоге BestPrice. Попробуйте изменить параметры поиска или ценовой диапазон.') }}</p>
                             </div>
                         @endif
 
@@ -190,4 +192,4 @@
     </div>
 </div>
 
-</x-layouts.public>s
+</x-layouts.public>
