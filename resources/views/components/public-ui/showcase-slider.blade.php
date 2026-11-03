@@ -7,20 +7,26 @@
 @endphp
 
 @if($products->isNotEmpty())
-<section class="py-6 bg-white  overflow-hidden">
+<section class="py-6 bg-white overflow-hidden">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-8">
-        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
-            <div>                
-                <h2 class="apple-section-title text-left">
+        <!-- Использование Grid для идеальной центровки заголовка и размещения кнопок справа -->
+        <div class="grid grid-cols-1 sm:grid-cols-[1fr_auto_1fr] items-center gap-4">
+            <!-- Пустой левый блок для сохранения симметрии центровки на десктопе -->
+            <div class="hidden sm:block"></div>
+
+            <!-- Заголовок строго по центру -->
+            <div class="text-center">                
+                <h2 class="apple-section-title">
                     {{ __('Популярные товары') }}
                 </h2>
-                <p class="apple-section-subtitle text-left mt-1">
+                <p class="apple-section-subtitle mt-1">
                     {{ __('Лучшие находки из греческих интернет-магазинов с доставкой') }}
                 </p>
             </div>
             
+            <!-- Кнопки управления прокруткой -->
             @if($products->count() > 1)
-            <div class="flex gap-2 shrink-0">
+            <div class="flex gap-2 justify-center sm:justify-end shrink-0">
                 <button onclick="document.getElementById('showcase-scroll-container').scrollBy({left: -320, behavior: 'smooth'})" 
                         class="w-10 h-10 rounded-full bg-white hover:bg-black/[0.04] text-[#1d1d1f] border border-black/[0.08] shadow-xs flex items-center justify-center transition-all cursor-pointer active:scale-95" 
                         aria-label="Назад">

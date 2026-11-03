@@ -118,14 +118,17 @@ class LocalQueryAnalyzer
         $query = trim((string) preg_replace('/\s+/u', ' ', $query));
         $lang = GroqAiService::detectLanguage($query);
 
-        if ($query === '' || $lang === 'ka') {
+        // БЫЛО: if ($query === '' || $lang === 'ka') { return null; }
+        // СТАЛО: Разрешаем грузинский язык (lang === 'ka')
+        if ($query === '') {
             return null;
         }
 
         $price = ['min' => null, 'max' => null, 'sort' => null];
         $rest = $query;
 
-        if (in_array($lang, ['ru', 'en'], true)) {
+        // Извлекаем бюджеты и цены для русского, английского и грузинского
+        if (in_array($lang, ['ru', 'en', 'ka'], true)) {
             [$rest, $price] = $this->extractPriceAndSort($query);
         }
 
@@ -135,10 +138,10 @@ class LocalQueryAnalyzer
             return null;
         }
 
-        // После удаления бюджета ("iphone 15 до 800 евро" -> "iphone 15") русских слов может не остаться.
         $restLang = GroqAiService::detectLanguage($rest);
 
-        $resolved = $restLang === 'ru'
+        // Если язык русский или грузинский — разбираем через наш единый словарь
+        $resolved = in_array($restLang, ['ru', 'ka'], true)
             ? $this->resolveRussian($tokens)
             : $this->resolvePassthrough($tokens, $restLang);
 

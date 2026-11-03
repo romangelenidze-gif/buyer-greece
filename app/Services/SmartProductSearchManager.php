@@ -91,8 +91,10 @@ class SmartProductSearchManager
         }
 
         // Широкий запрос ("часы", "кроссовки"): сначала уточняем, а не показываем случайную выдачу.
+        $wordCount = count(explode(' ', trim($userQuery)));
         if (
-            !empty($analysis['is_broad'])
+            $wordCount === 1
+            && !empty($analysis['is_broad'])
             && !empty($analysis['clarification'])
             && empty($userFilters['skip_clarification'])
         ) {

@@ -56,8 +56,9 @@
     <!-- Нижняя серая плашка -->
     <div class="apple-product-card-bottom flex flex-col justify-between">
         
-        <div>
-            <h3 class="apple-product-title line-clamp-2 leading-snug">
+        <!-- Обертка заголовка с жестким выравниванием влево -->
+        <div class="w-full text-left">
+            <h3 class="apple-product-title">
                 {{ $product['title'] ?? '' }}
             </h3>
         </div>

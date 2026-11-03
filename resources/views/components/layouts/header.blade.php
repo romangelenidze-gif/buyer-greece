@@ -1,20 +1,35 @@
 @php
-    $isSearchPage = request()->routeIs('product-search');
+    $isHomePage = request()->routeIs('home');
 @endphp
 
-<header class="bg-white text-[#1d1d1f] sticky top-0 z-50 border-b border-black/[0.08] backdrop-blur-xl bg-white/90">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
-        <div class="flex items-center justify-between h-20">
-            
-            <!-- Логотип -->
-            <div class="flex items-center shrink-0">
-                <a href="{{ route('home') }}" class="apple-section-title !text-xl flex items-center gap-1 group">
-                    <span class="text-[#0071e3]">Buyer</span>Greece
+<!-- Статичный хедер -->
+<header class="text-[#1d1d1f] relative bg-[#fbfbfd] w-full">
+    <div class="max-w-[96rem] mx-auto px-4 sm:px-6 lg:px-8 w-full">
+        
+        <!-- МОБИЛЬНАЯ ШАПКА (< lg): на главной только гамбургер справа, на внутренних — логотип и гамбургер -->
+        <div class="flex lg:hidden items-center h-16 {{ $isHomePage ? 'justify-end' : 'justify-between' }}">
+            @unless($isHomePage)
+                <a href="{{ route('home') }}" class="apple-section-title !text-xl flex items-center">
+                    exereto
                 </a>
-            </div>
+            @endunless
 
-            <!-- Десктопное меню -->
-            <nav class="hidden lg:flex items-center space-x-2">
+            <button @click="mobileNavOpen = true" type="button" class="p-2 text-gray-700 rounded-full hover:bg-black/[0.04] transition-colors cursor-pointer focus:outline-none" aria-label="{{ __('Открыть меню') }}">
+                <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+            </button>
+        </div>
+
+        <!-- ДЕСКТОПНАЯ ШАПКА (>= lg) -->
+        <div class="hidden lg:flex items-center justify-center gap-8 h-20">
+            @unless($isHomePage)
+                <a href="{{ route('home') }}" class="apple-section-title !text-xl flex items-center shrink-0">
+                    exereto
+                </a>
+            @endunless
+
+            <nav class="flex items-center space-x-1 shrink-0">
                 <a href="{{ route('how-it-works') }}" class="apple-nav-link {{ request()->routeIs('how-it-works') ? 'active' : '' }}">
                     {{ __('Как это работает') }}
                 </a>
@@ -29,48 +44,23 @@
                 </a>
             </nav>
 
-            <!-- Правая панель -->
-            <div class="flex items-center gap-2 sm:gap-1 shrink-0">
-                
-                <!-- КНОПКА ПОИСКА (скрывается на странице результатов поиска) -->
-                @unless($isSearchPage)
-                    <button @click="searchOpen = true" type="button" class="apple-nav-link cursor-pointer focus:outline-none" aria-label="{{ __('Поиск') }}">
-                        <svg class="w-5 h-5 opacity-70" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                        </svg>
-                       <!--  <span class="hidden md:inline">{{ __('Поиск') }}</span>-->
-                    </button>
-                @endunless
-
+            <div class="flex items-center gap-4 shrink-0">
                 @auth
-                    <a href="{{ route('dashboard') }}" class="hidden sm:inline-flex apple-nav-link">
+                    <a href="{{ route('dashboard') }}" class="apple-nav-link">
                         {{ __('Личный кабинет') }}
                     </a>
                 @else
-                    <a href="{{ route('login') }}" class="hidden sm:inline-flex apple-nav-link">
+                    <a href="{{ route('login') }}" class="apple-nav-link">
                         {{ __('Войти') }}
                     </a>
                 @endauth
 
-                <!-- Переключатель языка -->
-                <div class="hidden sm:block">
-                    <x-language-switcher theme="light" />
-                </div>
-
-                <!-- Кнопка мобильного гамбургера -->
-                <button @click="mobileNavOpen = true" type="button" class="lg:hidden p-2 text-gray-700 rounded-full hover:bg-gray-100 transition-colors cursor-pointer focus:outline-none" aria-label="{{ __('Открыть меню') }}">
-                    <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
-                    </svg>
-                </button>
+                <x-language-switcher theme="light" />
             </div>
-
         </div>
+
     </div>
 
-    <!-- Мобильная шторка меню -->
     <x-layouts.mobile-nav />
-
-    <!-- Шторка умного поиска -->
     <x-layouts.search-sheet />
 </header>

@@ -12,7 +12,7 @@
     @resize.window="if (window.innerWidth >= 1024) searchOpen = false"
     class="relative z-[100]"
     x-data="{
-        query: '{{ request('q') }}',
+        query: @js(request('q')),
         suggestions: [],
         loadingSuggestions: false,
         loading: false,
@@ -99,11 +99,7 @@
                     <div class="bg-white p-2 sm:p-4 rounded-full shadow-[0_10px_30px_rgba(0,0,0,0.05)] border border-black/[0.08]">
                         <form action="{{ route('product-search') }}" method="GET" class="flex items-center gap-2" @submit="loading = true">
                             <div class="relative flex-1 w-full flex items-center">
-                                <span class="absolute left-3.5 pointer-events-none text-[#86868b] flex items-center">
-                                    <svg class="w-5 h-5 sm:w-6 sm:h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                                    </svg>
-                                </span>
+                                
                                 <input 
                                     type="text" 
                                     name="q" 
@@ -113,10 +109,10 @@
                                     required
                                     maxlength="200"
                                     x-ref="searchInput"
-                                    class="w-full pl-12 pr-12 py-2 bg-transparent border-0 app-text-title text-xl text-[#1d1d1f] placeholder-[#86868b] focus:outline-none focus:ring-0"
+                                    class="w-full pl-5 pr-12 py-2 bg-transparent border-0 app-text-title text-xl text-[#1d1d1f] placeholder-[#86868b] focus:outline-none focus:ring-0"
                                 >
-                                <button type="submit" aria-label="{{ __('Найти') }}" class="absolute right-3.5 p-2 text-[#0071e3] hover:opacity-85 transition-opacity cursor-pointer">
-                                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <button type="submit" aria-label="{{ __('Найти') }}" class="absolute right-2 p-2 text-[#0071e3] hover:opacity-85 transition-opacity cursor-pointer">
+                                    <svg class="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1">
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                                     </svg>
                                 </button>

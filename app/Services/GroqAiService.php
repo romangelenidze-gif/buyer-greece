@@ -374,6 +374,12 @@ class GroqAiService
         $clarification = $this->normalizeClarification($d['clarification'] ?? null);
         $isBroad = !empty($d['is_broad']) && $clarification !== null;
 
+        // Отключаем назойливые блоки уточнений для грузинского языка
+        if ($sourceLang === 'ka') {
+            $isBroad = false;
+            $clarification = null;
+        }
+
         $brand = $this->str($d['brand'] ?? '', 60);
 
         return [

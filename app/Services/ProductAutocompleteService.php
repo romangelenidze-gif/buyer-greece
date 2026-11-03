@@ -6,7 +6,6 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Redis;
 
 class ProductAutocompleteService
 {
@@ -29,10 +28,10 @@ class ProductAutocompleteService
 
         $cacheKey = "autocomplete:v1:{$locale}:{$normalized}";
 
-        // 1. Мгновенный ответ из Redis / RAM-кэша (L1 Cache) — менее 2 мс
+        // Кэшируем только в кэш приложения/Redis. Не совершаем запись в DB при вводе!
         return Cache::remember($cacheKey, now()->addHours(24), function () use ($normalized, $locale, $rawQuery) {
             
-            // 2. Поиск в MySQL с использованием префиксного индекса (LIKE 'query%') вместо медленного '%query%'[cite: 10]
+            // 1. Поиск среди реально популярных завершенных запросов
             $learned = DB::table('learned_autocomplete')
                 ->where('query', 'LIKE', $normalized . '%')
                 ->orderBy('hits', 'desc')
@@ -41,68 +40,13 @@ class ProductAutocompleteService
             if ($learned && !empty($learned->suggestions_json)) {
                 $suggestions = json_decode($learned->suggestions_json, true);
                 if (is_array($suggestions) && !empty($suggestions)) {
-                    // Асинхронный инкремент hits в Redis без блокировки MySQL[cite: 10]
-                    $this->incrementHitsAsync($normalized);
                     return $suggestions;
                 }
             }
 
-            // 3. Защита от Stampede (Thundering Herd) с помощью распределенного блокировщика Cache::lock
-            $lockKey = "ai_autocomplete_lock:{$locale}:{$normalized}";
-            
-            return Cache::lock($lockKey, 5)->get(function () use ($normalized, $rawQuery, $locale) {
-                // Повторная проверка внутри блокировки на случай, если другой поток только что записал данные
-                $learned = DB::table('learned_autocomplete')
-                    ->where('query', 'LIKE', $normalized . '%')
-                    ->orderBy('hits', 'desc')
-                    ->first();
-
-                if ($learned && !empty($learned->suggestions_json)) {
-                    $suggestions = json_decode($learned->suggestions_json, true);
-                    if (is_array($suggestions) && !empty($suggestions)) {
-                        return $suggestions;
-                    }
-                }
-
-                // 4. Запрос к ИИ Groq, если в базе и кэше ничего не найдено[cite: 10]
-                $aiSuggestions = $this->fetchAiSuggestions($rawQuery, $locale);
-
-                if (!empty($aiSuggestions)) {
-                    try {
-                        DB::table('learned_autocomplete')->updateOrInsert(
-                            ['query' => $normalized],
-                            [
-                                'suggestions_json' => json_encode($aiSuggestions, JSON_UNESCAPED_UNICODE),
-                                'hits' => 1,
-                                'last_used_at' => now(),
-                                'updated_at' => now(),
-                                'created_at' => now(),
-                            ]
-                        );
-                    } catch (\Exception $e) {
-                        Log::warning('Failed to save learned autocomplete: ' . $e->getMessage());
-                    }
-                }
-
-                return $aiSuggestions;
-            }) ?? [];
+            // 2. Запрос к ИИ Groq, если ничего не найдено в базе
+            return $this->fetchAiSuggestions($rawQuery, $locale);
         });
-    }
-
-    protected function incrementHitsAsync(string $normalized): void
-    {
-        try {
-            // Сохраняем счетчик в Redis, разгружая дисковую базу данных[cite: 10]
-            Redis::zincrby('autocomplete_hits_counter', 1, $normalized);
-        } catch (\Exception $e) {
-            // Фолбек на случай недоступности Redis
-            DB::table('learned_autocomplete')
-                ->where('query', $normalized)
-                ->update([
-                    'hits' => DB::raw('hits + 1'),
-                    'last_used_at' => now(),
-                ]);
-        }
     }
 
     protected function fetchAiSuggestions(string $query, string $locale): array

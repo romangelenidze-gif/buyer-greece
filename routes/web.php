@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\HomeController;
 use App\Http\Controllers\ProductSearchController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\OrderController;
@@ -16,7 +17,9 @@ use Illuminate\Support\Facades\Route;
 | Публичные маршруты
 |--------------------------------------------------------------------------
 */
-Route::view('/', 'public.home')->name('home');
+// Главная страница теперь обрабатывается через контроллер для передачи данных категорий и брендов
+Route::get('/', [HomeController::class, 'index'])->name('home');
+
 Route::view('/how-it-works', 'public.how-it-works')->name('how-it-works');
 
 Route::get('/buy-for-me', [OrderController::class, 'create'])->name('buy-for-me');
