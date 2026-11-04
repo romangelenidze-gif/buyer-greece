@@ -2,8 +2,8 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="grid grid-cols-1 md:grid-cols-4 gap-8 mb-12">
             <div class="space-y-3">
-                <div class="font-bold text-sm text-white tracking-tight flex items-center gap-1.5">
-                    <span class="text-[#0071e3]">Buyer</span>Greece
+                <div class="font-base text-2xl text-white tracking-tight flex items-center gap-1.5">
+                    exereto
                 </div>
                 <p class="text-gray-400 leading-relaxed text-xs">
                     {{ __('Сервис выкупа и приема покупок в греческих магазинах. Международная доставка в Грузию выполняется перевозчиком Camex.') }}
@@ -37,7 +37,7 @@
 
         <div class="pt-8 border-t border-white/10 flex flex-col sm:flex-row justify-center items-center gap-4 text-gray-500">
             <div class="text-xs">
-                © {{ date('Y') }} Buyer Greece • {{ __('© Все права защищены.') }}
+                © {{ date('Y') }} exereto • {{ __('© Все права защищены.') }}
             </div>
         </div>
     </div>

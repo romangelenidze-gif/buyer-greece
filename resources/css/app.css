@@ -121,10 +121,9 @@ body.overflow-hidden {
 /* Дополнительный ультра-мелкий размер (Бейджи, Теги) */
 .app-text-xs,
 .app-badge-text {
-    font-size: 0.75rem; /* 12px */
-    font-weight: 600;
+    font-size: 1rem; /* 12px */
+    font-weight: 400;
     letter-spacing: 0.03em;
-    text-transform: uppercase;
 }
 
 /* ==========================================================================
@@ -520,6 +519,112 @@ a.apple-nav-link.active {
 }
 
 
+/* --------------------------------------------------------------------------
+   Мобильное меню (шторка): кнопка-иконка, пункты, разделители, появление
+   -------------------------------------------------------------------------- */
+
+/* Круглая кнопка-иконка (крестик в шторке, годится и для гамбургера в хедере) */
+.apple-icon-btn {
+    padding: 0.5rem;
+    border-radius: 9999px;
+    color: #374151;
+    cursor: pointer;
+    transition: color 0.15s cubic-bezier(0.4, 0, 0.2, 1),
+                background-color 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.apple-icon-btn:hover {
+    background-color: #f3f4f6;
+}
+
+.apple-icon-btn:focus {
+    outline: none;
+}
+
+.apple-icon-btn:focus-visible {
+    outline: 2px solid #0071e3;
+    outline-offset: 2px;
+}
+
+/* Пункт меню шторки. Активный пункт (aria-current) подсвечивается синим */
+.apple-mobile-link {
+    display: block;
+    padding-block: 0.375rem;
+    font-size: 2.4rem;
+    line-height: 2.4rem;
+    font-weight: 600;
+    letter-spacing: -0.025em;
+    color: #1d1d1f;
+    text-decoration: none;
+    transition: color 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@media (min-width: 640px) {
+    .apple-mobile-link {
+        font-size: 1.875rem;
+        line-height: 2.25rem;
+    }
+}
+
+.apple-mobile-link:hover {
+    opacity: 0.6;
+}
+
+/* Вторичные пункты (Помощь, Кабинет, Вход): размер как у .app-card-title */
+.apple-mobile-link--secondary {
+    font-size: 1.6rem;
+    line-height: 1.35;
+    letter-spacing: -0.01em;
+}
+
+.apple-mobile-link[aria-current="page"],
+.apple-mobile-link--accent {
+    color: #0071e3;
+    font-weight: 700;
+}
+
+/* Разделитель между блоками шторки */
+.apple-mobile-nav-divider {
+    border-top: 1px solid rgba(0, 0, 0, 0.10);
+    padding-top: 1rem;
+}
+
+/* Нижняя панель шторки (язык), прижата вниз и учитывает «чёлку» iOS */
+.apple-mobile-nav-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: auto;
+    padding-bottom: max(1rem, env(safe-area-inset-bottom));
+}
+
+.apple-mobile-nav-label {
+    color: #86868b;
+}
+
+/* Каскадное появление блоков шторки: задержка задаётся через style="--i: N" */
+.apple-item {
+    animation: apple-item-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+    animation-delay: calc(0.12s + var(--i, 0) * 0.05s);
+}
+
+@keyframes apple-item-in {
+    from {
+        opacity: 0;
+        transform: translateY(0.75rem);
+    }
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .apple-item {
+        animation: none;
+    }
+}
+
 /* ==========================================================================
    7. ПОДВАЛ САЙТА (FOOTER STYLES)
    ========================================================================== */
@@ -561,7 +666,7 @@ a.apple-nav-link.active {
     gap: 0.375rem;
     padding: 0.375rem 0.75rem;
     border-radius: 9999px;
-    font-size: 0.8125rem; /* 13px */
+    font-size: 1.2rem; /* 13px */
     font-weight: 500;
     transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
     cursor: pointer;
@@ -591,9 +696,39 @@ a.apple-nav-link.active {
 }
 
 .apple-lang-btn svg {
-    width: 1rem;
-    height: 1rem;
+    width: 1.25rem;
+    height: 1.25rem;
     opacity: 0.75;
+}
+
+/* Код текущего языка в кнопке-триггере (RU, EN, KA) */
+.apple-lang-code {
+    font-weight: 600;
+    letter-spacing: 0.025em;
+    text-transform: uppercase;
+}
+
+/* Пункт выпадающего списка языков */
+.apple-lang-option {
+    display: flex;
+    align-items: center;
+    padding: 0.5rem 0.875rem;
+    font-size: 1.2rem;
+    transition: background-color 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.apple-lang-option.theme-light:hover {
+    background-color: rgba(0, 0, 0, 0.04);
+}
+
+.apple-lang-option.theme-dark:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Текущий язык */
+.apple-lang-option[aria-current="true"] {
+    color: #0071e3;
+    font-weight: 600;
 }
 
 /* добавить фирменную плавность движения Apple */
