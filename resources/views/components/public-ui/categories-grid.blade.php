@@ -4,7 +4,7 @@
     <!-- Шапка секции с подзаголовком -->
     <div class="text-center mb-8 max-w-3xl mx-auto px-4">
         <h2 class="apple-section-title text-2xl sm:text-3xl mb-2">
-            {{ __('Категории каталога') }}
+            {{ __('Популярные категории') }}
         </h2>
         <p class="app-text-body text-[#515154] text-sm sm:text-base leading-relaxed">
             <span>{{ __('Найдите нужный товар в каталоге BestPrice.gr — крупнейшем греческом каталоге, объединяющем 3 741 магазин и 27 644 929 товаров. Откройте страницу понравившегося товара и отправьте нам ссылку.') }}</span>

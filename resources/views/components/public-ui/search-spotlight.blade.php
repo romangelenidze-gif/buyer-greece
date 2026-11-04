@@ -56,7 +56,7 @@
                     x-model="query"
                     @focus="if(suggestions.length > 0) open = true"
                     @input.debounce.300ms="fetchSuggestions()"
-                    placeholder="{{ __('Search...') }}" 
+                    placeholder="{{ __('Поиск...') }}" 
                     required
                     maxlength="200"
                     autocomplete="off"

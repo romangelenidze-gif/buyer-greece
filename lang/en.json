@@ -1,5 +1,4 @@
 {
-    "Buyer Greece": "Buyer Greece",
     "Главная": "Home",
     "Личный кабинет": "Dashboard",
     "Войти": "Log In",
@@ -349,5 +348,31 @@
     "Где посмотреть статусы заказа, посылки и отправки?": "Where can I view order, package, and shipment statuses?",
     "В вашем личном кабинете вы можете отдельно отслеживать процесс выкупа товара (заказ), физическое поступление на склад (входящая посылка) и международную транспортировку (отправка Camex).": "In your dashboard, you can separately track the product purchase process (order), physical warehouse arrival (incoming package), and international transportation (Camex shipment).",
     "Остались вопросы или нужна помощь?": "Still have questions or need help?",
-    "Свяжитесь с нашей командой в удобном мессенджере. Мы на связи и готовы помочь с любым вопросом по выкупу и доставке.": "Contact our team in your preferred messenger. We are online and ready to help with any purchase or delivery question."
+    "Свяжитесь с нашей командой в удобном мессенджере. Мы на связи и готовы помочь с любым вопросом по выкупу и доставке.": "Contact our team in your preferred messenger. We are online and ready to help with any purchase or delivery question.",
+    
+    "Опишите любой товар на вашем языке. ИИ подберет варианты в греческих магазинах.": "Describe any product in your language. AI will find options in Greek stores.",
+    "Популярные категории": "Popular Categories",
+    "Найдите нужный товар в каталоге BestPrice.gr — крупнейшем греческом каталоге, объединяющем 3 741 магазин и 27 644 929 товаров. Откройте страницу понравившегося товара и отправьте нам ссылку.": "Find the desired product in the BestPrice.gr catalog — the largest Greek catalog uniting 3,741 stores and 27,644,929 products. Open the page of the product you like and send us the link.",
+    "Безграничные возможмости": "Unlimited Possibilities",
+    "Найдите нужный товар на сайте любого магазина Греции, скопируйте ссылку и отправьте её нам для выкупа или укажите наш греческий адрес при самостоятельном оформлении.": "Find the desired product on the website of any Greek store, copy the link and send it to us for purchase or provide our Greek address for self-checkout.",
+    
+    "Мобильные телефоны": "Mobile",
+    "Крупная бытовая техника": "White Goods",
+    "Парфюмерия": "Perfume",
+    "Фотоаппараты и камеры": "Cameras",
+    "Ноутбуки": "Laptops",
+    "Мужские куртки": "Men's Jackets",
+    "Женские куртки": "Women's Jackets",
+    "Мужская спортивная обувь": "Men's Sports Shoes",
+    "Игрушки": "Toys",
+    "Смарт-часы": "Smartwatches",
+    "Кремы для лица": "Face Creams",
+    "Женские кроссовки": "Women's Sneakers",
+    "Оливковое масло": "Olive Oil",
+    "Женские джинсы": "Women's Jeans",
+    "Планшеты": "Tablets",
+    "Детская мода": "Children's Fashion",
+    "Женские ботинки": "Women's Boots",
+    "Платья": "Dresses",
+    "Акции и скидки": "Sales & Offers"
 }
