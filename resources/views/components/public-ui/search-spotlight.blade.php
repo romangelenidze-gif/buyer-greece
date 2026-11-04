@@ -1,7 +1,3 @@
-@php
-    $searchHeight = 'h-16 sm:h-20'; 
-@endphp
-
 <!-- Поднимаем блок выше (pt-2 sm:pt-4), убирая лишнее пустое пространство -->
 <section class="pt-0 sm:pt-4 lg:pt-6 pb-10 px-4 sm:px-8 lg:px-8 text-center max-w-4xl mx-auto space-y-8 sm:space-y-12">
     <div class="space-y-3">
@@ -53,7 +49,7 @@
          @scroll.window="open = false"
     >
         <form action="{{ route('product-search') }}" method="GET" class="relative" @submit="loading = true">
-            <div class="apple-search-bar flex items-center justify-between px-6 {{ $searchHeight }}">
+            <div class="apple-search-bar flex items-center justify-between">
                 <input 
                     type="text" 
                     name="q" 

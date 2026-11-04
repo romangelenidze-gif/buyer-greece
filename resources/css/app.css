@@ -609,11 +609,19 @@ a.apple-nav-link.active {
 /* Главная поисковая капсула */
 .apple-search-bar {
     background-color: #ffffff;
-    padding: 0.4rem 1.5rem;
+    height: 4rem; /* эквивалент h-16 */
+    padding-left: 1.5rem; /* эквивалент px-6 */
+    padding-right: 1.5rem;
     border-radius: 9999px;
     box-shadow: 0 4px 25px rgba(0, 0, 0, 0.04);
     border: 1px solid rgba(0, 0, 0, 0.06);
     transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@media (min-width: 640px) {
+    .apple-search-bar {
+        height: 3.7rem; /* эквивалент sm:h-20 */
+    }
 }
 
 .apple-search-bar:hover {
@@ -631,7 +639,7 @@ a.apple-nav-link.active {
     background-color: transparent;
     border: none;
     padding: 0;
-    font-size: 1.3rem;
+    font-size: 1.5rem;
     color: #1d1d1f;
     outline: none;
 }
