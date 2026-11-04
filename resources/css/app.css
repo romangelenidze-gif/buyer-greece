@@ -696,8 +696,8 @@ a.apple-nav-link.active {
 }
 
 .apple-lang-btn svg {
-    width: 1.25rem;
-    height: 1.25rem;
+    width: 1.2rem;
+    height: 1.2rem;
     opacity: 0.75;
 }
 
@@ -729,6 +729,23 @@ a.apple-nav-link.active {
 .apple-lang-option[aria-current="true"] {
     color: #0071e3;
     font-weight: 600;
+}
+
+/* Десктоп (хедер, lg+): переключатель языка компактнее, чем в мобильной шторке */
+@media (min-width: 1024px) {
+    .apple-lang-btn {
+        font-size: 0.7rem; /* 15px */
+    }
+
+    .apple-lang-btn svg {
+        width: 0.9rem;
+        height: 0.9rem;
+    }
+
+    .apple-lang-option {
+        padding: 0.4375rem 0.875rem;
+        font-size: 0.9375rem; /* 15px */
+    }
 }
 
 /* добавить фирменную плавность движения Apple */
