@@ -97,7 +97,7 @@
 
                                 <div>
                                     <label for="phone" class="block app-text-sub font-semibold mb-1.5">
-                                        {{ __('Номер телефона (необязательно)') }}
+                                        {{ __('Номер телефона') }}
                                     </label>
                                     <input 
                                         type="tel" 
@@ -198,7 +198,7 @@
                                 </div>
 
                                 <div>
-                                    <label for="size" class="block app-text-sub mb-1.5">{{ __('Размер (необязательно)') }}</label>
+                                    <label for="size" class="block app-text-sub mb-1.5">{{ __('Размер') }}</label>
                                     <input 
                                         type="text" 
                                         name="size" 
@@ -210,7 +210,7 @@
                                 </div>
 
                                 <div>
-                                    <label for="color" class="block app-text-sub mb-1.5">{{ __('Цвет (необязательно)') }}</label>
+                                    <label for="color" class="block app-text-sub mb-1.5">{{ __('Цвет') }}</label>
                                     <input 
                                         type="text" 
                                         name="color" 
