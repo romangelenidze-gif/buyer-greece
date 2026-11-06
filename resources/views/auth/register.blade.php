@@ -20,7 +20,7 @@
                         value="{{ old('name') }}" 
                         required 
                         autofocus 
-                        placeholder="Иван Иванов" 
+                        placeholder="{{ __('Иван Иванов') }}" 
                         class="w-full px-4 py-2.5 rounded-xl bg-black/[0.03] border border-black/[0.08] app-text-body focus:bg-white focus:border-[#0071e3] focus:ring-4 focus:ring-[#0071e3]/10 transition-all duration-200 outline-none"
                     >
                     @error('name')
@@ -72,7 +72,7 @@
                         name="password" 
                         id="password" 
                         required 
-                        placeholder="Минимум 8 символов" 
+                        placeholder="{{ __('Минимум 8 символов') }}" 
                         class="w-full px-4 py-2.5 rounded-xl bg-black/[0.03] border border-black/[0.08] app-text-body focus:bg-white focus:border-[#0071e3] focus:ring-4 focus:ring-[#0071e3]/10 transition-all duration-200 outline-none"
                     >
                     @error('password')
