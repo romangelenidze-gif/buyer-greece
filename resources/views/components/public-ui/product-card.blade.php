@@ -16,6 +16,17 @@
     }
     
     $productUrl = $product['product_url'] ?? '#';
+
+    // Рейтинг из MCP: ['average' => 4.38, 'count' => 67]; допускаем и «плоские» rating_average / rating_count
+    $rating = $product['rating'] ?? null;
+    $ratingAverage = is_array($rating) ? ($rating['average'] ?? null) : $rating;
+    $ratingAverage ??= $product['rating_average'] ?? null;
+    $ratingCount = is_array($rating) ? ($rating['count'] ?? null) : null;
+    $ratingCount ??= $product['rating_count'] ?? null;
+
+    $hasRating = is_numeric($ratingAverage) && (float) $ratingAverage > 0;
+    $ratingAverage = $hasRating ? min(5.0, (float) $ratingAverage) : null;
+    $ratingCount = is_numeric($ratingCount) && (int) $ratingCount > 0 ? (int) $ratingCount : null;
 @endphp
 
 <div class="apple-product-card group relative">
@@ -56,19 +67,24 @@
     <!-- Нижняя серая плашка -->
     <div class="apple-product-card-bottom flex flex-col justify-between">
         
-        <!-- Обертка заголовка с жестким выравниванием влево -->
-        <div class="w-full text-left">
-            <h3 class="apple-product-title">
+        <div>
+            <h3 class="apple-product-title line-clamp-2 leading-snug">
                 {{ $product['title'] ?? '' }}
             </h3>
         </div>
 
         <div class="w-full flex items-end justify-between mt-3">
             <div class="space-y-1">
-                <div class="apple-product-rating">
-                    <span class="apple-product-stars">★★★★☆</span>
-                    <span>({{ $product['offers_count'] ?? 1 }})</span>
-                </div>
+                @if($hasRating)
+                    <div class="apple-product-rating">
+                        <span class="apple-product-stars" role="img"
+                              aria-label="{{ number_format($ratingAverage, 1) }} / 5"
+                              style="--rating: {{ round($ratingAverage, 2) }}"></span>
+                        @if($ratingCount)
+                            <span>({{ number_format($ratingCount) }})</span>
+                        @endif
+                    </div>
+                @endif
                 
                 <div class="apple-product-price text-left leading-none">
                     @if(!empty($product['price_amount']))

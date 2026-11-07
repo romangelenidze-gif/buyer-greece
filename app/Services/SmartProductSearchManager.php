@@ -15,7 +15,7 @@ use Illuminate\Support\Facades\Log;
  */
 class SmartProductSearchManager
 {
-    protected const CACHE_VERSION = 'v9';
+    protected const CACHE_VERSION = 'v10';
     protected const CACHE_TTL = 10800; // 3 часа
     protected const LIMIT = 8;
 
@@ -223,8 +223,10 @@ class SmartProductSearchManager
                 ? '€' . number_format($priceAmount, 2, '.', ' ')
                 : __('По запросу');
 
-            $rating = $item['rating'] ?? null;
-            $rating = is_array($rating) ? ($rating['average'] ?? null) : (is_numeric($rating) ? $rating : null);
+            // MCP отдаёт rating как ['average' => 4.38, 'count' => 67]
+            $ratingRaw = $item['rating'] ?? null;
+            $rating = is_array($ratingRaw) ? ($ratingRaw['average'] ?? null) : (is_numeric($ratingRaw) ? $ratingRaw : null);
+            $ratingCount = is_array($ratingRaw) && is_numeric($ratingRaw['count'] ?? null) ? (int) $ratingRaw['count'] : null;
 
             $products[] = [
                 'title' => $displayTitle,
@@ -243,6 +245,7 @@ class SmartProductSearchManager
                 'currency' => 'EUR',
                 'offers_count' => $item['offer_count'] ?? $item['offers_count'] ?? 1,
                 'rating' => $rating,
+                'rating_count' => $ratingCount,
                 'image_url' => filter_var($item['image_url'] ?? '', FILTER_VALIDATE_URL) ?: null,
                 'product_url' => filter_var($item['bestprice_url'] ?? $item['product_url'] ?? '', FILTER_VALIDATE_URL) ?: '#',
             ];

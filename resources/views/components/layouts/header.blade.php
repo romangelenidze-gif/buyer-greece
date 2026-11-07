@@ -3,7 +3,7 @@
 @endphp
 
 <!-- Статичный хедер -->
-<header class="text-[#1d1d1f] relative bg-[#fbfbfd] w-full">
+<header class="text-[#1d1d1f] relative w-full">
     <div class="max-w-[96rem] mx-auto px-4 sm:px-6 lg:px-8 w-full">
         
         <!-- МОБИЛЬНАЯ ШАПКА (< lg): на главной только гамбургер справа, на внутренних — логотип и гамбургер -->

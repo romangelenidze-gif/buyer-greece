@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <meta name='impact-site-verification' value='262bda77-2fd8-4e20-a422-cde2f97ae789'>
+<!--<meta name='impact-site-verification' value='262bda77-2fd8-4e20-a422-cde2f97ae789'>-->
 
     <title>{{ $title ?? __('Buyer Greece → Georgia | Выкуп и доставка товаров из Греции') }}</title>
     @if(isset($description))

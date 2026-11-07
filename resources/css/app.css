@@ -131,11 +131,11 @@ body.overflow-hidden {
    ========================================================================== */
 
 .apple-dark-cta {
-    background-color: #1d1d1f;
+    /*background-color: #1d1d1f; */
     border-radius: 2rem; /* 32px */
     padding: 2rem;
     text-align: center;
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+    /*box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15); */
 }
 
 @media (min-width: 640px) {
@@ -146,7 +146,7 @@ body.overflow-hidden {
 
 /* Заголовок на темном фоне */
 .apple-dark-cta-title {
-    color: #ffffff !important;
+    color: #1d1d1f !important;
     font-size: clamp(1.125rem, 1.5vw, 1.35rem);
     font-weight: 600;
     letter-spacing: -0.01em;
@@ -156,7 +156,7 @@ body.overflow-hidden {
 
 /* Описание / Подзаголовок на темном фоне */
 .apple-dark-cta-desc {
-    color: #a1a1a6 !important; /* Контрастный серый цвет Apple для темных тем */
+    color: #515154 !important; /* Контрастный серый цвет Apple для темных тем */
     font-size: clamp(0.875rem, 1vw, 1rem);
     line-height: 1.5;
     max-width: 28rem;
@@ -428,9 +428,26 @@ a.apple-nav-link.active {
     color: #86868b;
 }
 
+/* Звёзды рейтинга: заливка считается из --rating (0–5), например style="--rating: 4.38".
+   Дробные значения закрашиваются частично, пустая часть остаётся серой. */
 .apple-product-stars {
-    color: #f59e0b; /* Цвет звездочек */
+    --rating: 0;
+    display: inline-block;
+    line-height: 1;
     font-weight: 500;
+    background: linear-gradient(
+        90deg,
+        #f59e0b calc(var(--rating) / 5 * 100%),  /* Цвет заполненных звёзд */
+        #d2d2d7 calc(var(--rating) / 5 * 100%)   /* Цвет пустых звёзд */
+    );
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+}
+
+.apple-product-stars::before {
+    content: "★★★★★";
 }
 
 .apple-product-desc {
@@ -630,11 +647,11 @@ a.apple-nav-link.active {
    ========================================================================== */
 
 .apple-footer {
-    background-color: #f5f5f7;
+    background-color: #f3f3f3;
     color: #6e6e73;
     font-size: 0.8125rem; /* 13px - фирменный размер подвала Apple */
     line-height: 1.45;
-    border-top: 1px solid rgba(0, 0, 0, 0.08);
+    /*border-top: 1px solid rgba(0, 0, 0, 0.08); */
 }
 
 .apple-footer-title {

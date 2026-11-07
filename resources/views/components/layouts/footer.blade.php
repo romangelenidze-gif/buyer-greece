@@ -1,42 +1,42 @@
-<footer class="bg-[#1d1d1f] text-gray-400 text-xs border-t border-white/10 py-16">
+<footer class="apple-footer py-8">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="grid grid-cols-1 md:grid-cols-4 gap-8 mb-12">
             <div class="space-y-3">
-                <div class="font-base text-2xl text-white tracking-tight flex items-center gap-1.5">
+                <div class="font-semibold text-xl text-[#1d1d1f] tracking-tight flex items-center gap-1.5">
                     exereto
                 </div>
-                <p class="text-gray-400 leading-relaxed text-xs">
-                    {{ __('Сервис выкупа и приема покупок в греческих магазинах. Международная доставка в Грузию выполняется перевозчиком Camex.') }}
+                <p class="text-[#6e6e73] leading-relaxed text-sm">
+                    {{ __('Интеллектуальная платформа поиска и заказа товаров из греческих каталогов и интернет-магазинов.') }}
                 </p>
             </div>
 
             <div>
-                <h4 class="font-semibold text-white mb-3 text-xs tracking-wider uppercase">{{ __('Услуги') }}</h4>
+                <h4 class="apple-footer-title">{{ __('Услуги') }}</h4>
                 <ul class="space-y-2">
-                    <li><a href="{{ route('buy-for-me') }}" class="hover:text-white transition-colors">{{ __('Выкупите за меня') }}</a></li>
-                    <li><a href="{{ route('forwarding') }}" class="hover:text-white transition-colors">{{ __('Форвардинг') }}</a></li>
+                    <li><a href="{{ route('buy-for-me') }}" class="apple-footer-link">{{ __('Выкупите за меня') }}</a></li>
+                    <li><a href="{{ route('forwarding') }}" class="apple-footer-link">{{ __('Форвардинг') }}</a></li>
                 </ul>
             </div>
 
             <div>
-                <h4 class="font-semibold text-white mb-3 text-xs tracking-wider uppercase">{{ __('Информация') }}</h4>
+                <h4 class="apple-footer-title">{{ __('Информация') }}</h4>
                 <ul class="space-y-2">
-                    <li><a href="{{ route('how-it-works') }}" class="hover:text-white transition-colors">{{ __('Как это работает') }}</a></li>
-                    <li><a href="{{ route('help') }}" class="hover:text-white transition-colors">{{ __('Помощь / FAQ') }}</a></li>
-                    <li><a href="{{ route('help') }}" class="hover:text-white transition-colors">{{ __('Условия обслуживания') }}</a></li>
-                    <li><a href="{{ route('help') }}" class="hover:text-white transition-colors">{{ __('Политика конфиденциальности') }}</a></li>
+                    <li><a href="{{ route('how-it-works') }}" class="apple-footer-link">{{ __('Как это работает') }}</a></li>
+                    <li><a href="{{ route('help') }}" class="apple-footer-link">{{ __('Помощь / FAQ') }}</a></li>
+                    <li><a href="{{ route('help') }}" class="apple-footer-link">{{ __('Условия обслуживания') }}</a></li>
+                    <li><a href="{{ route('help') }}" class="apple-footer-link">{{ __('Политика конфиденциальности') }}</a></li>
                 </ul>
             </div>
 
             <div>
-                <p class="app-badge-text text-gray-500 leading-relaxed">
+                <p class="text-sm text-[#6e6e73] leading-relaxed">
                     {{ __('Международная транспортировка Греция → Грузия регулируется правилами Camex.') }}
                 </p>
             </div>
         </div>
 
-        <div class="pt-8 border-t border-white/10 flex flex-col sm:flex-row justify-center items-center gap-4 text-gray-500">
-            <div class="text-xs">
+        <div class="pt-8 border-t border-black/[0.08] flex flex-col sm:flex-row justify-between items-center gap-4 text-[#86868b]">
+            <div class="text-sm">
                 © {{ date('Y') }} exereto • {{ __('© Все права защищены.') }}
             </div>
         </div>
