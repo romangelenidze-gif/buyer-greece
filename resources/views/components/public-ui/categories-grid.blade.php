@@ -20,7 +20,7 @@
             <a href="{{ $cat['url'] ?? '#' }}" 
                target="_blank" 
                rel="noopener noreferrer"
-               class="group bg-[#f5f5f7] hover:bg-white border border-black/[0.04] rounded-2xl p-3 sm:p-4 flex flex-col items-center justify-between text-center transition-all duration-300 hover:shadow-lg hover:-translate-y-1 h-44 sm:h-48">
+               class="group bg-[#ffffff] shadow-sm hover:bg-white border border-black/[0.04] rounded-2xl p-3 sm:p-4 flex flex-col items-center justify-between text-center transition-all duration-300 hover:shadow-lg hover:-translate-y-1 h-44 sm:h-48">
                 <div class="w-full h-28 sm:h-32 flex items-center justify-center overflow-hidden">
                     <img src="{{ asset('images/categories/' . $cat['img']) }}" 
                          alt="{{ $cat['name'] }}" 
