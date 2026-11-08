@@ -2,7 +2,7 @@
     title="{{ __('Центр помощи и FAQ | Buyer Greece') }}"
     description="{{ __('Ответы на часто задаваемые вопросы о выкупе, оплате, форвардинге и доставке из Греции в Грузию.') }}"
 >
-    <div class="py-8 bg-[#f2f2f2] min-h-[calc(100vh-4rem)]" x-data="{ openFaq: null }">
+    <div class="py-8 bg-[#f5f5f7] min-h-[calc(100vh-4rem)]" x-data="{ openFaq: null }">
         <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
             
             <!-- HEADER -->

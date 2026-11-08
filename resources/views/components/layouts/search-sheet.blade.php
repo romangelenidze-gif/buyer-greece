@@ -63,7 +63,7 @@
         x-transition:leave="apple-sheet-leave"
         x-transition:leave-start="apple-sheet-leave-start"
         x-transition:leave-end="apple-sheet-leave-end"
-        class="apple-sheet fixed inset-0 z-[100] flex flex-col overflow-y-auto bg-[#fbfbfd]"
+        class="apple-sheet fixed inset-0 z-[100] flex flex-col overflow-y-auto bg-[#f5f5f7]"
         role="dialog"
         aria-modal="true"
         aria-label="{{ __('Поиск') }}"

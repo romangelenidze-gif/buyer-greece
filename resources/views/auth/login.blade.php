@@ -1,5 +1,5 @@
 <x-layouts.public title="{{ __('Вход в кабинет | Buyer Greece') }}">
-    <div class="min-h-[calc(100vh-16rem)] flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-[#f2f2f2]">
+    <div class="min-h-[calc(100vh-16rem)] flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-[#f5f5f7]">
         <div class="max-w-md w-full space-y-6 apple-card">
             <div class="text-center space-y-2">
                 <h1 class="app-text-title">{{ __('Вход в личный кабинет') }}</h1>

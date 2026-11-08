@@ -2,7 +2,7 @@
     title="{{ __('Как это работает | Buyer Greece') }}"
     description="{{ __('Пошаговое руководство по выкупу товаров и форвардингу из Греции в Грузию.') }}"
 >
-    <div class="py-6 bg-[#f2f2f2] min-h-[calc(100vh-4rem)]">
+    <div class="py-6 bg-[#f5f5f7] min-h-[calc(100vh-4rem)]">
         <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
             <div class="text-center space-y-2">
                 <h1 class="apple-section-title text-left sm:text-center">{{ __('Как работает сервис') }}</h1>

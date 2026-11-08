@@ -7,7 +7,7 @@
 @endphp
 
 @if($products->isNotEmpty())
-<section class="py-6 bg-white  overflow-hidden">
+<section class="py-6 overflow-hidden">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-8">
         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
             <div>                

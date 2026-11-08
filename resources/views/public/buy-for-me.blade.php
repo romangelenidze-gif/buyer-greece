@@ -2,7 +2,7 @@
     title="{{ __('Выкупите за меня') }} | Buyer Greece"
     description="{{ __('Отправьте ссылку на товар из любого интернет-магазина Греции, и мы рассчитаем точную стоимость перед покупкой.') }}"
 >
-    <div class="py-6 bg-[#f2f2f2] min-h-[calc(100vh-4rem)]">
+    <div class="py-6 bg-[#f5f5f7] min-h-[calc(100vh-4rem)]">
         <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
             
             <!-- HEADER SECTION -->

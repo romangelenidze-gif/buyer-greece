@@ -11,7 +11,7 @@
         .info-table td { padding: 5px; vertical-align: top; }
         .items-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
         .items-table th, .items-table td { border: 1px solid #ccc; padding: 8px; text-align: left; }
-        .items-table th { background-color: #f2f2f2; font-weight: bold; }
+        .items-table th { background-color: #f5f5f7; font-weight: bold; }
         .total-box { margin-top: 20px; text-align: right; font-size: 14px; font-weight: bold; }
     </style>
 </head>

@@ -216,7 +216,6 @@ a.apple-nav-link.active {
 
 .apple-hero-section {
     position: relative;
-    background-color: #f2f2f2;
     overflow: hidden;
     padding-top: 2.5rem;
     padding-bottom: 5.5rem; 
@@ -231,100 +230,12 @@ a.apple-nav-link.active {
         padding-bottom: 0;
     }
 
-    .hero-desktop-bg {
-        background-repeat: no-repeat;
-        background-size: cover;
-        background-position: right 50% center;
-    }
-}
-
-.hero-mobile-bg {
-    display: block;
-    width: 100%;
-    height: 480px;
-    background-repeat: no-repeat;
-    background-size: cover;
-    background-position: center top;
-}
-
-/* Элементы с зелеными галочками */
-.apple-feature-item {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-}
-
-.apple-feature-icon {
-    width: 1.25rem;
-    height: 1.25rem;
-    border-radius: 9999px;
-    background-color: rgba(16, 185, 129, 0.1);
-    color: #059669;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-}
-
-.apple-feature-icon svg {
-    width: 0.875rem;
-    height: 0.875rem;
-    stroke-width: 3;
 }
 
 
 /* ==========================================================================
-   5.1 КАРТОЧКИ И ШАГИ (CARDS & PROCESS)
+   5.1 КАРТОЧКИ (CARDS)
    ========================================================================== */
-
-/* Карточка процесса / шагов */
-.apple-step-card {
-    background-color: #f8fbfc;
-    border: 1px solid rgba(0, 0, 0, 0.04);
-    border-radius: 1.75rem;
-    padding: 1.75rem 1.25rem;
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.apple-step-card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.05);
-    background-color: #ffffff;
-}
-
-.apple-step-number {
-    position: absolute;
-    top: 1.25rem;
-    left: 1.25rem;
-    width: 2.25rem;
-    height: 2.25rem;
-    border-radius: 9999px;
-    background-color: #e1eeff;
-    color: #0071e3;
-    font-size: 0.9375rem;
-    font-weight: 600;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.apple-step-icon-wrapper {
-    width: 4rem;
-    height: 4rem;
-    border-radius: 9999px;
-    background-color: #f8fbfc;
-    color: #0071e3;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-top: 0.5rem;
-    margin-bottom: 1.25rem;
-}
 
 /* Стандартные Apple карточки и Бенто */
 .apple-card,
@@ -358,11 +269,11 @@ a.apple-nav-link.active {
     border-radius: 1.75rem; /* 28px */
     /* overflow: hidden;*/
     background-color: #f5f5f7;
-    border: 1px solid rgba(0, 0, 0, 0.06);
+    
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.10);
     transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
@@ -374,15 +285,14 @@ a.apple-nav-link.active {
 /* Белая верхняя часть под фото */
 .apple-product-card-top {
     position: relative;
-    height: 320px;
+    height: 300px;
     width: 100%;
     background-color: #ffffff;
     /* Добавляем скругление верхних углов вровень с карточкой */
     border-top-left-radius: 1.75rem;
     border-top-right-radius: 1.75rem;
     /* Нижние углы остаются скругленными */
-    border-bottom-left-radius: 1.75rem; 
-    border-bottom-right-radius: 1.75rem;
+
     padding: 1.25rem;
     display: flex;
     align-items: center;
@@ -401,7 +311,7 @@ a.apple-nav-link.active {
     align-items: flex-end;
     justify-content: space-between;
     gap: 0.5rem;
-    background-color: #f5f5f7;
+    background-color: #ffffff;
 }
 
 /* --- ТЕКСТОВЫЕ СТИЛИ КАРТОЧКИ (ДЛЯ ТОЧНОЙ НАСТРОЙКИ) --- */
@@ -506,7 +416,7 @@ a.apple-nav-link.active {
 .apple-sheet {
     min-height: 100vh;
     min-height: 100dvh;
-    background-color: #fbfbfd;
+    background-color: #f5f5f7;
     color: #1d1d1f;
     overscroll-behavior: contain;
 }
@@ -647,20 +557,65 @@ a.apple-nav-link.active {
    ========================================================================== */
 
 .apple-footer {
-    background-color: #f3f3f3;
+    background-color: #f5f5f7;
     color: #6e6e73;
     font-size: 0.8125rem; /* 13px - фирменный размер подвала Apple */
-    line-height: 1.45;
-    /*border-top: 1px solid rgba(0, 0, 0, 0.08); */
+    line-height: 1.2;
+    padding-block: 2rem;
+    border-top: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+/* Сетка колонок: бренд шире, остальные равны; все колонки выровнены по верху */
+.apple-footer-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 2rem;
+    align-items: start;
+}
+
+@media (min-width: 768px) {
+    .apple-footer-grid {
+        grid-template-columns: 1.4fr 1fr 1fr;
+    }
+}
+
+@media (min-width: 1024px) {
+    .apple-footer-grid {
+        gap: 3rem;
+    }
+}
+
+/* Заголовок колонки и логотип занимают одинаковую по высоте строку,
+   поэтому контент всех колонок стартует с одной линии */
+.apple-footer-brand,
+.apple-footer-title {
+    line-height: 1.25rem;
+    margin-bottom: 0.75rem;
+    color: #1d1d1f;
+    font-weight: 600;
+}
+
+.apple-footer-brand {
+    font-size: 1.25rem; /* 20px */
+    letter-spacing: -0.025em;
 }
 
 .apple-footer-title {
     font-size: 0.75rem; /* 12px */
-    font-weight: 600;
-    color: #1d1d1f;
     letter-spacing: 0.02em;
     text-transform: uppercase;
-    margin-bottom: 0.75rem;
+}
+
+.apple-footer-text {
+    line-height: 1.5;
+}
+
+.apple-footer-list {
+    display: grid;
+    gap: 0.625rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
 }
 
 .apple-footer-link {
@@ -671,6 +626,30 @@ a.apple-nav-link.active {
 
 .apple-footer-link:hover {
     color: #0071e3;
+}
+
+/* Нижняя плашка: копирайт и примечание о доставке */
+.apple-footer-bottom {
+    /* display: flex; */
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 2rem;
+    padding-top: 2rem;
+    border-top: 1px solid rgba(0, 0, 0, 0.06);
+    font-size: 0.75rem; /* 12px */
+    line-height: 1.45;
+    text-align: center;
+    color: #86868b;
+}
+
+@media (min-width: 640px) {
+    .apple-footer-bottom {
+        flex-direction: row;
+        justify-content: space-between;
+        gap: 1rem;
+        text-align: center;
+    }
 }
 
 /* ==========================================================================
@@ -821,7 +800,7 @@ a.apple-nav-link.active {
 .apple-filter-pill {
     display: flex;
     align-items: center;
-    background-color: #f2f2f7;
+    background-color: #ffffff;
     padding: 0.5rem 1rem;
     border-radius: 9999px;
     border: 1px solid rgba(0, 0, 0, 0.04);

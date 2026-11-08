@@ -17,7 +17,6 @@
             suggestions: [], 
             open: false,
             loadingSuggestions: false,
-            loading: false,
             fetchSuggestions() {
                 if (this.query.length < 2) {
                     this.suggestions = [];
@@ -41,14 +40,15 @@
             selectSuggestion(val) {
                 this.query = val;
                 this.open = false;
-                this.loading = true;
+                // Оверлей загрузки живёт на странице (home), а не в этом компоненте: сообщаем ей событием
+                this.$dispatch('search-loading');
                 window.location.href = `{{ route('product-search') }}?q=${encodeURIComponent(val)}`;
             }
          }"
          @click.outside="open = false"
          @scroll.window="open = false"
     >
-        <form action="{{ route('product-search') }}" method="GET" class="relative" @submit="loading = true">
+        <form action="{{ route('product-search') }}" method="GET" class="relative">
             <div class="apple-search-bar flex items-center justify-between">
                 <input 
                     type="text" 

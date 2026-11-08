@@ -3,7 +3,7 @@
     description="{{ __('Найдите нужный товар на естественном языке с помощью ИИ и отправьте его на выкуп.') }}"
 >
 
-<div class="min-h-[calc(100vh-4rem)] bg-[#fbfbfd] text-[#1d1d1f] antialiased selection:bg-[#0071e3] selection:text-white py-12 px-6 sm:px-8 lg:px-8 relative" 
+<div class="min-h-[calc(100vh-4rem)] bg-[#f5f5f7] text-[#1d1d1f] antialiased selection:bg-[#0071e3] selection:text-white py-12 px-6 sm:px-8 lg:px-8 relative" 
      x-data="{ 
         loading: false, 
         sortModalOpen: false,
@@ -190,4 +190,4 @@
     </div>
 </div>
 
-</x-layouts.public>s
+</x-layouts.public>
