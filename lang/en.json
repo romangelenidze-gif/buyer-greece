@@ -54,6 +54,18 @@
     "Файл не выбран": "No file chosen",
     "Цена за ед. (€)": "Price per unit (€)",
 
+    "Забыли пароль?": "Forgot password?",
+    "Восстановление пароля": "Reset password",
+    "Введите ваш email, и мы отправим вам ссылку для сброса пароля": "Enter your email and we will send you a link to reset your password",
+    "Отправить ссылку сброса": "Send reset link",
+    "Вернуться к входу": "Back to login",
+
+    "Подтвердите ваш email": "Verify your email",
+    "Спасибо за регистрацию! Перед началом работы, пожалуйста, подтвердите ваш адрес электронной почты, перейдя по ссылке, которую мы только что отправили вам. Если вы не получили письмо, мы с радостью отправим его повторно.": "Thanks for signing up! Before getting started, could you verify your email address by clicking on the link we just emailed to you? If you didn't receive the email, we will gladly send you another.",
+    "Новая ссылка для подтверждения была отправлена на ваш email адрес.": "A new verification link has been sent to your email address.",
+    "Отправить письмо повторно": "Resend email",
+    "Выйти из системы": "Log out",
+
     "Популярные товары": "Popular Products",
     "Лучшие находки из греческих интернет-магазинов с доставкой": "Best finds from Greek online stores with delivery",
     "Уточняется": "Price upon request",

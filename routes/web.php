@@ -67,7 +67,7 @@ Route::middleware('guest')->group(function () {
 
 /*
 |--------------------------------------------------------------------------
-| Маршруты подтверждения Email (Email Verification)
+| Маршруты подтверждения Email и выхода (Доступны авторизованным)
 |--------------------------------------------------------------------------
 */
 Route::middleware('auth')->group(function () {
@@ -86,6 +86,14 @@ Route::middleware('auth')->group(function () {
 
         return back()->with('status', 'verification-link-sent');
     })->middleware('throttle:6,1')->name('verification.send');
+
+    // Выход из системы (теперь доступен и до подтверждения почты)
+    Route::post('/logout', function () {
+        Auth::logout();
+        request()->session()->invalidate();
+        request()->session()->regenerateToken();
+        return redirect()->route('home');
+    })->name('logout');
 });
 
 /*
@@ -127,12 +135,4 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::get('/orders/{order}/items/{item}/screenshot', [OrderMediaController::class, 'downloadItemScreenshot'])
         ->name('orders.items.screenshot');    
-
-    // Выход из системы
-    Route::post('/logout', function () {
-        Auth::logout();
-        request()->session()->invalidate();
-        request()->session()->regenerateToken();
-        return redirect()->route('home');
-    })->name('logout');
 });

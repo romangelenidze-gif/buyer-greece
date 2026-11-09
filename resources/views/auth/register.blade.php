@@ -57,7 +57,7 @@
 
                 <div>
                     <label for="phone" class="block app-text-sub font-semibold mb-1.5">
-                        {{ __('Номер телефона (необязательно)') }}
+                        {{ __('Номер телефона') }}
                     </label>
                     <input 
                         type="tel" 
