@@ -24,6 +24,13 @@
                         <input type="checkbox" name="remember" class="rounded border-black/20 text-[#0071e3] focus:ring-[#0071e3]/20 w-4 h-4">
                         <span>{{ __('Запомнить меня') }}</span>
                     </label>
+
+                    {{-- Ссылка на восстановление пароля --}}
+                    @if (Route::has('password.request'))
+                        <a href="{{ route('password.request') }}" class="text-[#0071e3] hover:underline text-sm font-medium">
+                            {{ __('Забыли пароль?') }}
+                        </a>
+                    @endif
                 </div>
 
                 <button type="submit" class="apple-btn-primary w-full">

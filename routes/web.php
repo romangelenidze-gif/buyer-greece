@@ -11,21 +11,24 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ShipmentController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Foundation\Auth\EmailVerificationRequest;
+use Illuminate\Http\Request;
 
 /*
 |--------------------------------------------------------------------------
 | Публичные маршруты
 |--------------------------------------------------------------------------
 */
-// Главная страница теперь обрабатывается через контроллер для передачи данных категорий и брендов
 Route::get('/', [HomeController::class, 'index'])->name('home');
 
 Route::view('/how-it-works', 'public.how-it-works')->name('how-it-works');
-
 Route::get('/buy-for-me', [OrderController::class, 'create'])->name('buy-for-me');
-
 Route::view('/forwarding', 'public.forwarding')->name('forwarding');
 Route::view('/help', 'public.help')->name('help');
+
+// Публичные юридические страницы
+Route::view('/terms', 'public.terms')->name('terms');
+Route::view('/privacy', 'public.privacy')->name('privacy');
 
 Route::get('/product-search', [ProductSearchController::class, 'index'])->name('product-search');
 
@@ -53,6 +56,36 @@ Route::middleware('guest')->group(function () {
 
     Route::view('/register', 'auth.register')->name('register');
     Route::post('/register', [AuthController::class, 'register']);
+
+    // --- Маршруты восстановления пароля ---
+    Route::get('/forgot-password', [App\Http\Controllers\Auth\ForgotPasswordController::class, 'create'])->name('password.request');
+    Route::post('/forgot-password', [App\Http\Controllers\Auth\ForgotPasswordController::class, 'store'])->name('password.email');
+    
+    Route::get('/reset-password/{token}', [App\Http\Controllers\Auth\ResetPasswordController::class, 'create'])->name('password.reset');
+    Route::post('/reset-password', [App\Http\Controllers\Auth\ResetPasswordController::class, 'store'])->name('password.update');
+});
+
+/*
+|--------------------------------------------------------------------------
+| Маршруты подтверждения Email (Email Verification)
+|--------------------------------------------------------------------------
+*/
+Route::middleware('auth')->group(function () {
+    Route::get('/email/verify', function () {
+        return view('auth.verify-email');
+    })->name('verification.notice');
+
+    Route::get('/email/verify/{id}/{hash}', function (EmailVerificationRequest $request) {
+        $request->fulfill();
+
+        return redirect()->route('dashboard')->with('success', 'Почта успешно подтверждена!');
+    })->middleware('signed')->name('verification.verify');
+
+    Route::post('/email/verification-notification', function (Request $request) {
+        $request->user()->sendEmailVerificationNotification();
+
+        return back()->with('status', 'verification-link-sent');
+    })->middleware('throttle:6,1')->name('verification.send');
 });
 
 /*

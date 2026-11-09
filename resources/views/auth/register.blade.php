@@ -6,6 +6,15 @@
                 <p class="app-text-sub">{{ __('Зарегистрируйтесь для отправки заявок и управления заказами') }}</p>
             </div>
 
+            {{-- Общий блок вывода ошибок валидации (например, занятый email) --}}
+            @if ($errors->any())
+                <div class="p-3 text-sm text-rose-600 bg-rose-50 border border-rose-200 rounded-xl space-y-1">
+                    @foreach ($errors->all() as $error)
+                        <p>{{ $error }}</p>
+                    @endforeach
+                </div>
+            @endif
+
             <form action="{{ route('register') }}" method="POST" class="space-y-4">
                 @csrf
 

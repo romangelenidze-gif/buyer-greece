@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Customer;
 use App\Models\User;
+use Illuminate\Auth\Events\Registered; // <--- 1. Импортируем событие регистрации
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -52,7 +53,7 @@ class AuthController extends Controller
         $firstName = $nameParts[0] ?? $validated['name'];
         $lastName = $nameParts[1] ?? '';
 
-        // 1. Создаем профиль клиента (Customer)
+        // 1. Создаем профиль клиента (Customer)[cite: 8]
         $customer = Customer::create([
             'first_name' => $firstName,
             'last_name' => $lastName,
@@ -61,7 +62,7 @@ class AuthController extends Controller
             'status' => 'active',
         ]);
 
-        // 2. Создаем учетную запись пользователя (User) с привязкой customer_id
+        // 2. Создаем учетную запись пользователя (User) с привязкой customer_id[cite: 8]
         $user = User::create([
             'customer_id' => $customer->id,
             'name' => $validated['name'],
@@ -71,8 +72,14 @@ class AuthController extends Controller
             'status' => 'active',
         ]);
 
+        // 3. Генерируем событие регистрации (отправляет письмо верификации через Brevo)
+        event(new Registered($user));
+
+        // (Опционально) Если вы создали Mailable для приветственного письма, можно отправить его здесь:
+        // \Illuminate\Support\Facades\Mail::to($user->email)->send(new \App\Mail\WelcomeEmail($user));
+
         Auth::login($user);
 
-        return redirect()->route('dashboard')->with('success', 'Добро пожаловать! Аккаунт успешно создан.');
+        return redirect()->route('dashboard')->with('success', 'Добро пожаловать! Аккаунт успешно создан. Пожалуйста, подтвердите вашу почту.');
     }
 }

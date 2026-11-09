@@ -5,11 +5,12 @@ namespace App\Models;
 use Filament\Models\Contracts\FilamentUser;
 use App\Traits\Auditable;
 use Filament\Panel;
+use Illuminate\Contracts\Auth\MustVerifyEmail; // <--- 1. Импортируем интерфейс
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-class User extends Authenticatable implements FilamentUser
+class User extends Authenticatable implements FilamentUser, MustVerifyEmail // <--- 2. Добавляем MustVerifyEmail
 {
     use HasFactory, Auditable, Notifiable;
 
