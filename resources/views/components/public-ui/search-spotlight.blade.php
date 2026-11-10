@@ -1,5 +1,5 @@
 <!-- Поднимаем блок выше (pt-2 sm:pt-4), убирая лишнее пустое пространство -->
-<section class="pt-0 sm:pt-4 lg:pt-6 pb-10 px-4 sm:px-8 lg:px-8 text-center max-w-4xl mx-auto space-y-8 sm:space-y-12">
+<section class="pt-0 sm:pt-4 lg:pt-3 pb-10 px-4 sm:px-8 lg:px-8 text-center max-w-4xl mx-auto space-y-8 sm:space-y-12">
     <div class="space-y-3">
         <!-- Крупный логотип с безопасным адаптивным масштабированием без горизонтального скролла -->
         <h1 class="text-6xl sm:text-9xl font-bold tracking-tight text-[#1d1d1f] truncate px-2">
