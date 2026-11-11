@@ -44,9 +44,9 @@
         <!-- Информация -->
         <div class="apple-pdp-info">
 
-            @if(!empty($categories))
+          <!--  @if(!empty($categories))
                 <p class="apple-pdp-crumbs">{{ implode(' › ', $categories) }}</p>
-            @endif
+            @endif-->
 
             <p class="apple-pdp-brand">{{ $product->brand }}</p>
             <h1 class="apple-pdp-title">{{ $title }}</h1>
@@ -144,30 +144,13 @@
     @endif
 </div>
 
-<!-- Релевантные (похожие) товары Adidas -->
+<!-- Релевантные (похожие) товары -->
     @if(isset($relatedProducts) && $relatedProducts->isNotEmpty())
         <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 border-t border-zinc-200 mt-16">
             <h2 class="text-2xl font-bold tracking-tight text-zinc-900 mb-8">{{ __('Вам также может понравиться') }}</h2>
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                 @foreach($relatedProducts as $related)
-                    <div class="group bg-white rounded-2xl border border-zinc-200 overflow-hidden shadow-sm hover:shadow-md transition flex flex-col">
-                        <a href="{{ $related->detailUrl() }}" class="relative aspect-square bg-zinc-50 overflow-hidden block">
-                            @if($related->image_url)
-                                <img src="{{ $related->image_url }}" alt="{{ $related->name }}" class="w-full h-full object-cover group-hover:scale-105 transition duration-300">
-                            @endif
-                        </a>
-                        <div class="p-4 flex flex-col flex-grow">
-                            <h3 class="font-medium text-zinc-900 text-sm line-clamp-2 mb-2 flex-grow">
-                                <a href="{{ $related->detailUrl() }}" class="hover:underline">{{ $related->name }}</a>
-                            </h3>
-                            <div class="flex items-center justify-between mt-auto pt-3 border-t border-zinc-100">
-                                <div class="text-base font-bold text-zinc-900">€{{ number_format($related->price, 2) }}</div>
-                                <a href="{{ $related->detailUrl() }}" class="text-xs font-semibold bg-zinc-900 text-white px-3.5 py-2 rounded-full hover:bg-zinc-800 transition">
-                                    {{ __('Перейти') }}
-                                </a>
-                            </div>
-                        </div>
-                    </div>
+                    <x-public-ui.product-card :product="$related" />
                 @endforeach
             </div>
         </section>

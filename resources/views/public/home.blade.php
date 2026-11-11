@@ -33,7 +33,7 @@
                 @endif
                 <div class="banner-content space-y-4">
                     <span class="inline-block text-xs font-bold uppercase tracking-widest bg-white/20 backdrop-blur-md px-3.5 py-1.5 rounded-full text-white border border-white/20">
-                        Official Partner (Awin)
+                        Official Partner
                     </span>
                     <h1 class="text-3xl sm:text-5xl font-black tracking-tight leading-tight text-white">
                         {{ $promoBanner['title'] }}
