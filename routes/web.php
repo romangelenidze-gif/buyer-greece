@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use Illuminate\Http\Request;
+use App\Http\Controllers\FeedProductController;
 
 /*
 |--------------------------------------------------------------------------
@@ -26,11 +27,20 @@ Route::get('/buy-for-me', [OrderController::class, 'create'])->name('buy-for-me'
 Route::view('/forwarding', 'public.forwarding')->name('forwarding');
 Route::view('/help', 'public.help')->name('help');
 
+
+
+
 // Публичные юридические страницы
 Route::view('/terms', 'public.terms')->name('terms');
 Route::view('/privacy', 'public.privacy')->name('privacy');
 
 Route::get('/product-search', [ProductSearchController::class, 'index'])->name('product-search');
+
+//AWIN
+Route::get('/product/{feed}/{sku}', [FeedProductController::class, 'show'])
+       ->where('feed', '[a-z0-9\-]+')->where('sku', '[A-Za-z0-9\-_.]+')
+       ->name('feed-product.show');
+       
 
 // ПУБЛИЧНЫЙ МАРШРУТ АВТОКОМПЛИТА С ТРОТТЛИНГОМ (30 запросов в минуту)
 Route::get('/api/autocomplete', [ProductSearchController::class, 'autocomplete'])

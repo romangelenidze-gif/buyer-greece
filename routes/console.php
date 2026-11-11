@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Schedule;
 Schedule::command('quotes:expire')->hourly();
 
 Schedule::command('autocomplete:sync-hits')->everyTenMinutes();
+Schedule::command('feeds:import adidas')->dailyAt('04:30')->withoutOverlapping();
 
 // Ежемесячная чистка и продвижение популярный запросов автокомплита
 Schedule::call(function () {

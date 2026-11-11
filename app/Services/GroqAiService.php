@@ -200,6 +200,64 @@ class GroqAiService
         return $titles;
     }
 
+    /**
+     * Короткое описание товара на языке пользователя по фактам из фида (название, категория, пол, характеристики).
+     * Модель не должна ничего придумывать сверх переданных фактов. Результат кэшируется на 90 дней;
+     * ключ не зависит от цвета, поэтому все расцветки одной модели делят одно описание.
+     */
+    public function describeProduct(array $facts, string $targetLanguage): ?string
+    {
+        if ($this->apiKey === '') {
+            return null;
+        }
+
+        $langName = match ($targetLanguage) {
+            'ru' => 'Russian',
+            'ka' => 'Georgian',
+            'en' => 'English',
+            'el' => 'Greek',
+            default => null,
+        };
+
+        if ($langName === null) {
+            return null;
+        }
+
+        $payload = json_encode($facts, JSON_UNESCAPED_UNICODE);
+        $cacheKey = 'groq_desc_v1_' . $targetLanguage . '_' . md5((string) $payload);
+        $cached = Cache::get($cacheKey);
+
+        if (is_string($cached) && $cached !== '') {
+            return $cached;
+        }
+
+        $prompt = str_replace('{LANG}', $langName, $this->describeSystemPrompt());
+        $decoded = $this->chatJson($prompt, (string) $payload, $this->translateModel($targetLanguage), self::MAX_TOKENS_TRANSLATE);
+
+        $text = is_string($decoded['description'] ?? null) ? trim(strip_tags($decoded['description'])) : '';
+
+        if (mb_strlen($text) < 20 || mb_strlen($text) > 700) {
+            return null; // неудачу не кэшируем
+        }
+
+        Cache::put($cacheKey, $text, 7776000); // 90 дней
+
+        return $text;
+    }
+
+    protected function describeSystemPrompt(): string
+    {
+        return <<<'PROMPT'
+You write a short product description for an online shop catalogue.
+Use ONLY the facts in the JSON the user sends (name, category, gender, features). The facts may be in Greek or English.
+Do not invent materials, technologies, benefits, sizes, prices, sport claims or any other detail that is not in the facts. Do not mention the colour or the price.
+Write 2 or 3 plain sentences, at most 60 words, in {LANG}. No marketing superlatives, no emojis, no markdown.
+Keep brand names, model names and technology names (for example GORE-TEX, Boost) in Latin letters exactly as written.
+If the facts are scarce, write a single short sentence.
+Return ONLY a JSON object: {"description": "..."}
+PROMPT;
+    }
+
     protected function titleCacheKey(string $lang, string $title): string
     {
         return 'groq_title_v2_' . $lang . '_' . md5($title);

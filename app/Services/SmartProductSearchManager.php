@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Services\Feeds\FeedProductSearch;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 
@@ -15,22 +16,25 @@ use Illuminate\Support\Facades\Log;
  */
 class SmartProductSearchManager
 {
-    protected const CACHE_VERSION = 'v10';
+    protected const CACHE_VERSION = 'v11'; // v11: из выдачи BestPrice убраны бренды с партнёрским фидом
     protected const CACHE_TTL = 10800; // 3 часа
     protected const LIMIT = 8;
 
     protected GroqAiService $groqService;
     protected BestPriceMcpService $bestPrice;
     protected LocalQueryAnalyzer $localAnalyzer;
+    protected FeedProductSearch $feedSearch;
 
     public function __construct(
         GroqAiService $groqService,
         BestPriceMcpService $bestPrice,
-        LocalQueryAnalyzer $localAnalyzer
+        LocalQueryAnalyzer $localAnalyzer,
+        FeedProductSearch $feedSearch
     ) {
         $this->groqService = $groqService;
         $this->bestPrice = $bestPrice;
         $this->localAnalyzer = $localAnalyzer;
+        $this->feedSearch = $feedSearch;
     }
 
     public function search(string $userQuery, string $locale = 'ru', array $userFilters = []): array
@@ -109,6 +113,13 @@ class SmartProductSearchManager
             ];
         }
 
+        // Бренды с партнёрским фидом (Adidas) ищем ТОЛЬКО в фиде: там прямая комиссия.
+        $feedKey = $this->feedSearch->matchFeed($analysis, $userQuery);
+
+        if ($feedKey !== null) {
+            return $this->runFeed($feedKey, $userQuery, $targetLang, $analysis, $activeFilters);
+        }
+
         $mcpOptions = ['limit' => self::LIMIT];
 
         if (!empty($activeFilters['price_min'])) {
@@ -155,6 +166,9 @@ class SmartProductSearchManager
 
                 continue;
             }
+
+            // Товары брендов с партнёрским фидом (Adidas) из BestPrice не показываем: они идут только из фида.
+            $response['products'] = $this->feedSearch->stripOwnedBrands($response['products']);
 
             if (empty($response['products'])) {
                 continue;
@@ -263,6 +277,45 @@ class SmartProductSearchManager
                 'fallback_used' => ($usedAttempt['step'] ?? 0) > 0,
                 'brand_mismatch' => $brandMismatch,
                 'queries_merged' => $okQueries,
+            ],
+        ];
+    }
+
+    /**
+     * Поиск по партнёрскому фиду (Adidas): без обращения к BestPrice и без возврата к нему при пустой выдаче.
+     */
+    protected function runFeed(string $feedKey, string $userQuery, string $targetLang, array $analysis, array $activeFilters): array
+    {
+        $cards = $this->feedSearch->search($feedKey, $analysis, $activeFilters, $userQuery);
+
+        if ($cards === []) {
+            return $this->emptyResult(
+                $userQuery,
+                $activeFilters,
+                __('В каталоге бренда ничего не найдено. Попробуйте изменить запрос.'),
+                ['intent_analysis' => $analysis]
+            );
+        }
+
+        $translated = $this->groqService->translateProductsBack(array_column($cards, 'title'), $targetLang);
+
+        foreach ($cards as $index => $card) {
+            $cards[$index]['title'] = $translated[$index] ?? $card['title'];
+        }
+
+        return [
+            'query_summary' => $userQuery,
+            'recommendation' => __('Найдено уникальных предложений в магазинах Греции: ') . count($cards),
+            'products' => $cards,
+            'active_filters' => $activeFilters,
+            'intent_analysis' => $analysis,
+            'search_meta' => [
+                'query_used' => $analysis['query_el'] ?? $userQuery,
+                'language_used' => 'feed',
+                'fallback_used' => false,
+                'brand_mismatch' => false,
+                'queries_merged' => 1,
+                'source' => 'feed:' . $feedKey,
             ],
         ];
     }
