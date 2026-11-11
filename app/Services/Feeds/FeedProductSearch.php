@@ -183,33 +183,17 @@ class FeedProductSearch
             $p = $entry['product'];
             $formatted = '€' . number_format($p->price, 2, '.', ' ');
 
-            $cards[] = [
-                'title' => $p->name,
+            // Основа карточки та же, что на главной ($p->toCard()); ниже только поля, нужные поиску и сортировке.
+            $cards[] = $p->toCard() + [
                 'original_title' => $p->name,
                 'merchant' => $store,
-                'merchant_name' => $store,
-
-                // те же дубли ключей цены, что у выдачи BestPrice (на них завязаны шаблоны)
-                'price' => $p->price,
                 'price_from' => $p->price,
-                'price_amount' => $p->price,
                 'price_formatted' => $formatted,
                 'price_note' => $formatted,
                 'formatted_price' => $formatted,
-
-                'currency' => $p->currency ?: 'EUR',
                 'offers_count' => 1,
-                'rating' => $p->rating,
                 'rating_count' => null,
-                'image_url' => $p->image_url,
-
-                'product_url' => $p->outboundUrl(),    // партнёрская ссылка на магазин (внешняя)
-                'detail_url' => $p->detailUrl(),       // наша детальная страница
-
-                'old_price' => $p->old_price,
-                'discount_percent' => $p->discount_percent,
                 'colorways_count' => $entry['colorways'],
-                'source' => 'feed',
             ];
         }
 

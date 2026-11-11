@@ -1,8 +1,12 @@
-@props(['product'])
+@props(['product', 'isFirst' => false])
+
+@php
+    $colour = $product['colour'] ?? $product['color'] ?? null;
+@endphp
 
 <div class="relative h-[490px] w-full rounded-[36px] overflow-hidden shadow-sm hover:shadow-xl hover:-translate-y-1.5 transition-all duration-500 group flex flex-col justify-between bg-[#f2f1ed] border border-black/[0.04]">
     
-    <!-- Background Image (Exact from old working version) -->
+    <!-- Background Image -->
     <div class="absolute inset-0 w-full h-full bg-[#f2f1ed]">
         @if(!empty($product['image_url']))
             <img src="{{ filter_var($product['image_url'], FILTER_VALIDATE_URL) ? $product['image_url'] : asset('storage/' . $product['image_url']) }}" 
@@ -18,14 +22,14 @@
     </div>
 
     <!-- Soft Bottom Gradient Overlay for readability -->
-    <div class="absolute inset-x-0 bottom-0 h-[45%] bg-gradient-to-t from-[#e5e3dd]/95 via-[#f2f1ed]/60 to-transparent pointer-events-none"></div>
+    <div class="absolute inset-x-0 bottom-0 h-[50%] bg-gradient-to-t from-[#e5e3dd]/95 via-[#f2f1ed]/60 to-transparent pointer-events-none"></div>
 
     <!-- Top Header Overlay (Merchant & External Link) -->
     <div class="relative z-10 p-5 flex items-center justify-between">
         <span class="inline-flex items-center px-3 py-1 rounded-full text-[11px] font-semibold bg-white/70 backdrop-blur-md text-[#1d1d1f] shadow-2xs uppercase tracking-wider">
-            {{ $product['merchant_name'] }}
+            {{ $product['merchant_name'] ?? 'Store' }}
         </span>
-        <a href="{{ $product['product_url'] }}" target="_blank" rel="noopener noreferrer" 
+        <a href="{{ $product['product_url'] ?? '#' }}" target="_blank" rel="noopener noreferrer" 
            title="{{ __('Перейти в магазин') }}"
            class="w-9 h-9 rounded-full bg-white/70 backdrop-blur-md flex items-center justify-center text-[#1d1d1f] shadow-2xs hover:bg-white transition-colors">
             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -37,10 +41,10 @@
     <!-- Bottom Content Overlay -->
     <div class="relative z-10 p-6 flex items-end justify-between gap-3">
         
-        <!-- Left Column: Title, Rating & Description -->
+        <!-- Left Column: Title, Rating, Colors & Description -->
         <div class="space-y-2 flex-1 pr-2">
             <h3 class="text-base font-bold text-[#1d1d1f] line-clamp-2 leading-snug tracking-tight">
-                {{ $product['title'] }}
+                {{ $product['title'] ?? '' }}
             </h3>
             
             <!-- Rating Stars -->
@@ -49,13 +53,20 @@
                 <span class="text-xs text-[#86868b] font-normal ml-1">({{ $product['offers_count'] ?? 1 }})</span>
             </div>
 
+            <!-- Цветные кружочки (Color Dots) -->
+            @if(!empty($colour))
+                <div class="pt-0.5">
+                    <x-public-ui.color-dots :colour="$colour" :only-dots="true" />
+                </div>
+            @endif
+
             <!-- Short Description / Details -->
             <p class="text-[11px] text-[#86868b] line-clamp-2 leading-relaxed">
-                {{ $product['short_description'] }}
+                {{ $product['short_description'] ?? '' }}
             </p>
         </div>
 
-        <!-- Right Column: Price & Order Button (Heart removed) -->
+        <!-- Right Column: Price & Order Button -->
         <div class="flex flex-col items-end justify-between space-y-4">
             
             <!-- Price Badge -->
@@ -71,7 +82,7 @@
 
             <!-- Single Action Button (Bag/Order) -->
             <div class="flex flex-col space-y-2.5">
-                <a href="{{ route('buy-for-me') }}?url={{ urlencode($product['product_url']) }}" 
+                <a href="{{ route('buy-for-me') }}?url={{ urlencode($product['product_url'] ?? '') }}" 
                    title="{{ __('Оформить заказ') }}"
                    class="w-12 h-12 rounded-full bg-[#1d1d1f] hover:bg-black text-white shadow-md hover:shadow-lg hover:scale-105 active:scale-95 flex items-center justify-center transition-all">
                     <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">

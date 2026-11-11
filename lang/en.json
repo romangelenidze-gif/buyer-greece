@@ -54,6 +54,21 @@
     "Файл не выбран": "No file chosen",
     "Цена за ед. (€)": "Price per unit (€)",
 
+    "Купить на :store": "Buy from :store",
+    "Цена и наличие обновляются ежедневно, итоговые данные смотрите на сайте магазина.": "Prices and availability are updated daily; please check the store's website for the final details.",
+    "Ссылка на магазин партнёрская: мы получаем комиссию, а цена для вас не меняется.": "This is an affiliate link: we earn a commission at no extra cost to you.",
+    "Характеристики": "Specifications",    
+    "Больше фото этого товара:": "More photos of this item",
+    "смотреть на :store": "view on :store",
+    "К результатам поиска": "Back to search results",
+
+    "Официальные спортивные технологии, одежда и обувь с доставкой из партнерского каталога.": "Official sports tech, apparel, and footwear with delivery from our partner catalog.",
+    "Смотреть весь каталог": "Browse full catalog",
+    "Популярные модели Adidas": "Popular Adidas models",
+    "Хиты продаж из официального фида Awin": "Bestsellers",
+    "Все товары": "All products",
+    "Скидки и специальные предложения": "Discounts & special offers",
+    
     "Забыли пароль?": "Forgot password?",
     "Восстановление пароля": "Reset password",
     "Введите ваш email, и мы отправим вам ссылку для сброса пароля": "Enter your email and we will send you a link to reset your password",

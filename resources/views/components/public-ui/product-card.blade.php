@@ -1,130 +1,74 @@
 @props(['product', 'isFirst' => false])
 
 @php
-    $rawImg = $product['image_url'] ?? $product['image_path'] ?? $product['image'] ?? null;
-    if (is_array($rawImg)) {
-        $rawImg = reset($rawImg);
+    // Один источник данных для карточки: и модель из базы (главная), и массив из поиска приводятся к одному виду
+    if ($product instanceof \Illuminate\Database\Eloquent\Model) {
+        $card = method_exists($product, 'toCard') ? $product->toCard() : $product->toArray();
+    } else {
+        $card = (array) $product;
     }
-    
-    $imgUrl = null;
-    if (!empty($rawImg)) {
-        $imgUrl = filter_var($rawImg, FILTER_VALIDATE_URL) 
-            ? $rawImg 
-            : (\Illuminate\Support\Facades\Storage::disk('public')->exists($rawImg) 
-                ? \Illuminate\Support\Facades\Storage::url($rawImg) 
-                : asset('storage/' . $rawImg));
-    }
-    
-    $productUrl = $product['product_url'] ?? '#';
 
-    // Товары из партнёрского фида открываются на нашей детальной странице, остальные сразу в магазине
-    $detailUrl = $product['detail_url'] ?? null;
-    $cardUrl = $detailUrl ?? $productUrl;
-    $isExternal = $detailUrl === null;
-    $oldPrice = $product['old_price'] ?? null;
-    $discount = (int) ($product['discount_percent'] ?? 0);
-
-    // Рейтинг из MCP: ['average' => 4.38, 'count' => 67]; допускаем и «плоские» rating_average / rating_count
-    $rating = $product['rating'] ?? null;
-    $ratingAverage = is_array($rating) ? ($rating['average'] ?? null) : $rating;
-    $ratingAverage ??= $product['rating_average'] ?? null;
-    $ratingCount = is_array($rating) ? ($rating['count'] ?? null) : null;
-    $ratingCount ??= $product['rating_count'] ?? null;
-
-    $hasRating = is_numeric($ratingAverage) && (float) $ratingAverage > 0;
-    $ratingAverage = $hasRating ? min(5.0, (float) $ratingAverage) : null;
-    $ratingCount = is_numeric($ratingCount) && (int) $ratingCount > 0 ? (int) $ratingCount : null;
+    $name = $card['title'] ?? $card['name'] ?? '';
+    $imgUrl = $card['image_url'] ?? $card['image'] ?? '';
+    $price = $card['price'] ?? $card['price_amount'] ?? 0;
+    $oldPrice = $card['old_price'] ?? null;
+    $discount = (int) ($card['discount_percent'] ?? 0);
+    $colour = $card['colour'] ?? $card['color'] ?? $card['attributes']['colour'] ?? $card['attributes']['color'] ?? null;
+    $detailUrl = $card['detail_url'] ?? $card['product_url'] ?? '#';
+    $brand = $card['brand'] ?? null; // без запасного «Adidas»: чужие товары не должны получать чужой бренд
 @endphp
 
-<div class="apple-product-card group relative">
+<div class="adidas-product-card group relative">
     
     <!-- Растянутая ссылка на всю карточку -->
-    <a href="{{ $cardUrl }}" @if($isExternal) target="_blank" rel="noopener noreferrer" @endif class="absolute inset-0 z-10" aria-label="{{ $product['title'] ?? '' }}"></a>
+    <a href="{{ $detailUrl }}" class="absolute inset-0 z-10" aria-label="{{ $name }}"></a>
 
     <!-- Верхний блок под фото -->
-    <div class="apple-product-card-top">
-        <div class="w-full h-full flex items-center justify-center relative">
-            @if(!empty($imgUrl))
-                <img src="{{ $imgUrl }}" 
-                     alt="{{ $product['title'] ?? '' }}" 
-                     class="max-h-full max-w-full object-contain object-center group-hover:scale-105 transition-transform duration-700{{ $detailUrl ? ' apple-photo-lift' : '' }}">
-            @else
-                <div class="flex flex-col items-center justify-center h-full text-[#86868b] space-y-1">
-                    <svg class="w-10 h-10 opacity-30" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
+    <div class="adidas-product-top">
+        @if(!empty($imgUrl))
+            <img src="{{ $imgUrl }}" alt="{{ $name }}" class="max-h-full max-w-full object-contain group-hover:scale-105 transition-transform duration-500">
+        @endif
+        @if($discount > 0)
+            <span class="absolute top-3 left-3 z-20 bg-red-600 text-white text-xs font-bold px-2.5 py-1 rounded-full shadow">
+                -{{ $discount }}%
+            </span>
+        @endif
+    </div>
+
+    <!-- Нижний блок с информацией -->
+    <div class="adidas-product-bottom">
+        <div class="space-y-1 mb-3">
+            @if($brand)
+                <div class="text-xs font-bold text-zinc-400 uppercase tracking-wider">{{ $brand }}</div>
+            @endif
+            <h3 class="font-semibold text-zinc-900 text-sm line-clamp-2">
+                {{ $name }}
+            </h3>
+            
+            <!-- Цветные кружки-индикаторы (без дублирования текста, с тултипом) -->
+            @if(!empty($colour))
+                <div class="pt-1">
+                    <x-public-ui.color-dots :colour="$colour" :only-dots="true" />
                 </div>
             @endif
         </div>
 
-        <div class="absolute inset-x-0 top-0 p-3.5 flex items-center justify-between z-20 pointer-events-none">
-            <div class="pointer-events-auto">
-                @if($discount > 0)
-                    <span class="apple-product-badge">-{{ $discount }}%</span>
+        <div class="flex items-end justify-between pt-3 border-t border-zinc-100">
+            <div>
+                <div class="text-lg font-bold text-zinc-900">€{{ number_format((float)$price, 2) }}</div>
+                @if(!empty($oldPrice))
+                    <div class="text-xs text-zinc-400 line-through">€{{ number_format((float)$oldPrice, 2) }}</div>
                 @endif
             </div>
-            <div class="pointer-events-auto">
-                <a href="{{ $productUrl }}" target="_blank" rel="{{ $isExternal ? 'noopener noreferrer' : 'sponsored nofollow noopener noreferrer' }}" 
-                   title="{{ __('Перейти в магазин') }}"
-                   class="w-8 h-8 rounded-full bg-black/5 hover:bg-black/10 backdrop-blur-md flex items-center justify-center text-[#1d1d1f] transition-colors">
-                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+
+            <!-- Чёрная кнопка перехода -->
+            <div class="relative z-20">
+                <a href="{{ $detailUrl }}" class="adidas-card-action-btn" title="{{ __('Открыть') }}">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
                     </svg>
                 </a>
             </div>
         </div>
-    </div>
-
-    <!-- Нижняя серая плашка -->
-    <div class="apple-product-card-bottom flex flex-col justify-between">
-        
-        <div>
-            <h3 class="apple-product-title line-clamp-2 leading-snug">
-                {{ $product['title'] ?? '' }}
-            </h3>
-        </div>
-
-        <div class="w-full flex items-end justify-between mt-3">
-            <div class="space-y-1">
-                @if($hasRating)
-                    <div class="apple-product-rating">
-                        <span class="apple-product-stars" role="img"
-                              aria-label="{{ number_format($ratingAverage, 1) }} / 5"
-                              style="--rating: {{ round($ratingAverage, 2) }}"></span>
-                        @if($ratingCount)
-                            <span>({{ number_format($ratingCount) }})</span>
-                        @endif
-                    </div>
-                @endif
-                
-                <div class="apple-product-price text-left leading-none">
-                    @if(!empty($product['price_amount']))
-                        €{{ number_format($product['price_amount'], 2) }}
-                        @if(!empty($oldPrice))
-                            <span class="apple-product-price-old">€{{ number_format($oldPrice, 2) }}</span>
-                        @endif
-                    @else
-                        <span class="apple-product-price-note">{{ $product['price_note'] ?? __('Уточняется') }}</span>
-                    @endif
-                </div>
-            </div>
-
-            <!-- Кнопка заказа с изолированным тултипом -->
-            <div class="relative z-30">
-                <a href="{{ $isExternal ? route('buy-for-me') . '?url=' . urlencode($product['product_url'] ?? '') . '&name=' . urlencode($product['title'] ?? '') . '&price=' . ($product['price_amount'] ?? '') : $productUrl }}"
-                   @unless($isExternal) target="_blank" rel="sponsored nofollow noopener noreferrer" @endunless
-                   title="{{ $isExternal ? __('Оформить заказ') : __('Купить в магазине') }}"
-                   class="apple-product-cart-btn">
-                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-                    </svg>
-                </a>
-
-                @if($isFirst)
-                    <x-public-ui.onboarding-tooltip show="showTooltip" />
-                @endif
-            </div>
-        </div>
-
     </div>
 </div>

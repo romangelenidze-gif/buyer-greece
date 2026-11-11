@@ -165,19 +165,20 @@
                     @endphp
 
                     <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6" id="products-grid">
-                        
+    
                         @if(!empty($categoryHandoff))
                             @include('search.partials.category-handoff', ['categoryHandoff' => $categoryHandoff])
                         @elseif(!empty($products))
                             @foreach($products as $product)
                                 <div data-price="{{ $product['price_amount'] ?? $product['price'] ?? 0 }}" data-index="{{ $loop->index }}" class="contents">
+                                    <!-- Единый компонент карточки продукта (с поддержкой кружков цветов) -->
                                     <x-public-ui.product-card :product="$product" :is-first="$loop->first" />
                                 </div>
                             @endforeach
                         @else
                             <div class="col-span-full apple-card text-center max-w-md mx-auto space-y-2 py-10 bg-white rounded-3xl border border-black/[0.06]">
                                 <h4 class="app-text-title font-semibold">{{ __('Ничего не найдено') }}</h4>
-                                <p class="app-text-sub text-sm text-[#86868b]">{{ __('По вашему запросу ничего не найдено в каталоге BestPrice. Попробуйте изменить параметры поиска или ценовой диапазон.') }}</p>
+                                <p class="app-text-sub text-sm text-[#86868b]">{{ __('По вашему запросу ничего не найдено. Попробуйте изменить параметры поиска или ценовой диапазон.') }}</p>
                             </div>
                         @endif
 

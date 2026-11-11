@@ -19,6 +19,9 @@ return [
             'store_name' => 'adidas.gr',
             'url' => env('AWIN_ADIDAS_FEED_URL'),
 
+            // Ваш партнерский баннер Awin
+            'banner_image' => 'https://a1.awin1.com/ads/awin/77018/img6370369-cam_eu_pm_display_affiliatebanners_blackfriday_peakholiday_fw25_3000x2000-1763993046910.jpg',
+
             // Если в запросе (или в разборе ИИ) есть любая из этих подстрок, запрос идёт ТОЛЬКО в фид,
             // а такие же товары вырезаются из выдачи BestPrice.
             'brand_aliases' => ['adidas', 'адидас', 'ადიდას', 'αντιντάς', 'αντίντας'],

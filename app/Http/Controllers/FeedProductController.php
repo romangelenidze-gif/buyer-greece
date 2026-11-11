@@ -26,12 +26,29 @@ class FeedProductController extends Controller
                 ->get(['id', 'feed', 'sku', 'colour', 'image_url'])
             : collect([$product]);
 
-        // Название, характеристики и категории переводим на язык интерфейса одним вызовом.
+        // Релевантные (похожие) товары Adidas из той же категории
+        $relatedProducts = FeedProduct::query()
+            ->where('feed', 'adidas')
+            ->where('id', '!=', $product->id)
+            ->where('is_active', true)
+            ->where('in_stock', true)
+            ->when($product->category_top, fn($q) => $q->where('category_top', $product->category_top))
+            ->inRandomOrder()
+            ->limit(4)
+            ->get();
+
+        // Определяем локаль интерфейса
+        $locale = app()->getLocale();
+
+        // Если язык грузинский ('ka'), принудительно переводим греческий текст на английский ('en')
+        $translationLocale = $locale === 'ka' ? 'en' : $locale;
+
+        // Название, характеристики и категории переводим на нужный язык одним вызовом.
         // Готовые переводы берутся из кэша GroqAiService (30 дней), поэтому повторные открытия бесплатны.
         $categories = array_values(array_filter(array_map('trim', explode(',', (string) $product->category_path))));
         $specs = (array) ($product->specs ?? []);
         $texts = array_merge([$product->name], $specs, $categories);
-        $translated = $groq->translateProductsBack($texts, app()->getLocale());
+        $translated = $groq->translateProductsBack($texts, $translationLocale);
 
         if (count($translated) !== count($texts)) {
             $translated = $texts;
@@ -46,6 +63,7 @@ class FeedProductController extends Controller
             'specs' => array_slice($translated, 1, count($specs)),
             'categories' => array_slice($translated, 1 + count($specs)),
             'colorways' => $colorways,
+            'relatedProducts' => $relatedProducts,
             'backUrl' => $backUrl,
             'outboundUrl' => $product->outboundUrl(),
             'storeName' => (string) config("feeds.feeds.{$feed}.store_name", $feed),

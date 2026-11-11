@@ -46,6 +46,31 @@ class FeedProduct extends Model
         );
     }
 
+    /**
+     * Единый вид карточки товара. Из этого массива рисуется карточка и на главной, и в поисковой выдаче,
+     * поэтому набор полей везде одинаковый.
+     */
+    public function toCard(): array
+    {
+        return [
+            'title' => $this->name,
+            'brand' => $this->brand,
+            'colour' => $this->colour,
+            'image_url' => $this->image_url,
+            'price' => $this->price,
+            'price_amount' => $this->price,
+            'old_price' => $this->old_price,
+            'discount_percent' => $this->discount_percent,
+            'currency' => $this->currency ?: 'EUR',
+            'rating' => $this->rating,
+            'in_stock' => $this->in_stock,
+            'detail_url' => $this->detailUrl(),
+            'product_url' => $this->outboundUrl(),
+            'merchant_name' => (string) config("feeds.feeds.{$this->feed}.store_name", $this->feed),
+            'source' => 'feed',
+        ];
+    }
+
     public function detailUrl(): string
     {
         return route('feed-product.show', ['feed' => $this->feed, 'sku' => $this->sku]);
