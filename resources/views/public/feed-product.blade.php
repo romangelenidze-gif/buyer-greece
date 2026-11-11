@@ -3,24 +3,22 @@
     description="{{ __('Цена, размеры и наличие в магазине. Переход в магазин по партнёрской ссылке, цена для вас не меняется.') }}"
 >
 
-<div class="apple-pdp"
-     x-data="{ zoom: false }"
-     x-effect="document.body.classList.toggle('overflow-hidden', zoom)"
-     @keydown.escape.window="zoom = false"
->
+<div class="apple-pdp">
 
-    <a href="{{ $backUrl }}" class="apple-pdp-back">
+   <!-- <a href="{{ $backUrl }}" class="apple-pdp-back">
         <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
         </svg>
         {{ __('К результатам поиска') }}
-    </a>
+    </a> -->
 
     <div class="apple-pdp-grid">
 
         <!-- Фото: по клику открывается на весь экран; под ним ссылка на остальные фото в магазине -->
         <div class="apple-pdp-media">
-        <button type="button" class="apple-pdp-gallery" @click="zoom = true" aria-label="{{ __('Увеличить фото') }}">
+        <button type="button" class="apple-pdp-gallery"
+                @if($product->image_url) data-pswp-src="{{ $product->image_url }}" data-pswp-alt="{{ $title }}" @endif
+                aria-label="{{ __('Увеличить фото') }}">
             @if($product->discount_percent > 0)
                 <span class="apple-pdp-badge">-{{ $product->discount_percent }}%</span>
             @endif
@@ -36,7 +34,7 @@
         </button>
 
         <p class="apple-pdp-photo-note">
-            {{ __('Больше фото этого товара:') }}:
+            {{ __('Больше фото этого товара:') }}
             <a href="{{ $outboundUrl }}" target="_blank" rel="sponsored nofollow noopener noreferrer">{{ __('смотреть на :store', ['store' => $storeName]) }}</a>
         </p>
         </div>
@@ -126,22 +124,6 @@
 
         </div>
     </div>
-
-    <!-- Просмотр фото на весь экран -->
-    @if($product->image_url)
-        <template x-teleport="body">
-            <div x-show="zoom" x-cloak x-transition.opacity.duration.200ms
-                 @click="zoom = false"
-                 class="apple-lightbox" role="dialog" aria-modal="true" aria-label="{{ $title }}">
-                <button type="button" class="apple-lightbox-close" @click.stop="zoom = false" aria-label="{{ __('Закрыть') }}">
-                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                </button>
-                <img src="{{ $product->image_url }}" alt="{{ $title }}" class="apple-lightbox-image apple-photo-lift" @click.stop>
-            </div>
-        </template>
-    @endif
 </div>
 
 <!-- Релевантные (похожие) товары -->
