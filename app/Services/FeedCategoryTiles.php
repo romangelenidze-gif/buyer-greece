@@ -9,54 +9,81 @@ use Illuminate\Support\Facades\Cache;
 use InvalidArgumentException;
 
 /**
- * Категории для главной: название и число товаров в наличии.
- * Список задаётся в config/home_categories.php; категории без товаров пропускаются.
+ * Категории из config/home_categories.php: плашки для главной (название и число товаров)
+ * и выборка товаров для страницы категории. Обе части используют один и тот же отбор,
+ * поэтому число на плашке всегда совпадает с числом товаров на странице.
  */
 class FeedCategoryTiles
 {
     private const CACHE_MINUTES = 60;
 
     /**
-     * @return Collection<int, array{label: string, count: int, url: string}>
+     * Плашки для главной.
+     *
+     * @return Collection<int, array{slug: string, label: string, count: int, url: string}>
      */
     public function get(): Collection
     {
-        $feed = (string) config('home_categories.feed', 'adidas');
+        $feed = $this->feed();
 
         // В кэше лежат «сырые» данные; перевод названий делаем на лету, потому что язык у посетителей разный.
         $raw = Cache::remember(
-            "home.category_chips.{$feed}",
+            "home.category_chips.v2.{$feed}",
             now()->addMinutes(self::CACHE_MINUTES),
-            fn () => $this->build($feed)
+            fn () => $this->build()
         );
 
         return collect($raw)->map(fn (array $tile) => [
+            'slug' => $tile['slug'],
             'label' => __($tile['label']),
             'count' => $tile['count'],
-            'url' => route('product-search', ['q' => $tile['q']]),
+            'url' => route('feed-category.show', ['slug' => $tile['slug']]),
         ]);
     }
 
-    private function build(string $feed): array
+    /** Описание категории по адресу или null, если такой нет. */
+    public function tile(string $slug): ?array
+    {
+        foreach ((array) config('home_categories.tiles', []) as $tile) {
+            if (($tile['slug'] ?? null) === $slug) {
+                return $tile;
+            }
+        }
+
+        return null;
+    }
+
+    /** Товары категории, доступные в наличии (без сортировки и пагинации). */
+    public function productsQuery(array $tile): Builder
+    {
+        $query = FeedProduct::query()
+            ->where('feed', $this->feed())
+            ->where('is_active', true)
+            ->where('in_stock', true);
+
+        $this->applyFilter($query, (array) ($tile['where'] ?? []));
+
+        return $query;
+    }
+
+    private function feed(): string
+    {
+        return (string) config('home_categories.feed', 'adidas');
+    }
+
+    private function build(): array
     {
         $tiles = [];
 
         foreach ((array) config('home_categories.tiles', []) as $tile) {
-            $query = FeedProduct::query()
-                ->where('feed', $feed)
-                ->where('is_active', true)
-                ->where('in_stock', true);
-
-            $this->applyFilter($query, (array) ($tile['where'] ?? []));
-
-            $count = $query->count();
+            $count = $this->productsQuery($tile)->count();
             if ($count === 0) {
                 continue;
             }
 
             $tiles[] = [
+                'slug' => (string) $tile['slug'],
                 'label' => (string) $tile['label'],
-                'q' => (string) $tile['q'],
                 'count' => $count,
             ];
         }

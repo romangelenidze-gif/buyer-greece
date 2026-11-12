@@ -2,6 +2,8 @@
 
 <div class="flex items-center gap-2 pt-3 pb-2 text-xs px-3 sm:px-1">
     
+    <input type="hidden" name="sort" :value="activeSort">
+
     <!-- Скроллируемая область для инпутов цены -->
     <div class="flex items-center gap-2 overflow-x-auto no-scrollbar shrink-0 py-1.5 px-1">
         
@@ -40,7 +42,6 @@
     <!-- ДЕСКТОП: СОРТИРОВКА -->
     <div class="hidden sm:flex ml-auto items-center relative pr-1" x-data="{ sortOpen: false }" @click.outside="sortOpen = false">
         
-        <!-- Кнопка-триггер -->
         <div @click="sortOpen = !sortOpen" 
              class="apple-filter-pill shrink-0 px-4 py-2 flex items-center justify-between cursor-pointer select-none space-x-3 transition-all duration-200 hover:bg-[#e8e8ed] active:scale-[0.98]">
             <span class="text-xs font-medium text-[#1d1d1f]" x-text="
@@ -52,7 +53,6 @@
             </svg>
         </div>
 
-        <!-- Выпадающее меню Apple Glassmorphism -->
         <div x-show="sortOpen" 
              x-transition:enter="transition ease-out duration-150" 
              x-transition:enter-start="opacity-0 scale-95 -translate-y-1" 
@@ -63,21 +63,21 @@
              x-cloak 
              class="absolute right-0 top-full mt-2 w-52 rounded-2xl overflow-hidden shadow-[0_10px_30px_rgba(0,0,0,0.08)] py-1.5 z-[100] text-xs font-medium bg-white/95 backdrop-blur-xl border border-black/[0.08] text-[#1d1d1f]">
             
-            <div @click="activeSort = 'relevance'; sortProducts('relevance'); sortOpen = false" 
+            <div @click="sortOpen = false; sortProducts('relevance')" 
                  class="flex items-center justify-between px-3.5 py-2 transition-colors cursor-pointer hover:bg-black/[0.04]"
                  :class="{ 'text-[#0071e3] font-semibold bg-[#0071e3]/5': activeSort === 'relevance' }">
                 <span>{{ __('Популярные') }}</span>
                 <svg x-show="activeSort === 'relevance'" class="w-3.5 h-3.5 text-[#0071e3]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
             </div>
 
-            <div @click="activeSort = 'price_asc'; sortProducts('price_asc'); sortOpen = false" 
+            <div @click="sortOpen = false; sortProducts('price_asc')" 
                  class="flex items-center justify-between px-3.5 py-2 transition-colors cursor-pointer hover:bg-black/[0.04]"
                  :class="{ 'text-[#0071e3] font-semibold bg-[#0071e3]/5': activeSort === 'price_asc' }">
                 <span>{{ __('Подешевле') }}</span>
                 <svg x-show="activeSort === 'price_asc'" class="w-3.5 h-3.5 text-[#0071e3]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
             </div>
 
-            <div @click="activeSort = 'price_desc'; sortProducts('price_desc'); sortOpen = false" 
+            <div @click="sortOpen = false; sortProducts('price_desc')" 
                  class="flex items-center justify-between px-3.5 py-2 transition-colors cursor-pointer hover:bg-black/[0.04]"
                  :class="{ 'text-[#0071e3] font-semibold bg-[#0071e3]/5': activeSort === 'price_desc' }">
                 <span>{{ __('Подороже') }}</span>

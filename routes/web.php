@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use Illuminate\Http\Request;
 use App\Http\Controllers\FeedProductController;
+use App\Http\Controllers\FeedCategoryController;
 
 /*
 |--------------------------------------------------------------------------
@@ -36,15 +37,21 @@ Route::view('/privacy', 'public.privacy')->name('privacy');
 
 Route::get('/product-search', [ProductSearchController::class, 'index'])->name('product-search');
 
+
 //AWIN
 Route::get('/product/{feed}/{sku}', [FeedProductController::class, 'show'])
        ->where('feed', '[a-z0-9\-]+')->where('sku', '[A-Za-z0-9\-_.]+')
        ->name('feed-product.show');
+
+// Страница категории товаров из фида (плашки на главной)
+Route::get('/category/{slug}', [FeedCategoryController::class, 'show'])
+       ->where('slug', '[a-z0-9\-]+')
+       ->name('feed-category.show');
        
 
 // ПУБЛИЧНЫЙ МАРШРУТ АВТОКОМПЛИТА С ТРОТТЛИНГОМ (30 запросов в минуту)
 Route::get('/api/autocomplete', [ProductSearchController::class, 'autocomplete'])
-    ->middleware('throttle:30,1')
+    ->middleware('throttle:60,1')
     ->name('api.autocomplete');
 
 // Переключатель языка сессии (ru / ka / en)

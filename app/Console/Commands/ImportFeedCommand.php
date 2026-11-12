@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\Services\Feeds\AwinFeedImporter;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 
 class ImportFeedCommand extends Command
@@ -25,6 +26,10 @@ class ImportFeedCommand extends Command
 
             return self::FAILURE;
         }
+
+        // Сбрасываем кэш автокомплита и плиток категорий, чтобы новые товары и цены появились сразу
+        Cache::forget("home.category_chips.v2.{$feed}");
+        Cache::forget('autocomplete.brands.all.v1');
 
         $this->table(
             ['Строк в фиде', 'Загружено', 'Пропущено', 'Деактивировано'],

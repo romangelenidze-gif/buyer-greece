@@ -1,48 +1,57 @@
-<!-- Поднимаем блок выше (pt-2 sm:pt-4), убирая лишнее пустое пространство -->
 <section class="pt-0 sm:pt-4 lg:pt-3 pb-10 px-4 sm:px-8 lg:px-8 text-center max-w-4xl mx-auto space-y-8 sm:space-y-12">
     <div class="space-y-3">
-        <!-- Крупный логотип с безопасным адаптивным масштабированием без горизонтального скролла -->
         <h1 class="text-6xl sm:text-9xl font-bold tracking-tight text-[#1d1d1f] truncate px-2">
             {{ __('exereto') }}
         </h1>
         <p class="app-text-body text-[#515154] max-w-2xl mx-auto font-normal px-2">
-            {{ __('Опишите любой товар на вашем языке. ИИ подберет варианты в греческих магазинах.') }}
+            {{ __('Быстрый поиск по официальным каталогам брендов в Греции.') }}
         </p>
     </div>
 
-    <!-- Поисковая строка Spotlight -->
     <div class="max-w-3xl mx-auto relative" 
          x-data="{ 
             query: '', 
             suggestions: [], 
             open: false,
             loadingSuggestions: false,
+            abortCtrl: null,
             fetchSuggestions() {
-                if (this.query.length < 2) {
+                if (this.query.trim().length < 2) {
                     this.suggestions = [];
                     this.open = false;
                     return;
                 }
+                if (this.abortCtrl) this.abortCtrl.abort();
+                this.abortCtrl = new AbortController();
                 this.loadingSuggestions = true;
-                fetch(`{{ route('api.autocomplete') }}?q=${encodeURIComponent(this.query)}`)
+
+                fetch(`{{ route('api.autocomplete') }}?q=${encodeURIComponent(this.query.trim())}`, {
+                    signal: this.abortCtrl.signal,
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                })
                     .then(res => res.json())
                     .then(data => {
                         this.suggestions = data.suggestions || [];
                         this.open = this.suggestions.length > 0;
                         this.loadingSuggestions = false;
                     })
-                    .catch(() => {
-                        this.suggestions = [];
-                        this.open = false;
-                        this.loadingSuggestions = false;
+                    .catch(err => {
+                        if (err.name !== 'AbortError') {
+                            this.suggestions = [];
+                            this.open = false;
+                            this.loadingSuggestions = false;
+                        }
                     });
             },
-            selectSuggestion(val) {
-                this.query = val;
+            selectSuggestion(item) {
+                this.query = item.label || item.value;
                 this.open = false;
-                // Оверлей загрузки живёт на странице (home), а не в этом компоненте: сообщаем ей событием
                 this.$dispatch('search-loading');
-                window.location.href = `{{ route('product-search') }}?q=${encodeURIComponent(val)}`;
+                if (item.url) {
+                    window.location.href = item.url;
+                    return;
+                }
+                window.location.href = `{{ route('product-search') }}?q=${encodeURIComponent(item.value)}`;
             }
          }"
          @click.outside="open = false"
@@ -55,7 +64,7 @@
                     name="q" 
                     x-model="query"
                     @focus="if(suggestions.length > 0) open = true"
-                    @input.debounce.300ms="fetchSuggestions()"
+                    @input.debounce.180ms="fetchSuggestions()"
                     placeholder="{{ __('Поиск...') }}" 
                     required
                     maxlength="200"
@@ -79,12 +88,18 @@
              x-transition:leave="transition cubic-bezier-apple duration-200"
              x-transition:leave-start="opacity-100 translate-y-0 scale-100"
              x-transition:leave-end="opacity-0 -translate-y-2 scale-95"
-             class="absolute left-0 right-0 mt-2 bg-white/90 backdrop-blur-xl rounded-2xl shadow-2xl border border-black/[0.08] overflow-hidden z-50 text-left"
+             class="absolute left-0 right-0 mt-2 bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-black/[0.08] overflow-hidden z-50 text-left"
         >
-            <template x-for="item in suggestions" :key="item.value">
-                <div @click="selectSuggestion(item.value)" class="px-5 py-3 hover:bg-black/[0.04] flex items-center justify-between cursor-pointer transition-colors border-b border-black/[0.03] last:border-b-0">
-                    <span class="app-text-body font-medium text-[#1d1d1f]" x-text="item.label"></span>
-                    <span class="text-xs px-2.5 py-1 bg-[#0071e3]/10 text-[#0071e3] rounded-full font-semibold" x-text="item.badge"></span>
+            <template x-for="item in suggestions" :key="item.url || item.value">
+                <div @click="selectSuggestion(item)" class="px-5 py-3 hover:bg-black/[0.04] flex items-center justify-between gap-3 cursor-pointer transition-colors border-b border-black/[0.03] last:border-b-0">
+                    <div class="flex items-center gap-3 min-w-0">
+                        <img x-show="item.image" :src="item.image" alt="" class="w-9 h-9 rounded-lg object-cover bg-[#f5f5f7] shrink-0">
+                        <span class="app-text-body font-medium text-[#1d1d1f] truncate" x-text="item.label"></span>
+                    </div>
+                    <div class="flex items-center gap-2 shrink-0">
+                        <span x-show="item.price" class="text-xs font-semibold text-[#1d1d1f]" x-text="item.price"></span>
+                        <span class="text-xs px-2.5 py-1 bg-[#0071e3]/10 text-[#0071e3] rounded-full font-semibold" x-text="item.badge"></span>
+                    </div>
                 </div>
             </template>
         </div>

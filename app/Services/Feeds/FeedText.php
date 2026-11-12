@@ -2,10 +2,6 @@
 
 namespace App\Services\Feeds;
 
-/**
- * Общая нормализация текста для импорта и поиска. Одна и та же функция на записи и на чтении,
- * поэтому «Παπούτσια», «ΠΑΠΟΥΤΣΙΑ» и «παπουτσια» дают одинаковый результат.
- */
 final class FeedText
 {
     private const ACCENTS = [
@@ -13,11 +9,65 @@ final class FeedText
         'ϊ' => 'ι', 'ΐ' => 'ι', 'ϋ' => 'υ', 'ΰ' => 'υ', 'ς' => 'σ', 'ё' => 'е',
     ];
 
-    private const MEN_WORDS = ['men', 'mens', 'man', 'male'];
-    private const WOMEN_WORDS = ['women', 'womens', 'woman', 'ladies', 'female'];
-    private const KIDS_WORDS = ['kids', 'kid', 'boys', 'boy', 'girls', 'girl', 'children', 'child', 'junior', 'juniors', 'toddler'];
+    private const GENDER_PREFIXES = [
+        'men' => ['men', 'mens', 'man', 'male', 'мужск', 'мужчин', 'парн', 'კაც', 'მამაკაც', 'ανδρ'],
+        'women' => ['women', 'womens', 'woman', 'ladies', 'lady', 'female', 'женск', 'женщин', 'девушк', 'ქალ', 'გოგო', 'γυναικ'],
+        'kids' => ['kids', 'kid', 'boys', 'boy', 'girls', 'girl', 'children', 'child', 'junior', 'juniors', 'youth', 'детск', 'детей', 'детям', 'ребен', 'мальчик', 'девочк', 'ბავშვ', 'საბავშვო', 'παιδικ'],
+    ];
 
-    /** нижний регистр, без греческих ударений и знаков препинания, одиночные пробелы */
+    /**
+     * Верхние категории фида (колонка category_top в feed_products).
+     * Позволяет запросам "women's clothing", "женская обувь", "აქსესუარები" бить точно в индекс БД.
+     */
+    private const TOP_CATEGORY_PREFIXES = [
+        'Παπούτσια' => ['shoe', 'shoes', 'footwear', 'обув', 'ფეხსაცმ', 'παπουτσ'],
+        'Ένδυση'    => ['clothing', 'clothes', 'apparel', 'wear', 'одежд', 'ტანსაცმ', 'ρουχ', 'ενδυσ'],
+        'Αξεσουάρ'  => ['accessory', 'accessories', 'аксессуар', 'აქსესუარ', 'αξεσουαρ'],
+    ];
+
+    /**
+     * Подкатегории (колонка category_path в feed_products) -> список подстрок для LIKE.
+     */
+    private const SUBCATEGORY_PREFIXES = [
+        ['stems' => ['sneaker', 'sneakers', 'trainer', 'trainers', 'кроссовк', 'кед', 'ბოტას', 'კედ'], 'paths' => ['Sneakers']],
+        ['stems' => ['running', 'runners', 'бегов', 'бег', 'სარბენ', 'τρεξιμ'], 'paths' => ['Παπούτσια Τρεξίματος']],
+        ['stems' => ['football', 'soccer', 'cleats', 'бутс', 'футбольн', 'საფეხბურთო', 'ბუც', 'ποδοσφαιρ'], 'paths' => ['Παπούτσια Ποδοσφαίρου']],
+        ['stems' => ['slide', 'slides', 'sandal', 'sandals', 'сланц', 'шлепанц', 'сандал', 'ჩუსტ', 'სანდალ', 'σαγιοναρ', 'παντοφλ'], 'paths' => ['Παντόφλες και σαγιονάρες']],
+        ['stems' => ['tracksuit', 'tracksuits', 'костюм', 'კოსტიუმ', 'φορμ'], 'paths' => ['Αθλητικές Φόρμες']],
+        ['stems' => ['hoodie', 'hoodies', 'sweatshirt', 'sweatshirts', 'худи', 'толстовк', 'ჰუდ', 'სვიტშოტ', 'φουτερ'], 'paths' => ['Φούτερ Και Ζακέτες']],
+        ['stems' => ['jacket', 'jackets', 'coat', 'coats', 'куртк', 'пуховик', 'ქურთუკ', 'μπουφαν'], 'paths' => ['Jackets', 'Μπουφάν']],
+        ['stems' => ['tshirt', 'tshirts', 'shirt', 'shirts', 'tee', 'jersey', 'jerseys', 'футболк', 'майк', 'джерси', 'მაისურ', 'ჯერსი', 'φανελ'], 'paths' => ['Φανέλες', 'Μπλούζες']],
+        ['stems' => ['short', 'shorts', 'legging', 'leggings', 'шорт', 'легинс', 'леггинс', 'შორტ', 'ლეგინს', 'κολαν'], 'paths' => ['Σορτς', 'Κολάν']],
+        ['stems' => ['dress', 'dresses', 'skirt', 'skirts', 'плать', 'юбк', 'კაბ', 'ქვედაბოლო', 'φορεμ', 'φουστ'], 'paths' => ['Φούστες και Φορέματα']],
+        ['stems' => ['bag', 'bags', 'backpack', 'backpacks', 'сумк', 'рюкзак', 'ჩანთ', 'ზურგჩანთ', 'τσαντ', 'σακιδι'], 'paths' => ['Τσάντες']],
+        ['stems' => ['sock', 'socks', 'носк', 'წინდ', 'καλτσ'], 'paths' => ['Κάλτσες']],
+        ['stems' => ['cap', 'caps', 'hat', 'hats', 'beanie', 'кепк', 'шапк', 'ქუდ', 'καπελ', 'σκουφ'], 'paths' => ['Καπέλα', 'Σκούφοι']],
+    ];
+
+    /** Словарь перевода греческих категорий фида без LLM. */
+    private const CATEGORY_LABELS = [
+        'παπουτσια' => 'Обувь',
+        'ενδυση' => 'Одежда',
+        'αξεσουαρ' => 'Аксессуары',
+        'sneakers' => 'Кроссовки',
+        'παπουτσια τρεξιματοσ' => 'Беговая обувь',
+        'παπουτσια ποδοσφαιρου' => 'Футбольные бутсы',
+        'παπουτσια γυμναστηριου' => 'Обувь для зала',
+        'παντοφλεσ και σαγιοναρεσ' => 'Сланцы и шлёпанцы',
+        'αθλητικεσ φορμεσ' => 'Спортивные костюмы',
+        'φουτερ και ζακετεσ' => 'Худи и толстовки',
+        'μπουφαν' => 'Куртки',
+        'jackets' => 'Куртки',
+        'φανελεσ' => 'Джерси и футболки',
+        'μπλουζεσ' => 'Футболки и лонгсливы',
+        'σορτσ' => 'Шорты',
+        'κολαν' => 'Леггинсы',
+        'φουστεσ και φορεματα' => 'Платья и юбки',
+        'τσαντεσ' => 'Сумки и рюкзаки',
+        'καλτσεσ' => 'Носки',
+        'καπελα' => 'Кепки и шапки',
+    ];
+
     public static function normalize(string $text): string
     {
         $text = strtr(mb_strtolower($text), self::ACCENTS);
@@ -26,10 +76,6 @@ final class FeedText
         return trim(preg_replace('/\s+/u', ' ', $text) ?? '');
     }
 
-    /**
-     * Грубая основа слова. В греческом окончания меняются (παπούτσι / παπούτσια / παπούτσιών),
-     * поэтому берём начало слова. В английском отрезаем множественное «s».
-     */
     public static function stem(string $token): string
     {
         $len = mb_strlen($token);
@@ -38,11 +84,9 @@ final class FeedText
             if ($len >= 7) {
                 return mb_substr($token, 0, 5);
             }
-
             if ($len >= 5) {
                 return mb_substr($token, 0, 4);
             }
-
             return $token;
         }
 
@@ -53,35 +97,72 @@ final class FeedText
         return $token;
     }
 
-    /** men | women | kids | null */
     public static function detectGender(string $token): ?string
     {
-        if (str_starts_with($token, 'ανδρ') || in_array($token, self::MEN_WORDS, true)) {
-            return 'men';
-        }
-
-        if (str_starts_with($token, 'γυναικ') || in_array($token, self::WOMEN_WORDS, true)) {
-            return 'women';
-        }
-
-        if (str_starts_with($token, 'παιδι') || in_array($token, self::KIDS_WORDS, true)) {
-            return 'kids';
+        foreach (self::GENDER_PREFIXES as $gender => $prefixes) {
+            if (self::matchesPrefixList($token, $prefixes)) {
+                return $gender;
+            }
         }
 
         return null;
     }
 
+    public static function detectTopCategory(string $token): ?string
+    {
+        foreach (self::TOP_CATEGORY_PREFIXES as $topCategory => $prefixes) {
+            if (self::matchesPrefixList($token, $prefixes)) {
+                return $topCategory;
+            }
+        }
+
+        return null;
+    }
+
+    /** @return string[]|null */
+    public static function detectSubcategoryPaths(string $token): ?array
+    {
+        foreach (self::SUBCATEGORY_PREFIXES as $entry) {
+            if (self::matchesPrefixList($token, $entry['stems'])) {
+                return $entry['paths'];
+            }
+        }
+
+        return null;
+    }
+
+    public static function translateCategorySegment(string $rawSegment): string
+    {
+        $norm = self::normalize($rawSegment);
+        if (isset(self::CATEGORY_LABELS[$norm])) {
+            return __(self::CATEGORY_LABELS[$norm]);
+        }
+
+        return trim($rawSegment);
+    }
+
     /**
-     * Разбор поисковой строки в условия: список групп (внутри группы ИЛИ, между группами И) и пол.
-     * Слова бренда, стоп-слова и греческое «αθλητικά» отбрасываются: весь каталог и так спортивный Adidas.
+     * Разбор поисковой строки в структурированные SQL-условия:
+     * gender, category_top, category_paths и оставшиеся текстовые группы (модель, цвет, артикул).
      *
-     * @return array{groups: array<int, string[]>, gender: ?string}
+     * @return array{
+     *     groups: array<int, string[]>,
+     *     gender: ?string,
+     *     category_top: ?string,
+     *     category_paths: string[]
+     * }
      */
-    public static function parseQuery(string $query, array $feedCfg, array $globalCfg): array
+    public static function parseQuery(string $query, array $feedCfg = [], array $globalCfg = []): array
     {
         $strip = array_map([self::class, 'normalize'], (array) ($feedCfg['strip_words'] ?? []));
         $stop = array_map([self::class, 'normalize'], (array) ($globalCfg['stop_words'] ?? []));
         $prefixes = array_map([self::class, 'normalize'], (array) ($globalCfg['stop_prefixes'] ?? []));
+
+        // Также отбрасываем все известные алиасы брендов, чтобы "adidas" или "адидас" не мешали поиску
+        foreach ((array) config('search_glossary.brands', []) as $alias => $canonical) {
+            $strip[] = self::normalize((string) $alias);
+            $strip[] = self::normalize((string) $canonical);
+        }
 
         $synonyms = [];
         foreach ((array) ($globalCfg['synonyms'] ?? []) as $word => $alts) {
@@ -99,6 +180,8 @@ final class FeedText
         }
 
         $gender = null;
+        $categoryTop = null;
+        $categoryPaths = [];
         $groups = [];
 
         foreach (explode(' ', $normalized) as $token) {
@@ -116,10 +199,18 @@ final class FeedText
                 }
             }
 
-            $g = self::detectGender($token);
-
-            if ($g !== null) {
+            if (($g = self::detectGender($token)) !== null) {
                 $gender ??= $g;
+                continue;
+            }
+
+            if (($top = self::detectTopCategory($token)) !== null) {
+                $categoryTop ??= $top;
+                continue;
+            }
+
+            if (($paths = self::detectSubcategoryPaths($token)) !== null) {
+                $categoryPaths = array_values(array_unique(array_merge($categoryPaths, $paths)));
                 continue;
             }
 
@@ -127,13 +218,14 @@ final class FeedText
             $groups[] = array_values(array_unique(array_merge([$stem], $synonyms[$stem] ?? [])));
         }
 
-        return ['groups' => $groups, 'gender' => $gender];
+        return [
+            'groups' => $groups,
+            'gender' => $gender,
+            'category_top' => $categoryTop,
+            'category_paths' => $categoryPaths,
+        ];
     }
 
-    /**
-     * LIKE-шаблон для одной основы: целое слово для коротких чисел (чтобы «5» не находило любой код с пятёркой),
-     * иначе начало слова. Текст поиска в базе хранится с пробелами по краям.
-     */
     public static function likePattern(string $stem): string
     {
         if (ctype_digit($stem) && mb_strlen($stem) <= 3) {
@@ -141,5 +233,22 @@ final class FeedText
         }
 
         return '% ' . $stem . '%';
+    }
+
+    /** @param string[] $prefixes */
+    private static function matchesPrefixList(string $token, array $prefixes): bool
+    {
+        foreach ($prefixes as $prefix) {
+            $len = mb_strlen($prefix);
+            if ($len <= 4) {
+                if ($token === $prefix || $token === $prefix . 's') {
+                    return true;
+                }
+            } elseif (str_starts_with($token, $prefix)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

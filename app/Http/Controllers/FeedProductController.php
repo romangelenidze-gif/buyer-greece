@@ -3,20 +3,16 @@
 namespace App\Http\Controllers;
 
 use App\Models\FeedProduct;
-use App\Services\GroqAiService;
+use App\Services\Feeds\FeedText;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
-/**
- * Детальная страница товара из партнёрского фида: /product/{feed}/{sku}.
- */
 class FeedProductController extends Controller
 {
-    public function show(Request $request, string $feed, string $sku, GroqAiService $groq): View
+    public function show(Request $request, string $feed, string $sku): View
     {
         $product = $this->findProduct($feed, $sku);
 
-        // Другие расцветки той же модели.
         $colorways = $product->model_code
             ? FeedProduct::query()
                 ->where('feed', $feed)
@@ -26,50 +22,36 @@ class FeedProductController extends Controller
                 ->get(['id', 'feed', 'sku', 'colour', 'image_url'])
             : collect([$product]);
 
-        // Релевантные (похожие) товары Adidas из той же категории
         $relatedProducts = FeedProduct::query()
-            ->where('feed', 'adidas')
+            ->where('feed', $feed)
             ->where('id', '!=', $product->id)
             ->where('is_active', true)
             ->where('in_stock', true)
-            ->when($product->category_top, fn($q) => $q->where('category_top', $product->category_top))
-            ->inRandomOrder()
+            ->when($product->category_top, fn ($q) => $q->where('category_top', $product->category_top))
+            ->when($product->gender, fn ($q) => $q->where('gender', $product->gender))
             ->limit(4)
             ->get();
 
-        // Определяем локаль интерфейса
-        $locale = app()->getLocale();
-
-        // Если язык грузинский ('ka'), принудительно переводим греческий текст на английский ('en')
-        $translationLocale = $locale === 'ka' ? 'en' : $locale;
-
-        // Название, характеристики и категории переводим на нужный язык одним вызовом.
-        // Готовые переводы берутся из кэша GroqAiService (30 дней), поэтому повторные открытия бесплатны.
-        $categories = array_values(array_filter(array_map('trim', explode(',', (string) $product->category_path))));
-        $specs = (array) ($product->specs ?? []);
-        $texts = array_merge([$product->name], $specs, $categories);
-        $translated = $groq->translateProductsBack($texts, $translationLocale);
-
-        if (count($translated) !== count($texts)) {
-            $translated = $texts;
-        }
+        $categories = array_values(array_filter(array_map(
+            fn ($seg) => FeedText::translateCategorySegment((string) $seg),
+            explode(',', (string) $product->category_path)
+        )));
 
         $previous = url()->previous();
         $backUrl = str_contains($previous, '/product-search') ? $previous : route('product-search');
 
         return view('public.feed-product', [
             'product' => $product,
-            'title' => (string) $translated[0],
-            'specs' => array_slice($translated, 1, count($specs)),
-            'categories' => array_slice($translated, 1 + count($specs)),
+            'title' => (string) $product->name,
+            'specs' => (array) ($product->specs ?? []),
+            'categories' => $categories,
             'colorways' => $colorways,
             'relatedProducts' => $relatedProducts,
             'backUrl' => $backUrl,
             'outboundUrl' => $product->outboundUrl(),
-            'storeName' => (string) config("feeds.feeds.{$feed}.store_name", $feed),
+            'storeName' => (string) config("feeds.feeds.{$feed}.store_name", $product->brand ?: $feed),
         ]);
     }
-
 
     protected function findProduct(string $feed, string $sku): FeedProduct
     {

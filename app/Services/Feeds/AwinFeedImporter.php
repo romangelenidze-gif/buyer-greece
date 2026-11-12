@@ -18,11 +18,19 @@ class AwinFeedImporter
     protected const BATCH = 500;
     protected const REQUIRED_COLUMNS = ['aw_deep_link', 'product_name', 'merchant_product_id', 'search_price'];
 
-    protected const GENDERS = [
+protected const GENDERS = [
         'Άνδρες' => 'men',
+        'Men' => 'men',
+        'Male' => 'men',
         'Γυναίκες' => 'women',
+        'Women' => 'women',
+        'Female' => 'women',
         'Unisex' => 'unisex',
         'Παιδιά' => 'kids',
+        'Kids' => 'kids',
+        'Children' => 'kids',
+        'Boys' => 'kids',
+        'Girls' => 'kids',
     ];
 
     protected const UPDATE_COLUMNS = [

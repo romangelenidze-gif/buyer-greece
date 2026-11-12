@@ -1,0 +1,25 @@
+/* Сетка карточек товаров: одна и та же на главной и в поисковой выдаче.
+   Добавьте в конец app.css. Заменяет длинные цепочки grid-cols-* в обоих шаблонах. */
+.apple-product-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1.5rem;
+}
+
+@media (min-width: 640px) {
+    .apple-product-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (min-width: 768px) {
+    .apple-product-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+
+@media (min-width: 1024px) {
+    .apple-product-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+}
