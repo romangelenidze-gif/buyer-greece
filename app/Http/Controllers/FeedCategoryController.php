@@ -52,7 +52,7 @@ class FeedCategoryController extends Controller
         } elseif ($sort === 'price_desc') {
             $grouped->orderByDesc('min_price');
         } else {
-            $grouped->orderByRaw('max_rating IS NULL')->orderByDesc('max_rating')->orderByDesc('max_discount')->orderBy('primary_id');
+            $grouped->orderByRaw('COALESCE(MAX(rating), -1) DESC')->orderByDesc('max_discount')->orderBy('primary_id');
         }
 
         $rows = $grouped

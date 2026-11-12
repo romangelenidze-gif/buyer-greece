@@ -57,8 +57,6 @@ class FeedProductSearch
     }
 
     /**
-     * Поиск с пагинацией и сортировкой по всей таблице feed_products.
-     *
      * @return array{cards: array<int, array>, total: int, per_page: int, current_page: int, last_page: int}
      */
     public function searchPaginated(?string $feedKey, array $analysis, array $filters, string $userQuery = '', int $page = 1, int $perPage = self::DEFAULT_PER_PAGE): array
@@ -70,7 +68,6 @@ class FeedProductSearch
 
         $brand = $feedKey === null ? $this->resolveBrand($userQuery, $analysis) : null;
 
-        // Разбираем исходный запрос пользователя + обогащённые варианты (если были)
         $rawCandidates = array_values(array_unique(array_filter([
             trim($userQuery),
             trim((string) ($analysis['query_en'] ?? '')),
@@ -83,7 +80,6 @@ class FeedProductSearch
 
         $parsedList = array_map(fn ($q) => FeedText::parseQuery($q, $cfg, $global), $rawCandidates);
 
-        // Собираем объединённые структурные фильтры (пол, верхняя категория, подкатегория)
         $gender = null;
         $categoryTop = null;
         $categoryPaths = [];
@@ -94,7 +90,6 @@ class FeedProductSearch
             $categoryPaths = array_values(array_unique(array_merge($categoryPaths, $p['category_paths'])));
         }
 
-        // Формируем список попыток от самой точной к более широкой
         $attempts = [];
         foreach ($parsedList as $p) {
             $attempts[] = [
@@ -105,7 +100,6 @@ class FeedProductSearch
             ];
         }
 
-        // Fallback 1: если задана узкая подкатегория и текстовые слова, пробуем без сужения category_paths
         if ($categoryPaths !== []) {
             $attempts[] = [
                 'groups' => $parsedList[0]['groups'],
@@ -115,7 +109,6 @@ class FeedProductSearch
             ];
         }
 
-        // Fallback 2: если не было ни слов, ни категорий (например запрос просто "adidas"), отдаём весь каталог бренда
         if ($parsedList[0]['groups'] === [] && $categoryTop === null && $categoryPaths === []) {
             $attempts[] = [
                 'groups' => [],
@@ -148,7 +141,6 @@ class FeedProductSearch
         ];
     }
 
-    /** Обратная совместимость со старым вызовом search(). */
     public function search(string $feedKey, array $analysis, array $filters, string $userQuery = '', ?int $limit = null): array
     {
         $perPage = $limit ?? (int) config('feeds.search_limit', self::DEFAULT_PER_PAGE);
@@ -205,7 +197,6 @@ class FeedProductSearch
             $base->where('price', '<=', (float) $filters['price_max']);
         }
 
-        // Группируем по моделям прямо в MariaDB, чтобы сортировка и пагинация работали по всему каталогу
         $grouped = (clone $base)
             ->selectRaw("feed, COALESCE(NULLIF(model_code, ''), sku) as group_key, MIN(id) as primary_id, MIN(price) as min_price, MAX(rating) as max_rating, MAX(discount_percent) as max_discount, COUNT(*) as colorways_count")
             ->groupBy('feed', 'group_key');
@@ -228,7 +219,7 @@ class FeedProductSearch
         } elseif ($sort === 'price_desc') {
             $grouped->orderByDesc('min_price');
         } else {
-            $grouped->orderByRaw('max_rating IS NULL')->orderByDesc('max_rating')->orderByDesc('max_discount')->orderBy('primary_id');
+            $grouped->orderByRaw('COALESCE(MAX(rating), -1) DESC')->orderByDesc('max_discount')->orderBy('primary_id');
         }
 
         $rows = $grouped
