@@ -50,6 +50,19 @@
             </div>
         </section>
 
+        <!-- Категории -->
+        @if(isset($categoryTiles) && $categoryTiles->isNotEmpty())
+        <section class="max-w-7xl mx-auto px-6 space-y-6">
+            <h2 class="text-2xl sm:text-3xl font-bold tracking-tight text-zinc-900 text-center">{{ __('Категории') }}</h2>
+
+            <div class="apple-category-list">
+                @foreach($categoryTiles as $tile)
+                    <x-public-ui.category-tile :tile="$tile" />
+                @endforeach
+            </div>
+        </section>
+        @endif
+
         <!-- Популярные модели Adidas -->
         @if(isset($popularProducts) && $popularProducts->isNotEmpty())
         <section class="max-w-7xl mx-auto px-6 space-y-6">

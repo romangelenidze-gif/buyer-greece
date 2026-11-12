@@ -3,12 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Models\FeedProduct;
+use App\Services\FeedCategoryTiles;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class HomeController extends Controller
 {
-    public function index(Request $request): View
+    public function index(Request $request, FeedCategoryTiles $categoryTiles): View
     {
         // 1. Популярные товары Adidas (бестселлеры по рейтингу)
         $popularProducts = FeedProduct::query()
@@ -38,14 +39,9 @@ class HomeController extends Controller
             'link' => route('product-search', ['q' => 'adidas']),
         ];
 
-        // Категории для быстрого доступа (фильтры поиска по каталогу Adidas)
-        $categories = [
-            ['name' => 'Кроссовки (Sneakers)', 'img' => 'mens-sports-shoes.png', 'url' => route('product-search', ['q' => 'sneakers'])],
-            ['name' => 'Одежда и худи', 'img' => 'mens-jackets.png', 'url' => route('product-search', ['q' => 'hoodie'])],
-            ['name' => 'Спортивные костюмы', 'img' => 'childrens-fashion.png', 'url' => route('product-search', ['q' => 'tracksuit'])],
-            ['name' => 'Аксессуары и сумки', 'img' => 'backpack.png', 'url' => route('product-search', ['q' => 'bag'])],
-        ];
+        // 4. Плитки категорий (данные из фида, список в config/home_categories.php)
+        $categoryTiles = $categoryTiles->get();
 
-        return view('public.home', compact('popularProducts', 'discountProducts', 'promoBanner', 'categories'));
+        return view('public.home', compact('popularProducts', 'discountProducts', 'promoBanner', 'categoryTiles'));
     }
 }

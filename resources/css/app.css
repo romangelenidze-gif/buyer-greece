@@ -1629,3 +1629,45 @@ html .pswp {
         grid-template-columns: repeat(4, minmax(0, 1fr));
     }
 }
+
+/* ==========================================================================
+   КАТЕГОРИИ НА ГЛАВНОЙ (компактные плашки без картинок)
+   ========================================================================== */
+
+.apple-category-list {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.apple-category-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    font-size: 0.9375rem;
+    font-weight: 500;
+    line-height: 1.2;
+    color: var(--apple-text-primary);
+    background-color: #ffffff;
+    border: 1px solid var(--apple-border);
+    border-radius: var(--apple-radius-pill);
+    text-decoration: none;
+    transition: border-color 0.2s var(--apple-ease), color 0.2s var(--apple-ease), transform 0.2s var(--apple-ease);
+}
+
+.apple-category-chip:hover {
+    color: var(--apple-blue);
+    border-color: rgba(0, 113, 227, 0.4);
+}
+
+.apple-category-chip:active {
+    transform: scale(0.98);
+}
+
+.apple-category-chip-count {
+    font-size: 0.8125rem;
+    font-weight: 400;
+    color: var(--apple-text-muted);
+}
