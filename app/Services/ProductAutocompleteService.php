@@ -23,7 +23,7 @@ class ProductAutocompleteService
             return [];
         }
 
-        $key = 'autocomplete:v4:' . md5($locale . '|' . mb_strtolower($typed));
+        $key = 'autocomplete:v7:' . md5($locale . '|' . mb_strtolower($typed));
 
         try {
             return Cache::remember($key, now()->addMinutes(self::CACHE_MINUTES), fn () => $this->build($typed));
@@ -41,7 +41,7 @@ class ProductAutocompleteService
         $restAfterBrand = trim($this->matcher->withoutBrands($typed));
         $primaryBrand = $matchedBrands[0] ?? $this->detectExactBrand($typed);
 
-        // 1. Бренд + категория ("адидас жен...", "adidas кросс...")
+        // 1. Бренд + категория ("adidas женская одежда", "адидас кросс...")
         if ($primaryBrand !== null && $restAfterBrand !== '') {
             foreach ($this->matcher->suggest($restAfterBrand, 4) as $tile) {
                 $combinedQuery = $primaryBrand . ' ' . $tile['label'];
@@ -56,7 +56,7 @@ class ProductAutocompleteService
             }
         }
 
-        // 2. Категории таксономии (на языке интерфейса)
+        // 2. Категории таксономии (на языке интерфейса, только с товарами в наличии)
         if ($out === [] && $restAfterBrand !== '') {
             foreach ($this->matcher->suggest($restAfterBrand, 5) as $tile) {
                 $out[] = [
@@ -82,7 +82,7 @@ class ProductAutocompleteService
             ];
         }
 
-        // 4. Если введён только бренд ("adidas", "адидас"), добавляем популярные разделы этого бренда
+        // 4. Популярные разделы бренда при вводе только названия бренда ("adidas", "адидас")
         if ($primaryBrand !== null && $restAfterBrand === '') {
             foreach ($this->matcher->popularTiles(4) as $tile) {
                 $combinedQuery = $primaryBrand . ' ' . $tile['label'];
@@ -97,7 +97,7 @@ class ProductAutocompleteService
             }
         }
 
-        // 5. Конкретные модели товаров (по латинице/цифрам)
+        // 5. Модели: цена, фото и SKU всегда берутся из одной конкретной строки товара
         foreach ($this->modelSuggestions($restAfterBrand, $primaryBrand) as $model) {
             $out[] = [
                 'label' => $model['name'],
@@ -121,6 +121,61 @@ class ProductAutocompleteService
         }
 
         return array_slice($unique, 0, self::MAX_TOTAL);
+    }
+
+    /**
+     * Берёт самые дешёвые совпадения и оставляет по одному экземпляру на уникальное название.
+     * Цена, фото и SKU всегда принадлежат одному и тому же товару.
+     *
+     * @return array<int, array{name: string, sku: string, feed: string, brand: string, image: ?string, price: ?string}>
+     */
+    private function modelSuggestions(string $text, ?string $brand): array
+    {
+        if (mb_strlen($text) < 2 || !preg_match('/[A-Za-z0-9]/', $text)) {
+            return [];
+        }
+
+        $like = addcslashes($text, '%_\\');
+
+        $rows = FeedProduct::query()
+            ->where('is_active', true)
+            ->where('in_stock', true)
+            ->where(function ($q) use ($like) {
+                $q->where('name', 'like', $like . '%')
+                    ->orWhere('name', 'like', '% ' . $like . '%')
+                    ->orWhere('model_code', 'like', $like . '%');
+            })
+            ->when($brand !== null, fn ($q) => $q->where('brand', $brand))
+            ->orderBy('price')
+            ->orderBy('id')
+            ->limit(40)
+            ->get(['id', 'feed', 'brand', 'sku', 'name', 'image_url', 'price']);
+
+        $out = [];
+        $seenNames = [];
+
+        foreach ($rows as $row) {
+            $normName = mb_strtolower(trim((string) $row->name));
+            if ($normName === '' || isset($seenNames[$normName])) {
+                continue;
+            }
+            $seenNames[$normName] = true;
+
+            $out[] = [
+                'name' => (string) $row->name,
+                'sku' => (string) $row->sku,
+                'feed' => (string) $row->feed,
+                'brand' => (string) ($row->brand ?? ''),
+                'image' => $row->image_url ? (string) $row->image_url : null,
+                'price' => '€' . number_format((float) $row->price, 2, '.', ' '),
+            ];
+
+            if (count($out) >= 4) {
+                break;
+            }
+        }
+
+        return $out;
     }
 
     private function detectExactBrand(string $typed): ?string
@@ -170,7 +225,6 @@ class ProductAutocompleteService
         }
 
         $brands = $this->allActiveBrands();
-
         $aliases = [];
         foreach ((array) config('search_glossary.brands', []) as $alias => $canonical) {
             $normAlias = $this->matcher->norm((string) $alias);
@@ -182,56 +236,14 @@ class ProductAutocompleteService
         $found = [];
         foreach ($brands as $brand) {
             $normBrand = $this->matcher->norm($brand);
-            $hit = str_starts_with($normBrand, $firstWord) || in_array($normBrand, $aliases, true);
-
-            if ($hit) {
+            if (str_starts_with($normBrand, $firstWord) || in_array($normBrand, $aliases, true)) {
                 $found[] = $brand;
             }
-
             if (count($found) >= 2) {
                 break;
             }
         }
 
         return $found;
-    }
-
-    /** @return array<int, array{name: string, sku: string, feed: string, brand: string, image: ?string, price: ?string}> */
-    private function modelSuggestions(string $text, ?string $brand): array
-    {
-        if (mb_strlen($text) < 2 || !preg_match('/[A-Za-z0-9]/', $text)) {
-            return [];
-        }
-
-        $like = addcslashes($text, '%_\\');
-
-        $query = FeedProduct::query()
-            ->where('is_active', true)
-            ->where('in_stock', true)
-            ->where(function ($q) use ($like) {
-                $q->where('name', 'like', $like . '%')
-                    ->orWhere('name', 'like', '% ' . $like . '%')
-                    ->orWhere('model_code', 'like', $like . '%');
-            });
-
-        if ($brand !== null) {
-            $query->where('brand', $brand);
-        }
-
-        return $query
-            ->selectRaw('name, MAX(feed) as feed, MAX(brand) as brand, MIN(sku) as sku, MIN(image_url) as image_url, MIN(price) as min_price')
-            ->groupBy('name')
-            ->orderByRaw('COUNT(*) DESC')
-            ->limit(4)
-            ->get()
-            ->map(fn ($row) => [
-                'name' => (string) $row->name,
-                'sku' => (string) $row->sku,
-                'feed' => (string) $row->feed,
-                'brand' => (string) ($row->brand ?? ''),
-                'image' => $row->image_url ? (string) $row->image_url : null,
-                'price' => is_numeric($row->min_price) ? '€' . number_format((float) $row->min_price, 2, '.', ' ') : null,
-            ])
-            ->all();
     }
 }

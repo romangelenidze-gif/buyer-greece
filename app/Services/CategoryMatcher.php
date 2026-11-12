@@ -123,10 +123,11 @@ class CategoryMatcher
             $config[$tile['slug']] = $tile;
         }
 
-        $activeTiles = $this->tiles->get();
+        // Только категории, реально существующие в БД (count > 0)
+        $activeTiles = $this->tiles->get()->all();
         $out = [];
 
-        // 1. Прямое совпадение по всем словам внутри одной плитки (например "женская обувь", "кроссовки")
+        // 1. Прямое совпадение по активным категориям ("женская одежда", "women's clothing", "sneakers")
         foreach ($activeTiles as $tile) {
             $entries = $this->haystack($tile, $config[$tile['slug']] ?? []);
 
@@ -143,7 +144,7 @@ class CategoryMatcher
             }
         }
 
-        // 2. Комбинация Пол + Подкатегория ("женские кроссовки", "мужские худи", "ქალის ბოტასები")
+        // 2. Комбинация Пол + Активная подкатегория ("женские кроссовки", "мужские худи")
         if ($out === [] && count($tokens) >= 2) {
             $gender = null;
             $restTokens = [];
@@ -163,7 +164,7 @@ class CategoryMatcher
                 foreach ($activeTiles as $tile) {
                     $tileCfg = $config[$tile['slug']] ?? [];
                     if (isset($tileCfg['where']['gender'])) {
-                        continue; // плитки с уже зашитым полом пропускаем
+                        continue;
                     }
 
                     $entries = $this->haystack($tile, $tileCfg);
@@ -190,97 +191,7 @@ class CategoryMatcher
             }
         }
 
-        // 3. Поиск по расширенному словарю search_glossary.php (носки, рюкзаки, футболки и т.д.)
-        if (count($out) < $limit) {
-            $out = array_merge($out, $this->suggestFromGlossary($tokens, $limit - count($out)));
-        }
-
         return array_slice($out, 0, $limit);
-    }
-
-    /**
-     * @return array<int, array{slug: string, label: string, count: int, url: string}>
-     */
-    private function suggestFromGlossary(array $tokens, int $limit): array
-    {
-        $gender = null;
-        $searchTokens = [];
-
-        foreach ($tokens as $token) {
-            $g = $this->prefixConceptKey($token, 'genders');
-            if ($g !== null && $gender === null) {
-                $gender = $g;
-            } else {
-                $searchTokens[] = $token;
-            }
-        }
-
-        if ($searchTokens === []) {
-            return [];
-        }
-
-        $genderWord = $gender !== null ? __(self::GENDER_PREFIX_LABELS[$gender] ?? '') : '';
-        $found = [];
-        $seen = [];
-
-        foreach ((array) config('search_glossary.categories', []) as $row) {
-            if (!isset($row[0], $row[2])) {
-                continue;
-            }
-
-            $stems = array_values(array_filter(array_map(
-                fn ($s) => $this->norm((string) $s),
-                explode('|', (string) $row[0])
-            )));
-            $en = $this->norm((string) $row[2]);
-            $candidates = array_merge($stems, [$en]);
-
-            foreach ($searchTokens as $token) {
-                $matched = false;
-                foreach ($candidates as $cand) {
-                    if ($cand !== '' && (str_starts_with($cand, $token) || str_starts_with($token, $cand))) {
-                        $matched = true;
-                        break;
-                    }
-                }
-                if (!$matched) {
-                    continue 2;
-                }
-            }
-
-            // Берем читаемое слово (первую основу на кириллице или английское название)
-            $baseLabel = (string) ($row[2] ?? '');
-            foreach (explode('|', (string) $row[0]) as $rawStem) {
-                $rawStem = trim($rawStem);
-                if ($rawStem !== '' && preg_match('/\p{Cyrillic}/u', $rawStem) && mb_strlen($rawStem) >= 4) {
-                    $baseLabel = mb_strtoupper(mb_substr($rawStem, 0, 1)) . mb_substr($rawStem, 1);
-                    break;
-                }
-            }
-
-            $label = $genderWord !== ''
-                ? trim($genderWord . ' ' . mb_strtolower($baseLabel))
-                : $baseLabel;
-
-            $key = mb_strtolower($label);
-            if (isset($seen[$key])) {
-                continue;
-            }
-            $seen[$key] = true;
-
-            $found[] = [
-                'slug' => 'glossary-' . md5($key),
-                'label' => $label,
-                'count' => 1,
-                'url' => route('product-search', ['q' => $label]),
-            ];
-
-            if (count($found) >= $limit) {
-                break;
-            }
-        }
-
-        return $found;
     }
 
     public function tokens(string $text): array

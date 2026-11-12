@@ -9,25 +9,26 @@ final class FeedText
         'ϊ' => 'ι', 'ΐ' => 'ι', 'ϋ' => 'υ', 'ΰ' => 'υ', 'ς' => 'σ', 'ё' => 'е',
     ];
 
-    private const GENDER_PREFIXES = [
-        'men' => ['men', 'mens', 'man', 'male', 'мужск', 'мужчин', 'парн', 'კაც', 'მამაკაც', 'ανδρ'],
-        'women' => ['women', 'womens', 'woman', 'ladies', 'lady', 'female', 'женск', 'женщин', 'девушк', 'ქალ', 'გოგო', 'γυναικ'],
-        'kids' => ['kids', 'kid', 'boys', 'boy', 'girls', 'girl', 'children', 'child', 'junior', 'juniors', 'youth', 'детск', 'детей', 'детям', 'ребен', 'мальчик', 'девочк', 'ბავშვ', 'საბავშვო', 'παιδικ'],
+    /** Точные слова (проверяются целиком, чтобы 'man' не цеплял обрывки) */
+    private const GENDER_EXACT = [
+        'kids' => ['kids', 'kid', 'boys', 'boy', 'girls', 'girl', 'children', 'child', 'junior', 'juniors', 'youth', 'infant', 'infants', 'toddler', 'toddlers', 'baby', 'babies'],
+        'women' => ['women', 'womens', 'woman', 'ladies', 'lady', 'female'],
+        'men' => ['men', 'mens', 'man', 'male'],
     ];
 
-    /**
-     * Верхние категории фида (колонка category_top в feed_products).
-     * Позволяет запросам "women's clothing", "женская обувь", "აქსესუარები" бить точно в индекс БД.
-     */
+    /** Префиксы основ любой длины (греческий, русский, грузинский) */
+    private const GENDER_STEMS = [
+        'kids' => ['παιδι', 'βρεφικ', 'εφηβικ', 'αγορ', 'κοριτσ', 'детск', 'детей', 'детям', 'ребен', 'мальчик', 'девочк', 'ბავშვ', 'საბავშვო'],
+        'women' => ['γυναικ', 'женск', 'женщин', 'девушк', 'ქალ', 'გოგო'],
+        'men' => ['ανδρ', 'αντρ', 'мужск', 'мужчин', 'парн', 'კაც', 'მამაკაც'],
+    ];
+
     private const TOP_CATEGORY_PREFIXES = [
         'Παπούτσια' => ['shoe', 'shoes', 'footwear', 'обув', 'ფეხსაცმ', 'παπουτσ'],
         'Ένδυση'    => ['clothing', 'clothes', 'apparel', 'wear', 'одежд', 'ტანსაცმ', 'ρουχ', 'ενδυσ'],
         'Αξεσουάρ'  => ['accessory', 'accessories', 'аксессуар', 'აქსესუარ', 'αξεσουαρ'],
     ];
 
-    /**
-     * Подкатегории (колонка category_path в feed_products) -> список подстрок для LIKE.
-     */
     private const SUBCATEGORY_PREFIXES = [
         ['stems' => ['sneaker', 'sneakers', 'trainer', 'trainers', 'кроссовк', 'кед', 'ბოტას', 'კედ'], 'paths' => ['Sneakers']],
         ['stems' => ['running', 'runners', 'бегов', 'бег', 'სარბენ', 'τρεξιμ'], 'paths' => ['Παπούτσια Τρεξίματος']],
@@ -44,7 +45,6 @@ final class FeedText
         ['stems' => ['cap', 'caps', 'hat', 'hats', 'beanie', 'кепк', 'шапк', 'ქუდ', 'καπελ', 'σκουφ'], 'paths' => ['Καπέλα', 'Σκούφοι']],
     ];
 
-    /** Словарь перевода греческих категорий фида без LLM. */
     private const CATEGORY_LABELS = [
         'παπουτσια' => 'Обувь',
         'ενδυση' => 'Одежда',
@@ -99,9 +99,14 @@ final class FeedText
 
     public static function detectGender(string $token): ?string
     {
-        foreach (self::GENDER_PREFIXES as $gender => $prefixes) {
-            if (self::matchesPrefixList($token, $prefixes)) {
+        foreach (['kids', 'women', 'men'] as $gender) {
+            if (in_array($token, self::GENDER_EXACT[$gender], true)) {
                 return $gender;
+            }
+            foreach (self::GENDER_STEMS[$gender] as $stem) {
+                if (str_starts_with($token, $stem)) {
+                    return $gender;
+                }
             }
         }
 
@@ -141,24 +146,12 @@ final class FeedText
         return trim($rawSegment);
     }
 
-    /**
-     * Разбор поисковой строки в структурированные SQL-условия:
-     * gender, category_top, category_paths и оставшиеся текстовые группы (модель, цвет, артикул).
-     *
-     * @return array{
-     *     groups: array<int, string[]>,
-     *     gender: ?string,
-     *     category_top: ?string,
-     *     category_paths: string[]
-     * }
-     */
     public static function parseQuery(string $query, array $feedCfg = [], array $globalCfg = []): array
     {
         $strip = array_map([self::class, 'normalize'], (array) ($feedCfg['strip_words'] ?? []));
         $stop = array_map([self::class, 'normalize'], (array) ($globalCfg['stop_words'] ?? []));
         $prefixes = array_map([self::class, 'normalize'], (array) ($globalCfg['stop_prefixes'] ?? []));
 
-        // Также отбрасываем все известные алиасы брендов, чтобы "adidas" или "адидас" не мешали поиску
         foreach ((array) config('search_glossary.brands', []) as $alias => $canonical) {
             $strip[] = self::normalize((string) $alias);
             $strip[] = self::normalize((string) $canonical);

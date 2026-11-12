@@ -4,34 +4,15 @@ namespace App\Services\Feeds;
 
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\RequestException;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
-/**
- * Импорт CSV-фида Awin (обычный или .gz) в таблицу feed_products.
- * Читает файл потоком (память не растёт), делает upsert пачками по (feed, sku)
- * и деактивирует товары, которых в свежем фиде больше нет.
- */
 class AwinFeedImporter
 {
     protected const BATCH = 500;
     protected const REQUIRED_COLUMNS = ['aw_deep_link', 'product_name', 'merchant_product_id', 'search_price'];
-
-protected const GENDERS = [
-        'Άνδρες' => 'men',
-        'Men' => 'men',
-        'Male' => 'men',
-        'Γυναίκες' => 'women',
-        'Women' => 'women',
-        'Female' => 'women',
-        'Unisex' => 'unisex',
-        'Παιδιά' => 'kids',
-        'Kids' => 'kids',
-        'Children' => 'kids',
-        'Boys' => 'kids',
-        'Girls' => 'kids',
-    ];
 
     protected const UPDATE_COLUMNS = [
         'model_code', 'brand', 'name', 'colour', 'category_path', 'category_top', 'gender', 'price',
@@ -40,7 +21,6 @@ protected const GENDERS = [
     ];
 
     /**
-     * @param string|null $source URL или путь к локальному .csv / .csv.gz; по умолчанию URL из config/feeds.php
      * @return array{total:int, imported:int, skipped:int, deactivated:int, deactivation_skipped:bool}
      */
     public function import(string $feedKey, ?string $source = null): array
@@ -61,7 +41,11 @@ protected const GENDERS = [
         [$path, $temporary] = $this->resolveSource($source);
 
         try {
-            return $this->process($feedKey, $cfg, $path, $startedAt);
+            $stats = $this->process($feedKey, $cfg, $path, $startedAt);
+            Cache::forget("home.category_chips.v2.{$feedKey}");
+            Cache::forget('autocomplete.brands.all.v1');
+
+            return $stats;
         } finally {
             if ($temporary) {
                 @unlink($path);
@@ -71,7 +55,7 @@ protected const GENDERS = [
 
     protected function process(string $feedKey, array $cfg, string $path, string $startedAt): array
     {
-        $handle = @fopen('compress.zlib://' . $path, 'r'); // читает и gzip, и обычный CSV
+        $handle = @fopen('compress.zlib://' . $path, 'r');
 
         if ($handle === false) {
             throw new \RuntimeException('Не удалось открыть файл фида.');
@@ -103,7 +87,7 @@ protected const GENDERS = [
 
             while (($row = fgetcsv($handle, 0, ',', '"', '')) !== false) {
                 if ($row === [null]) {
-                    continue; // пустая строка
+                    continue;
                 }
 
                 $total++;
@@ -136,7 +120,6 @@ protected const GENDERS = [
             throw new \RuntimeException('В фиде не нашлось ни одного пригодного товара: база не изменена.');
         }
 
-        // Если фид пришёл усечённым, не прячем из каталога то, чего просто не дочитали.
         $minRatio = (float) config('feeds.min_import_ratio', 0.5);
         $deactivationSkipped = $activeBefore > 0 && $imported < $activeBefore * $minRatio;
         $deactivated = 0;
@@ -180,7 +163,7 @@ protected const GENDERS = [
     }
 
     /**
-     * @return array{0: string, 1: bool} [путь к файлу, файл временный]
+     * @return array{0: string, 1: bool}
      */
     protected function resolveSource(string $source): array
     {
@@ -195,7 +178,6 @@ protected const GENDERS = [
         $tmp = tempnam(sys_get_temp_dir(), 'feed_');
 
         try {
-            // Не пишем URL ни в логи, ни в сообщения: в нём ключ Awin.
             Http::timeout(300)->withOptions(['sink' => $tmp])->get($source)->throw();
         } catch (RequestException $e) {
             @unlink($tmp);
@@ -208,10 +190,6 @@ protected const GENDERS = [
         return [$tmp, true];
     }
 
-    /**
-     * Строка CSV -> строка таблицы (JSON-поля уже закодированы, потому что upsert не применяет касты).
-     * Возвращает null, если строка непригодна (нет SKU, цены или партнёрской ссылки).
-     */
     public static function mapRow(array $r, string $feedKey, array $cfg, string $seenAt): ?array
     {
         $get = fn (string $key): string => trim((string) ($r[$key] ?? ''));
@@ -229,7 +207,6 @@ protected const GENDERS = [
         $oldPrice = ($old !== null && $old > $price) ? $old : null;
         $discount = $oldPrice !== null ? (int) max(1, min(99, round(($oldPrice - $price) / $oldPrice * 100))) : 0;
 
-        // Размеры, остатки и EAN приходят параллельными списками через запятую.
         $sizeList = self::list($get('Fashion:size'));
         $stockList = self::list($get('stock_quantity'));
         $eanList = self::list($get('ean'));
@@ -252,7 +229,7 @@ protected const GENDERS = [
 
         $categoryPath = $get('merchant_category');
         $categoryTop = trim(explode(',', $categoryPath)[0] ?? '');
-        $gender = self::GENDERS[$get('Fashion:suitable_for')] ?? null;
+        $gender = self::resolveGender($get('Fashion:suitable_for'), $categoryPath, $name);
         $colour = $get('colour');
         $model = $get('mpn');
         $rating = self::decimal($get('rating'));
@@ -295,6 +272,44 @@ protected const GENDERS = [
             'created_at' => $seenAt,
             'updated_at' => $seenAt,
         ];
+    }
+
+    protected static function resolveGender(string $suitableFor, string $categoryPath, string $name): ?string
+    {
+        foreach ([$suitableFor, $categoryPath, $name] as $idx => $source) {
+            $clean = $source;
+            if ($idx === 2) {
+                // Исключаем имена персонажей, чтобы Spider-Man / Iron-Man не попадали в мужской раздел
+                $clean = (string) preg_replace('/\b(spider[\s\-]?man|iron[\s\-]?man|super[\s\-]?man|bat[\s\-]?man|pac[\s\-]?man|x[\s\-]?men)\b/iu', ' ', $clean);
+            }
+
+            $norm = FeedText::normalize($clean);
+            if ($norm === '') {
+                continue;
+            }
+
+            if (preg_match('/\bunisex\b/u', $norm)) {
+                return 'unisex';
+            }
+
+            $tokens = explode(' ', $norm);
+            $found = [];
+            foreach ($tokens as $token) {
+                $detected = FeedText::detectGender($token);
+                if ($detected !== null) {
+                    $found[$detected] = true;
+                }
+            }
+
+            // Приоритет: kids -> women -> men (чтобы детские товары не уходили во взрослые)
+            foreach (['kids', 'women', 'men'] as $priority) {
+                if (isset($found[$priority])) {
+                    return $priority;
+                }
+            }
+        }
+
+        return null;
     }
 
     protected static function decimal(string $value): ?float
