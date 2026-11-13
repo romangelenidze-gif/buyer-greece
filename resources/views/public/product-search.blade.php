@@ -17,6 +17,8 @@
         initialQuery: @js($query ?? ''),
         query: @js($query ?? ''),
         suggestions: [],
+        openSuggestions: false,
+        activeIndex: -1,
         loadingSuggestions: false,
         abortCtrl: null,
         activeSort: @js($initialSort),
@@ -25,6 +27,10 @@
         totalItems: {{ (int) ($pagination['total'] ?? 0) }},
         shownCount: {{ count($searchResult['products'] ?? []) }},
         submitSearch() {
+            if (this.openSuggestions && this.activeIndex >= 0 && this.suggestions[this.activeIndex]) {
+                this.selectSuggestion(this.suggestions[this.activeIndex]);
+                return;
+            }
             this.loading = true;
             if (this.query.trim() !== this.initialQuery.trim()) {
                 this.$refs.searchForm.action = '{{ route('product-search') }}';
@@ -32,8 +38,10 @@
             this.$nextTick(() => this.$refs.searchForm.submit());
         },
         fetchSuggestions() {
+            this.activeIndex = -1;
             if (this.query.trim().length < 2) {
                 this.suggestions = [];
+                this.openSuggestions = false;
                 return;
             }
             if (this.abortCtrl) this.abortCtrl.abort();
@@ -51,18 +59,38 @@
                 .then(res => res.json())
                 .then(data => {
                     this.suggestions = data.suggestions || [];
+                    this.activeIndex = -1;
+                    this.openSuggestions = this.suggestions.length > 0;
                     this.loadingSuggestions = false;
                 })
                 .catch(err => {
                     if (err.name !== 'AbortError') {
                         this.suggestions = [];
+                        this.activeIndex = -1;
+                        this.openSuggestions = false;
                         this.loadingSuggestions = false;
                     }
                 });
         },
+        moveSelection(step) {
+            if (!this.suggestions.length) return;
+            if (!this.openSuggestions) {
+                this.openSuggestions = true;
+                this.activeIndex = step > 0 ? 0 : this.suggestions.length - 1;
+            } else {
+                this.activeIndex = (this.activeIndex + step + this.suggestions.length) % this.suggestions.length;
+            }
+            this.$nextTick(() => {
+                const items = this.$refs.suggestionsBox?.querySelectorAll('[data-suggestion-item]');
+                if (items && items[this.activeIndex]) {
+                    items[this.activeIndex].scrollIntoView({ block: 'nearest' });
+                }
+            });
+        },
         selectSuggestion(item) {
             this.query = item.label || item.value;
-            this.suggestions = [];
+            this.openSuggestions = false;
+            this.activeIndex = -1;
             this.loading = true;
             if (item.url) {
                 window.location.href = item.url;
@@ -143,13 +171,18 @@
         <div class="max-w-3xl mx-auto mb-1 space-y-4">
             <form action="{{ $baseAction }}" method="GET" x-ref="searchForm" @submit.prevent="submitSearch()">
                 
-                <div class="relative" @click.outside="suggestions = []">
+                <div class="relative" @click.outside="openSuggestions = false; activeIndex = -1">
                     <div class="apple-search-bar flex items-center justify-between">
                         <input 
                             type="text" 
                             name="q" 
                             x-model="query"
+                            @focus="if (suggestions.length > 0) openSuggestions = true"
                             @input.debounce.180ms="fetchSuggestions()"
+                            @keydown.arrow-down.prevent="moveSelection(1)"
+                            @keydown.arrow-up.prevent="moveSelection(-1)"
+                            @keydown.enter="if (openSuggestions && activeIndex >= 0 && suggestions[activeIndex]) { $event.preventDefault(); selectSuggestion(suggestions[activeIndex]); }"
+                            @keydown.escape="openSuggestions = false; activeIndex = -1"
                             placeholder="{{ __('Назовите товар и нажмите Enter...') }}" 
                             required
                             maxlength="200"
@@ -163,9 +196,21 @@
                         </button>
                     </div>
 
-                    <div x-show="suggestions.length > 0" x-cloak class="absolute left-0 right-0 mt-2 bg-white rounded-2xl shadow-xl border border-black/[0.06] overflow-hidden z-50">
-                        <template x-for="item in suggestions" :key="item.url || item.value">
-                            <div @click="selectSuggestion(item)" class="px-5 py-3 hover:bg-[#f5f5f7] flex items-center justify-between gap-3 cursor-pointer transition-colors border-b border-black/[0.03] last:border-b-0">
+                    <div x-show="openSuggestions"
+                         x-ref="suggestionsBox"
+                         x-cloak
+                         role="listbox"
+                         class="absolute left-0 right-0 mt-2 bg-white rounded-2xl shadow-xl border border-black/[0.06] overflow-y-auto max-h-96 z-50"
+                    >
+                        <template x-for="(item, idx) in suggestions" :key="item.url || item.value">
+                            <div data-suggestion-item
+                                 role="option"
+                                 :aria-selected="activeIndex === idx"
+                                 @mouseenter="activeIndex = idx"
+                                 @click="selectSuggestion(item)"
+                                 :class="activeIndex === idx ? 'bg-[#0071e3]/[0.08]' : 'hover:bg-[#f5f5f7]'"
+                                 class="px-5 py-3 flex items-center justify-between gap-3 cursor-pointer transition-colors border-b border-black/[0.03] last:border-b-0"
+                            >
                                 <div class="flex items-center gap-3 min-w-0">
                                     <img x-show="item.image" :src="item.image" alt="" class="w-9 h-9 rounded-lg object-cover bg-[#f5f5f7] shrink-0">
                                     <span class="app-text-body font-medium text-[#1d1d1f] truncate" x-text="item.label"></span>

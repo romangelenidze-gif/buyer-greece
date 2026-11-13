@@ -13,9 +13,11 @@
             query: '', 
             suggestions: [], 
             open: false,
+            activeIndex: -1,
             loadingSuggestions: false,
             abortCtrl: null,
             fetchSuggestions() {
+                this.activeIndex = -1;
                 if (this.query.trim().length < 2) {
                     this.suggestions = [];
                     this.open = false;
@@ -27,25 +29,47 @@
 
                 fetch(`{{ route('api.autocomplete') }}?q=${encodeURIComponent(this.query.trim())}`, {
                     signal: this.abortCtrl.signal,
-                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept-Language': '{{ app()->getLocale() }}'
+                    },
+                    credentials: 'same-origin'
                 })
                     .then(res => res.json())
                     .then(data => {
                         this.suggestions = data.suggestions || [];
+                        this.activeIndex = -1;
                         this.open = this.suggestions.length > 0;
                         this.loadingSuggestions = false;
                     })
                     .catch(err => {
                         if (err.name !== 'AbortError') {
                             this.suggestions = [];
+                            this.activeIndex = -1;
                             this.open = false;
                             this.loadingSuggestions = false;
                         }
                     });
             },
+            moveSelection(step) {
+                if (!this.suggestions.length) return;
+                if (!this.open) {
+                    this.open = true;
+                    this.activeIndex = step > 0 ? 0 : this.suggestions.length - 1;
+                } else {
+                    this.activeIndex = (this.activeIndex + step + this.suggestions.length) % this.suggestions.length;
+                }
+                this.$nextTick(() => {
+                    const items = this.$refs.suggestionsBox?.querySelectorAll('[data-suggestion-item]');
+                    if (items && items[this.activeIndex]) {
+                        items[this.activeIndex].scrollIntoView({ block: 'nearest' });
+                    }
+                });
+            },
             selectSuggestion(item) {
                 this.query = item.label || item.value;
                 this.open = false;
+                this.activeIndex = -1;
                 this.$dispatch('search-loading');
                 if (item.url) {
                     window.location.href = item.url;
@@ -54,8 +78,8 @@
                 window.location.href = `{{ route('product-search') }}?q=${encodeURIComponent(item.value)}`;
             }
          }"
-         @click.outside="open = false"
-         @scroll.window="open = false"
+         @click.outside="open = false; activeIndex = -1"
+         @scroll.window="open = false; activeIndex = -1"
     >
         <form action="{{ route('product-search') }}" method="GET" class="relative">
             <div class="apple-search-bar flex items-center justify-between">
@@ -65,6 +89,10 @@
                     x-model="query"
                     @focus="if(suggestions.length > 0) open = true"
                     @input.debounce.180ms="fetchSuggestions()"
+                    @keydown.arrow-down.prevent="moveSelection(1)"
+                    @keydown.arrow-up.prevent="moveSelection(-1)"
+                    @keydown.enter="if (open && activeIndex >= 0 && suggestions[activeIndex]) { $event.preventDefault(); selectSuggestion(suggestions[activeIndex]); }"
+                    @keydown.escape="open = false; activeIndex = -1"
                     placeholder="{{ __('Поиск...') }}" 
                     required
                     maxlength="200"
@@ -81,6 +109,7 @@
         </form>
 
         <div x-show="open" 
+             x-ref="suggestionsBox"
              x-cloak
              x-transition:enter="transition cubic-bezier-apple duration-300"
              x-transition:enter-start="opacity-0 -translate-y-2 scale-95"
@@ -88,10 +117,18 @@
              x-transition:leave="transition cubic-bezier-apple duration-200"
              x-transition:leave-start="opacity-100 translate-y-0 scale-100"
              x-transition:leave-end="opacity-0 -translate-y-2 scale-95"
-             class="absolute left-0 right-0 mt-2 bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-black/[0.08] overflow-hidden z-50 text-left"
+             role="listbox"
+             class="absolute left-0 right-0 mt-2 bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-black/[0.08] overflow-y-auto max-h-96 z-50 text-left"
         >
-            <template x-for="item in suggestions" :key="item.url || item.value">
-                <div @click="selectSuggestion(item)" class="px-5 py-3 hover:bg-black/[0.04] flex items-center justify-between gap-3 cursor-pointer transition-colors border-b border-black/[0.03] last:border-b-0">
+            <template x-for="(item, idx) in suggestions" :key="item.url || item.value">
+                <div data-suggestion-item
+                     role="option"
+                     :aria-selected="activeIndex === idx"
+                     @mouseenter="activeIndex = idx"
+                     @click="selectSuggestion(item)"
+                     :class="activeIndex === idx ? 'bg-[#0071e3]/[0.08]' : 'hover:bg-black/[0.04]'"
+                     class="px-5 py-3 flex items-center justify-between gap-3 cursor-pointer transition-colors border-b border-black/[0.03] last:border-b-0"
+                >
                     <div class="flex items-center gap-3 min-w-0">
                         <img x-show="item.image" :src="item.image" alt="" class="w-9 h-9 rounded-lg object-cover bg-[#f5f5f7] shrink-0">
                         <span class="app-text-body font-medium text-[#1d1d1f] truncate" x-text="item.label"></span>
