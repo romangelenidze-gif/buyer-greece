@@ -104,4 +104,5 @@ class ConfigureMeilisearchCommand extends Command
 
         return self::SUCCESS;
     }
+    
 }
