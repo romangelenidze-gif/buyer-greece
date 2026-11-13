@@ -3,13 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Models\FeedProduct;
-use App\Services\Feeds\FeedText;
+use App\Services\Feeds\FeedEntityLocalizer;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class FeedProductController extends Controller
 {
-    public function show(Request $request, string $feed, string $sku): View
+    public function show(Request $request, string $feed, string $sku, FeedEntityLocalizer $localizer): View
     {
         $product = $this->findProduct($feed, $sku);
 
@@ -32,19 +32,16 @@ class FeedProductController extends Controller
             ->limit(4)
             ->get();
 
-        $categories = array_values(array_filter(array_map(
-            fn ($seg) => FeedText::translateCategorySegment((string) $seg),
-            explode(',', (string) $product->category_path)
-        )));
+        $localized = $localizer->localizeProduct($product, app()->getLocale());
 
         $previous = url()->previous();
         $backUrl = str_contains($previous, '/product-search') ? $previous : route('product-search');
 
         return view('public.feed-product', [
             'product' => $product,
-            'title' => (string) $product->name,
-            'specs' => (array) ($product->specs ?? []),
-            'categories' => $categories,
+            'title' => $localized['title'],
+            'specs' => $localized['specs'],
+            'categories' => $localized['categories'],
             'colorways' => $colorways,
             'relatedProducts' => $relatedProducts,
             'backUrl' => $backUrl,

@@ -10,6 +10,10 @@ class FeedProductSearch
 {
     public const DEFAULT_PER_PAGE = 24;
 
+    public function __construct(protected FeedEntityLocalizer $localizer)
+    {
+    }
+
     public function matchFeed(array $analysis, string $userQuery): ?string
     {
         $haystack = FeedText::normalize(implode(' ', [
@@ -258,6 +262,8 @@ class FeedProductSearch
                 'colorways_count' => (int) ($colorwaysMap[$id] ?? 1),
             ];
         }
+
+        $cards = $this->localizer->localizeCardTitles($cards, app()->getLocale());
 
         return [
             'cards' => $cards,

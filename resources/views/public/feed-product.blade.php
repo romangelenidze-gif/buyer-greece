@@ -128,7 +128,7 @@
 
 <!-- Релевантные (похожие) товары -->
     @if(isset($relatedProducts) && $relatedProducts->isNotEmpty())
-        <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 border-t border-zinc-200 mt-16">
+        <section class="max-w-[90rem] mx-auto px-6 md:px-10 xl:px-14 py-16 border-t border-zinc-200 mt-16">
             <h2 class="text-2xl font-bold tracking-tight text-zinc-900 mb-8">{{ __('Вам также может понравиться') }}</h2>
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                 @foreach($relatedProducts as $related)

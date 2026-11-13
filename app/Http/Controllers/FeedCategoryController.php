@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\FeedProduct;
 use App\Services\FeedCategoryTiles;
+use App\Services\Feeds\FeedEntityLocalizer;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -11,7 +12,7 @@ use Illuminate\View\View;
 
 class FeedCategoryController extends Controller
 {
-    public function show(Request $request, string $slug, FeedCategoryTiles $tiles): View|JsonResponse
+    public function show(Request $request, string $slug, FeedCategoryTiles $tiles, FeedEntityLocalizer $localizer): View|JsonResponse
     {
         $tile = $tiles->tile($slug);
 
@@ -90,6 +91,8 @@ class FeedCategoryController extends Controller
                 'colorways_count' => (int) ($colorwaysMap[$id] ?? 1),
             ];
         }
+
+        $cards = $localizer->localizeCardTitles($cards, app()->getLocale());
 
         $query = __((string) $tile['label']);
         $searchResult = [

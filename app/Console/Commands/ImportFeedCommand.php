@@ -40,6 +40,9 @@ class ImportFeedCommand extends Command
             $this->warn('Фид намного меньше текущей базы: пропавшие товары НЕ деактивированы. Проверьте фид.');
         }
 
+        // Ставим в фоновую очередь перевод только новых категорий/цветов/характеристик, появившихся в фиде
+        app(\App\Services\Feeds\FeedEntityLocalizer::class)->dispatchMissingTranslations($feed, false);
+
         return self::SUCCESS;
     }
 }

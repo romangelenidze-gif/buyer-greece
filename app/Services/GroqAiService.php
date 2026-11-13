@@ -9,31 +9,8 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
 /**
- * LLM-часть поиска: понимание запроса (ru / ka / en / el -> структурированный поиск для BestPrice)
- * и обратный перевод названий товаров. Вызывается только если запрос не удалось разобрать
- * локально (LocalQueryAnalyzer) и его нет в кэше.
- *
- * Бесплатный тест и платный продакшен переключаются ТОЛЬКО через .env, код менять не нужно:
- *
- *   # тест (бесплатный тариф Groq, лимиты раздельные по моделям, поэтому есть запасные)
- *   GROQ_MODEL=openai/gpt-oss-20b
- *   GROQ_FALLBACK_MODELS=qwen/qwen3.8-27b,openai/gpt-oss-120b
- *
- *   # продакшен (платный тариф, дешёвая модель; запасная на случай сбоя)
- *   GROQ_MODEL=openai/gpt-oss-20b
- *   GROQ_FALLBACK_MODELS=openai/gpt-oss-120b
- *   GROQ_MODEL_KA=openai/gpt-oss-120b   # необязательно: модель посильнее для грузинского
- *
- * config/services.php:
- *   'groq' => [
- *       'api_key' => env('GROQ_API_KEY'),
- *       'model' => env('GROQ_MODEL', 'openai/gpt-oss-20b'),
- *       'fallback_models' => env('GROQ_FALLBACK_MODELS', ''),   // через запятую
- *       'model_ka' => env('GROQ_MODEL_KA'),
- *       'reasoning_effort' => env('GROQ_REASONING_EFFORT'),     // необязательно
- *   ],
- *   'bestprice' => ['mcp_endpoint' => env('BESTPRICE_MCP_ENDPOINT', 'https://mcp.bestprice.gr/mcp'), 'max_queries' => env('SEARCH_MAX_QUERIES', 1)],
- *   'currency_rates' => ['USD' => 0.92, 'RUB' => 0.010, 'GEL' => 0.34],
+ * LLM-часть поиска: понимание запроса (ru / ka / en / el -> структурированный поиск для BestPrice),
+ * обратный перевод названий товаров и фоновый пакетный перевод уникальных сущностей фида (en / ru / ka).
  */
 class GroqAiService
 {
@@ -42,14 +19,13 @@ class GroqAiService
 
     // Увеличивайте при любом изменении промпта: сбрасывает кэш разбора запросов.
     protected const PROMPT_VERSION = 3;
-    protected const ANALYSIS_TTL = 2592000;     // 30 дней: разобранные запросы по сути пополняют словарь
+    protected const ANALYSIS_TTL = 2592000;     // 30 дней
     protected const TRANSLATION_TTL = 2592000;  // 30 дней
     protected const TRANSLATE_CHUNK = 8;
 
-    // Лимит выходных токенов задаём явно: без него Groq оценивает запрос по максимуму и на бесплатном тарифе
-    // отвечает 429 "Request too large" (лимит OTPM).
     protected const MAX_TOKENS_ANALYZE = 700;
     protected const MAX_TOKENS_TRANSLATE = 800;
+    protected const MAX_TOKENS_ENTITY_BATCH = 1800;
 
     protected string $apiKey;
     protected string $model;
@@ -125,8 +101,6 @@ class GroqAiService
 
     /**
      * Переводит названия товаров на язык пользователя. Порядок и количество элементов сохраняются.
-     * Переводятся только названия с греческими буквами; готовые переводы берутся из кэша,
-     * остальные уходят в модель пачками по 8 штук.
      */
     public function translateProductsBack(array $titles, string $targetLanguage): array
     {
@@ -184,7 +158,7 @@ class GroqAiService
             $translated = is_array($decoded['translated'] ?? null) ? array_values($decoded['translated']) : null;
 
             if ($translated === null || count($translated) !== count($indexes)) {
-                continue; // оставляем оригинал (греческий) для этой пачки
+                continue;
             }
 
             foreach ($indexes as $pos => $i) {
@@ -201,9 +175,61 @@ class GroqAiService
     }
 
     /**
-     * Короткое описание товара на языке пользователя по фактам из фида (название, категория, пол, характеристики).
-     * Модель не должна ничего придумывать сверх переданных фактов. Результат кэшируется на 90 дней;
-     * ключ не зависит от цвета, поэтому все расцветки одной модели делят одно описание.
+     * Пакетный перевод уникальных сущностей фида (spec, category_segment, color, title_prefix)
+     * сразу на 3 языка (en, ru, ka) для сохранения в таблицу entity_translations.
+     *
+     * @param string[] $items
+     * @return array<int, array{en: string, ru: string, ka: string}>|null
+     */
+    public function translateEntitiesBatch(array $items, string $entityType = 'spec'): ?array
+    {
+        $items = array_values($items);
+        if ($items === [] || $this->apiKey === '') {
+            return null;
+        }
+
+        $payload = json_encode([
+            'entity_type' => $entityType,
+            'items' => $items,
+        ], JSON_UNESCAPED_UNICODE);
+
+        $decoded = $this->chatJson(
+            $this->entityBatchSystemPrompt(),
+            (string) $payload,
+            $this->translateModel('ka'),
+            self::MAX_TOKENS_ENTITY_BATCH
+        );
+
+        $translations = $decoded['translations'] ?? null;
+        if (!is_array($translations) || count($translations) !== count($items)) {
+            Log::warning('Groq translateEntitiesBatch: count mismatch or invalid output', [
+                'type' => $entityType,
+                'expected' => count($items),
+                'got' => is_array($translations) ? count($translations) : null,
+            ]);
+
+            return null;
+        }
+
+        $out = [];
+        foreach (array_values($translations) as $idx => $row) {
+            $fallback = (string) $items[$idx];
+            $en = is_string($row['en'] ?? null) && trim($row['en']) !== '' ? trim($row['en']) : $fallback;
+            $ru = is_string($row['ru'] ?? null) && trim($row['ru']) !== '' ? trim($row['ru']) : $en;
+            $ka = is_string($row['ka'] ?? null) && trim($row['ka']) !== '' ? trim($row['ka']) : $en;
+
+            $out[$idx] = [
+                'en' => mb_substr($en, 0, 500),
+                'ru' => mb_substr($ru, 0, 500),
+                'ka' => mb_substr($ka, 0, 500),
+            ];
+        }
+
+        return $out;
+    }
+
+    /**
+     * Короткое описание товара на языке пользователя по фактам из фида.
      */
     public function describeProduct(array $facts, string $targetLanguage): ?string
     {
@@ -237,7 +263,7 @@ class GroqAiService
         $text = is_string($decoded['description'] ?? null) ? trim(strip_tags($decoded['description'])) : '';
 
         if (mb_strlen($text) < 20 || mb_strlen($text) > 700) {
-            return null; // неудачу не кэшируем
+            return null;
         }
 
         Cache::put($cacheKey, $text, 7776000); // 90 дней
@@ -258,14 +284,31 @@ Return ONLY a JSON object: {"description": "..."}
 PROMPT;
     }
 
+    protected function entityBatchSystemPrompt(): string
+    {
+        return <<<'PROMPT'
+You are a professional e-commerce localization engine for a fashion & sportswear catalog (Adidas, Nike, etc.).
+The user sends a JSON object with "entity_type" ("spec", "category_segment", "color", or "title_prefix") and an array "items" (in Greek or English).
+Translate each item accurately into English ("en"), Russian ("ru"), and Georgian ("ka").
+
+Rules:
+1. Keep brand names, model names, and patented technologies (e.g., GORE-TEX, Boost, Primegreen, Aeroready, CLIMACOOL, Continental) in Latin script unchanged.
+2. Use natural online-store terminology:
+   - Greek "Κανονική εφαρμογή" -> en: "Regular fit", ru: "Классический крой", ka: "სტანდარტული თარგი".
+   - Greek "Δέσιμο με κορδόνια" -> en: "Lace closure", ru: "Шнуровка", ka: "თასმებით შესაკრავი".
+   - For "color" items like "Core Black / Cloud White / Gum", translate descriptive color words into ru and ka while keeping slashes ("Чёрный / Белый / Каучук", "შავი / თეთრი / კაუჩუკი").
+   - For "title_prefix" items (Greek generic product words before model name, e.g. "ΠΑΠΟΥΤΣΙΑ", "Παιδικά παπούτσια", "Ανδρικό φούτερ"), translate cleanly into nominative plural/singular as appropriate (en: "Shoes", ru: "Кроссовки", ka: "ფეხსაცმელი").
+3. Return ONLY a valid JSON object:
+{"translations": [{"en": "...", "ru": "...", "ka": "..."}, ...]}
+with the EXACT same number of elements and in the EXACT same order as "items".
+PROMPT;
+    }
+
     protected function titleCacheKey(string $lang, string $title): string
     {
         return 'groq_title_v2_' . $lang . '_' . md5($title);
     }
 
-    /**
-     * Для перевода названий можно задать отдельную (более сильную) модель: GROQ_MODEL_TRANSLATE.
-     */
     protected function translateModel(string $lang): string
     {
         $custom = config('services.groq.model_translate');
@@ -277,11 +320,6 @@ PROMPT;
     //  Groq HTTP
     // ------------------------------------------------------------------ //
 
-    /**
-     * Пробуем модели по очереди: основная, затем GROQ_FALLBACK_MODELS. Лимиты у моделей раздельные,
-     * поэтому при 429 / 5xx / 404 / 400 / неразобранном ответе следующая модель часто отвечает.
-     * Останавливаемся только при 401/403 (проблема с ключом).
-     */
     protected function chatJson(string $systemPrompt, string $userContent, string $model, int $maxTokens): ?array
     {
         foreach ($this->modelChain($model) as $candidate) {
@@ -312,7 +350,7 @@ PROMPT;
     }
 
     /**
-     * @return array{0: ?array, 1: int} [данные, HTTP-статус (0 = сетевая ошибка)]
+     * @return array{0: ?array, 1: int}
      */
     protected function sendChat(string $systemPrompt, string $userContent, string $model, int $maxTokens): array
     {
@@ -328,14 +366,13 @@ PROMPT;
         ] + $this->reasoningParams($model);
 
         try {
-            $response = Http::timeout(20)
+            $response = Http::timeout(25)
                 ->withToken($this->apiKey)
                 ->retry(2, 300, function ($e) {
                     if ($e instanceof ConnectionException) {
                         return true;
                     }
 
-                    // 429 не повторяем: минутный лимит за 300 мс не пройдёт, переходим на следующую модель.
                     return $e instanceof RequestException
                         && in_array($e->response->status(), [500, 502, 503], true);
                 }, throw: false)
@@ -381,9 +418,6 @@ PROMPT;
         return is_string($custom) && $custom !== '' ? $custom : $this->model;
     }
 
-    /**
-     * Отключаем/ограничиваем «размышления», чтобы ответ был быстрым и чистым JSON.
-     */
     protected function reasoningParams(string $model): array
     {
         $configured = config('services.groq.reasoning_effort');
@@ -432,7 +466,6 @@ PROMPT;
         $clarification = $this->normalizeClarification($d['clarification'] ?? null);
         $isBroad = !empty($d['is_broad']) && $clarification !== null;
 
-        // Отключаем назойливые блоки уточнений для грузинского языка
         if ($sourceLang === 'ka') {
             $isBroad = false;
             $clarification = null;
@@ -448,7 +481,7 @@ PROMPT;
             'query_en' => $queryEn,
             'relaxed_el' => $relaxed,
             'preferred_language' => $preferred,
-            'greek_query' => $queryEl, // обратная совместимость
+            'greek_query' => $queryEl,
             'brand' => $brand !== '' ? $brand : null,
             'is_broad' => $isBroad,
             'clarification' => $isBroad ? $clarification : null,
@@ -560,10 +593,6 @@ PROMPT;
         return is_numeric($value) && (float) $value > 0 ? round((float) $value, 2) : null;
     }
 
-    /**
-     * Запасной вариант, если LLM недоступна. degraded=true: для ru/ka такой запрос в BestPrice
-     * бесполезен, поэтому менеджер не ищет и не кэширует результат.
-     */
     protected function fallbackAnalysis(string $query, string $sourceLang = 'en'): array
     {
         return [
@@ -629,26 +658,6 @@ Rules:
 7. filters: fill price numbers only if the user stated a budget ("до 50 евро" -> price_max 50). Copy the number as stated and put its currency in "currency" (null means EUR). Cheap/"дешёвый" -> sort "price_asc" with no numbers; most expensive -> "price_desc"; otherwise sort null.
 8. Never put clothing or shoe sizes into query_el, query_en or relaxed_el: the catalogue groups products by model, and a number like 42 collides with model names (Nike Pegasus 42). Simply ignore such sizes.
 9. "brand" is set only when the user wants that maker's own product. Compatibility ("charger for iPhone") is not a brand request: brand = null.
-
-Examples (input -> output):
-
-Input: кроссовки найк мужские 42 до 80 евро
-{"intent":"product_search","product_type_en":"sneakers","query_el":"ανδρικά αθλητικά παπούτσια Nike","query_en":"Nike men's sneakers","relaxed_el":"αθλητικά παπούτσια Nike","preferred_language":"el","brand":"Nike","is_broad":false,"clarification":null,"filters":{"price_min":null,"price_max":80,"currency":"EUR","sort":null}}
-
-Input: зарядка для iPhone 15
-{"intent":"product_search","product_type_en":"phone charger","query_el":"φορτιστής iPhone 15","query_en":"iPhone 15 charger","relaxed_el":"φορτιστής iPhone","preferred_language":"el","brand":null,"is_broad":false,"clarification":null,"filters":{"price_min":null,"price_max":null,"currency":null,"sort":null}}
-
-Input: samsung galaxy s24 256gb дешевле 700$
-{"intent":"product_search","product_type_en":"smartphone","query_el":"Samsung Galaxy S24 256GB","query_en":"Samsung Galaxy S24 256GB","relaxed_el":"Samsung Galaxy S24","preferred_language":"en","brand":"Samsung","is_broad":false,"clarification":null,"filters":{"price_min":null,"price_max":700,"currency":"USD","sort":null}}
-
-Input: ქალის ჯინსის კაბა
-{"intent":"product_search","product_type_en":"dress","query_el":"τζιν γυναικείο φόρεμα","query_en":"women's denim dress","relaxed_el":"φόρεμα τζιν","preferred_language":"el","brand":null,"is_broad":false,"clarification":null,"filters":{"price_min":null,"price_max":null,"currency":null,"sort":null}}
-
-Input: самые дешёвые наушники sony
-{"intent":"product_search","product_type_en":"headphones","query_el":"ακουστικά Sony","query_en":"Sony headphones","relaxed_el":"ακουστικά Sony","preferred_language":"el","brand":"Sony","is_broad":false,"clarification":null,"filters":{"price_min":null,"price_max":null,"currency":null,"sort":"price_asc"}}
-
-Input: часы
-{"intent":"product_search","product_type_en":"watch","query_el":"ρολόι","query_en":"watch","relaxed_el":"ρολόι","preferred_language":"el","brand":null,"is_broad":true,"clarification":{"question":"Какие часы вас интересуют?","options":[{"label":"Мужские наручные","query":"мужские наручные часы"},{"label":"Женские наручные","query":"женские наручные часы"},{"label":"Смарт-часы","query":"смарт-часы"}],"budgets":[{"label":"до 50 €","price_min":null,"price_max":50},{"label":"от 50 €","price_min":50,"price_max":null}]},"filters":{"price_min":null,"price_max":null,"currency":null,"sort":null}}
 PROMPT;
     }
 
