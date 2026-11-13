@@ -68,8 +68,8 @@
         <section class="max-w-7xl mx-auto px-6 space-y-6">
             <div class="flex justify-between items-end">
                 <div>
-                    <h2 class="text-2xl sm:text-3xl font-bold tracking-tight text-zinc-900">{{ __('Популярные модели Adidas') }}</h2>
-                    <p class="text-sm text-zinc-500 mt-1">{{ __('Хиты продаж из официального фида Awin') }}</p>
+                    <h2 class="text-2xl sm:text-3xl font-bold tracking-tight text-zinc-900">{{ __('Популярные модели') }}</h2>
+                    <p class="text-sm text-zinc-500 mt-1">{{ __('Хиты продаж') }}</p>
                 </div>
                 <a href="{{ route('product-search', ['q' => 'adidas']) }}" class="text-sm font-semibold text-zinc-900 hover:underline">
                     {{ __('Все товары') }} &rarr;

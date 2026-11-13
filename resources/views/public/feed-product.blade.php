@@ -5,13 +5,6 @@
 
 <div class="apple-pdp">
 
-   <!-- <a href="{{ $backUrl }}" class="apple-pdp-back">
-        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
-        </svg>
-        {{ __('К результатам поиска') }}
-    </a> -->
-
     <div class="apple-pdp-grid">
 
         <!-- Фото: по клику открывается на весь экран; под ним ссылка на остальные фото в магазине -->
@@ -42,10 +35,6 @@
         <!-- Информация -->
         <div class="apple-pdp-info">
 
-          <!--  @if(!empty($categories))
-                <p class="apple-pdp-crumbs">{{ implode(' › ', $categories) }}</p>
-            @endif-->
-
             <p class="apple-pdp-brand">{{ $product->brand }}</p>
             <h1 class="apple-pdp-title">{{ $title }}</h1>
 
@@ -56,12 +45,11 @@
                 @endif
             </div>
 
-
             @if($product->colour)
                 <div class="apple-pdp-colour space-y-1">
                     <span class="apple-pdp-label">{{ __('Цвет') }}:</span>
                     <div>
-                        <x-public-ui.color-dots :colour="$product->colour" :only-dots="false" />
+                        <x-public-ui.color-dots :colour="$product->colour" :label="$colour ?? $product->colour" :only-dots="false" />
                     </div>
                 </div>
             @endif

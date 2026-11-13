@@ -12,6 +12,7 @@ class FeedProductController extends Controller
     public function show(Request $request, string $feed, string $sku, FeedEntityLocalizer $localizer): View
     {
         $product = $this->findProduct($feed, $sku);
+        $locale = app()->getLocale();
 
         $colorways = $product->model_code
             ? FeedProduct::query()
@@ -22,7 +23,7 @@ class FeedProductController extends Controller
                 ->get(['id', 'feed', 'sku', 'colour', 'image_url'])
             : collect([$product]);
 
-        $relatedProducts = FeedProduct::query()
+        $rawRelated = FeedProduct::query()
             ->where('feed', $feed)
             ->where('id', '!=', $product->id)
             ->where('is_active', true)
@@ -32,7 +33,14 @@ class FeedProductController extends Controller
             ->limit(4)
             ->get();
 
-        $localized = $localizer->localizeProduct($product, app()->getLocale());
+        $relatedProducts = collect(
+            $localizer->localizeCardTitles(
+                $rawRelated->map(fn (FeedProduct $p) => $p->toCard())->all(),
+                $locale
+            )
+        );
+
+        $localized = $localizer->localizeProduct($product, $locale);
 
         $previous = url()->previous();
         $backUrl = str_contains($previous, '/product-search') ? $previous : route('product-search');
@@ -40,6 +48,7 @@ class FeedProductController extends Controller
         return view('public.feed-product', [
             'product' => $product,
             'title' => $localized['title'],
+            'colour' => $localized['colour'],
             'specs' => $localized['specs'],
             'categories' => $localized['categories'],
             'colorways' => $colorways,

@@ -1,11 +1,11 @@
-@props(['colour' => ''])
+@props(['colour' => '', 'label' => null])
 
 @php
     if (empty($colour)) {
         return;
     }
 
-    // Словарь соответствия названий цветов HEX-кодам
+    // Словарь соответствия названий цветов HEX-кодам (работает по исходному английскому цвету)
     $colorMap = [
         'white' => '#FFFFFF',
         'black' => '#000000',
@@ -36,8 +36,7 @@
 
     foreach ($rawColors as $cName) {
         $cleanName = strtolower(trim($cName));
-        // Ищем точное совпадение или частичное вхождение
-        $hex = '#CCCCCC'; // дефолтный серый, если цвет не найден
+        $hex = '#CCCCCC';
         foreach ($colorMap as $key => $h) {
             if (str_contains($cleanName, $key)) {
                 $hex = $h;
@@ -46,19 +45,21 @@
         }
         $dots[] = [
             'name' => trim($cName),
-            'hex' => $hex
+            'hex' => $hex,
         ];
     }
+
+    $displayLabel = $label ?: $colour;
 @endphp
 
-<div class="inline-flex items-center gap-1.5" title="{{ $colour }}">
+<div class="inline-flex items-center gap-1.5" title="{{ $displayLabel }}">
     <div class="flex -space-x-1 overflow-hidden">
         @foreach($dots as $dot)
-            <span class="inline-block w-3.5 h-3.5 rounded-full ring-2 ring-white shadow-sm" 
+            <span class="inline-block w-3.5 h-3.5 rounded-full ring-2 ring-white shadow-sm"
                   style="background-color: {{ $dot['hex'] }};"
                   aria-label="{{ $dot['name'] }}">
             </span>
         @endforeach
     </div>
-    <span class="text-xs text-zinc-600 font-medium ml-1">{{ $colour }}</span>
+    <span class="text-xs text-zinc-600 font-medium ml-1">{{ $displayLabel }}</span>
 </div>

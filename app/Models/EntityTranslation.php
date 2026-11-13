@@ -34,6 +34,10 @@ class EntityTranslation extends Model
             default => $this->source_text,
         };
 
+        if ($locale === 'ka' || self::hasGeorgian($val)) {
+            return self::normalizeGeorgian($val);
+        }
+
         return self::ucfirstMb($val);
     }
 
@@ -44,6 +48,27 @@ class EntityTranslation extends Model
             return '';
         }
 
+        if (self::hasGeorgian($text)) {
+            return self::normalizeGeorgian($text);
+        }
+
         return mb_strtoupper(mb_substr($text, 0, 1)) . mb_substr($text, 1);
+    }
+
+    private static function hasGeorgian(string $text): bool
+    {
+        return (bool) preg_match('/[\x{10A0}-\x{10FF}\x{1C90}-\x{1CBF}]/u', $text);
+    }
+
+    private static function normalizeGeorgian(string $text): string
+    {
+        $text = trim($text);
+
+        // Переводим в строчные только грузинские символы (Мтаврули -> Мхедрули), сохраняя регистр латиницы
+        return (string) preg_replace_callback(
+            '/[\x{1C90}-\x{1CBF}]+/u',
+            fn (array $m) => mb_strtolower($m[0], 'UTF-8'),
+            $text
+        );
     }
 }

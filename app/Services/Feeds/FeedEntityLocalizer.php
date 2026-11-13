@@ -74,7 +74,6 @@ class FeedEntityLocalizer
             ];
         }
 
-        // 1. Заголовок (переводим только греческий префикс, латинское имя модели сохраняем)
         $title = (string) $product->name;
         $split = self::splitGreekTitle($title);
         if ($split !== null) {
@@ -85,7 +84,6 @@ class FeedEntityLocalizer
             }
         }
 
-        // 2. Цвет (разбиваем "Core Black / Cloud White / Gum" по "/")
         $colour = null;
         if ($rawColour !== '') {
             $colorParts = array_values(array_filter(array_map('trim', explode('/', $rawColour))));
@@ -99,7 +97,6 @@ class FeedEntityLocalizer
             $colour = implode(' / ', $translatedParts);
         }
 
-        // 3. Характеристики
         $specHashes = array_map(fn ($s) => EntityTranslation::hash($s), $rawSpecs);
         $specMap = $this->getMap('spec', $specHashes, $locale);
         $specs = array_map(
@@ -107,7 +104,6 @@ class FeedEntityLocalizer
             $rawSpecs
         );
 
-        // 4. Категории
         $catHashes = array_map(fn ($c) => EntityTranslation::hash($c), $rawCategories);
         $catMap = $this->getMap('category_segment', $catHashes, $locale);
         $categories = array_map(
@@ -163,7 +159,7 @@ class FeedEntityLocalizer
     /**
      * Собирает компактную выжимку самых частотных непереведённых сущностей, отсортированную по популярности.
      *
-     * @param array<string, int> $minCounts минимальная частота в каталоге для попадания в выжимку
+     * @param array<string, int> $minCounts
      * @return array<string, string[]>
      */
     public function collectUntranslatedEntities(?string $feedKey = null, array $minCounts = []): array
@@ -199,7 +195,6 @@ class FeedEntityLocalizer
         $query->select(['id', 'name', 'colour', 'category_path', 'specs'])
             ->chunkById(1000, function ($rows) use (&$candidates, &$counts) {
                 foreach ($rows as $row) {
-                    // 1. Сегменты категорий
                     foreach (explode(',', (string) $row->category_path) as $seg) {
                         $seg = trim($seg);
                         if ($seg !== '' && mb_strlen($seg) >= 2 && mb_strlen($seg) <= 80) {
@@ -209,7 +204,6 @@ class FeedEntityLocalizer
                         }
                     }
 
-                    // 2. Отдельные названия цветов
                     foreach (explode('/', (string) $row->colour) as $colPart) {
                         $colPart = trim($colPart);
                         if ($colPart !== '' && mb_strlen($colPart) >= 2 && mb_strlen($colPart) <= 50 && !is_numeric($colPart)) {
@@ -219,7 +213,6 @@ class FeedEntityLocalizer
                         }
                     }
 
-                    // 3. Греческие типы товаров в названиях
                     $split = self::splitGreekTitle((string) $row->name);
                     if ($split !== null) {
                         $h = EntityTranslation::hash($split['prefix']);
@@ -230,10 +223,9 @@ class FeedEntityLocalizer
                         $counts['title_prefix'][$h] = ($counts['title_prefix'][$h] ?? 0) + 1;
                     }
 
-                    // 4. Характеристики без цифр и процентов
                     foreach ((array) ($row->specs ?? []) as $spec) {
                         $spec = trim((string) $spec);
-                        if ($spec === '' || mb_strlen($spec) < 3 || mb_strlen($spec) > 75 || preg_match('/\d/u', $spec)) {
+                        if ($spec === '' || mb_strlen($spec) < 3 || mb_strlen($spec) > 120) {
                             continue;
                         }
                         $h = EntityTranslation::hash($spec);
@@ -252,8 +244,14 @@ class FeedEntityLocalizer
 
             $minFreq = max(1, (int) ($thresholds[$type] ?? 1));
 
-            // Оставляем только строки, встречающиеся >= $minFreq раз, и сортируем от самых частых к редким
-            $filteredCounts = array_filter($counts[$type], fn ($c) => $c >= $minFreq);
+            $filteredCounts = array_filter($counts[$type], function ($c, $h) use ($type, $minFreq, $byHash) {
+                if ($type === 'spec' && preg_match('/\d/u', $byHash[$h] ?? '')) {
+                    return $c >= max(10, $minFreq * 2);
+                }
+
+                return $c >= $minFreq;
+            }, ARRAY_FILTER_USE_BOTH);
+
             arsort($filteredCounts);
 
             if ($filteredCounts === []) {

@@ -4,15 +4,18 @@ namespace App\Http\Controllers;
 
 use App\Models\FeedProduct;
 use App\Services\FeedCategoryTiles;
+use App\Services\Feeds\FeedEntityLocalizer;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class HomeController extends Controller
 {
-    public function index(Request $request, FeedCategoryTiles $categoryTiles): View
+    public function index(Request $request, FeedCategoryTiles $categoryTiles, FeedEntityLocalizer $localizer): View
     {
+        $locale = app()->getLocale();
+
         // 1. Популярные товары Adidas (бестселлеры по рейтингу)
-        $popularProducts = FeedProduct::query()
+        $rawPopular = FeedProduct::query()
             ->where('feed', 'adidas')
             ->where('is_active', true)
             ->where('in_stock', true)
@@ -21,8 +24,15 @@ class HomeController extends Controller
             ->limit(8)
             ->get();
 
+        $popularProducts = collect(
+            $localizer->localizeCardTitles(
+                $rawPopular->map(fn (FeedProduct $p) => $p->toCard())->all(),
+                $locale
+            )
+        );
+
         // 2. Специальные предложения и скидки Adidas (Awin Deals)
-        $discountProducts = FeedProduct::query()
+        $rawDiscounts = FeedProduct::query()
             ->where('feed', 'adidas')
             ->where('is_active', true)
             ->where('in_stock', true)
@@ -30,6 +40,13 @@ class HomeController extends Controller
             ->orderByDesc('discount_percent')
             ->limit(4)
             ->get();
+
+        $discountProducts = collect(
+            $localizer->localizeCardTitles(
+                $rawDiscounts->map(fn (FeedProduct $p) => $p->toCard())->all(),
+                $locale
+            )
+        );
 
         // 3. Баннер Awin из конфига
         $promoBanner = [
