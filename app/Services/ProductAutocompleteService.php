@@ -2,248 +2,122 @@
 
 namespace App\Services;
 
-use App\Models\FeedProduct;
+use App\Models\AutocompleteEntry;
+use App\Services\Feeds\FeedText;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
 
 class ProductAutocompleteService
 {
-    private const CACHE_MINUTES = 15;
+    private const CACHE_MINUTES = 30;
     private const MAX_TOTAL = 8;
-
-    public function __construct(private CategoryMatcher $matcher)
-    {
-    }
 
     public function getSuggestions(string $query, string $locale = 'ru'): array
     {
         $typed = trim((string) preg_replace('/\s+/u', ' ', $query));
-
         if (mb_strlen($typed) < 2) {
             return [];
         }
 
-        $key = 'autocomplete:v7:' . md5($locale . '|' . mb_strtolower($typed));
+        $ver = (int) Cache::get('autocomplete:cache_ver', 1);
+        $cacheKey = "autocomplete:mat:v{$ver}:" . md5($locale . '|' . mb_strtolower($typed));
 
         try {
-            return Cache::remember($key, now()->addMinutes(self::CACHE_MINUTES), fn () => $this->build($typed));
+            return Cache::remember($cacheKey, now()->addMinutes(self::CACHE_MINUTES), fn () => $this->queryEntries($typed, $locale));
         } catch (\Throwable $e) {
-            Log::warning('Autocomplete failed: ' . $e->getMessage(), ['query' => $typed]);
+            Log::warning('Materialized autocomplete failed: ' . $e->getMessage(), ['query' => $typed]);
 
             return [];
         }
     }
 
-    private function build(string $typed): array
+    private function queryEntries(string $typed, string $locale): array
     {
-        $out = [];
-        $matchedBrands = $this->brandSuggestions($typed);
-        $restAfterBrand = trim($this->matcher->withoutBrands($typed));
-        $primaryBrand = $matchedBrands[0] ?? $this->detectExactBrand($typed);
-
-        // 1. Бренд + категория ("adidas женская одежда", "адидас кросс...")
-        if ($primaryBrand !== null && $restAfterBrand !== '') {
-            foreach ($this->matcher->suggest($restAfterBrand, 4) as $tile) {
-                $combinedQuery = $primaryBrand . ' ' . $tile['label'];
-                $out[] = [
-                    'label' => $primaryBrand . ' — ' . $tile['label'],
-                    'value' => $combinedQuery,
-                    'badge' => __('Категория'),
-                    'url' => route('product-search', ['q' => $combinedQuery]),
-                    'image' => null,
-                    'price' => null,
-                ];
-            }
-        }
-
-        // 2. Категории таксономии (на языке интерфейса, только с товарами в наличии)
-        if ($out === [] && $restAfterBrand !== '') {
-            foreach ($this->matcher->suggest($restAfterBrand, 5) as $tile) {
-                $out[] = [
-                    'label' => $tile['label'],
-                    'value' => $tile['label'],
-                    'badge' => __('Категория'),
-                    'url' => $tile['url'],
-                    'image' => null,
-                    'price' => null,
-                ];
-            }
-        }
-
-        // 3. Бренды по всем активным фидам
-        foreach ($matchedBrands as $brand) {
-            $out[] = [
-                'label' => $brand,
-                'value' => $brand,
-                'badge' => __('Бренд'),
-                'url' => route('product-search', ['q' => $brand]),
-                'image' => null,
-                'price' => null,
-            ];
-        }
-
-        // 4. Популярные разделы бренда при вводе только названия бренда ("adidas", "адидас")
-        if ($primaryBrand !== null && $restAfterBrand === '') {
-            foreach ($this->matcher->popularTiles(4) as $tile) {
-                $combinedQuery = $primaryBrand . ' ' . $tile['label'];
-                $out[] = [
-                    'label' => $primaryBrand . ' — ' . $tile['label'],
-                    'value' => $combinedQuery,
-                    'badge' => __('Категория'),
-                    'url' => route('product-search', ['q' => $combinedQuery]),
-                    'image' => null,
-                    'price' => null,
-                ];
-            }
-        }
-
-        // 5. Модели: цена, фото и SKU всегда берутся из одной конкретной строки товара
-        foreach ($this->modelSuggestions($restAfterBrand, $primaryBrand) as $model) {
-            $out[] = [
-                'label' => $model['name'],
-                'value' => $model['name'],
-                'badge' => $model['brand'] ?: __('Модель'),
-                'url' => route('feed-product.show', ['feed' => $model['feed'], 'sku' => $model['sku']]),
-                'image' => $model['image'],
-                'price' => $model['price'],
-            ];
-        }
-
-        $unique = [];
-        $seen = [];
-        foreach ($out as $item) {
-            $k = mb_strtolower($item['label']);
-            if (isset($seen[$k])) {
-                continue;
-            }
-            $seen[$k] = true;
-            $unique[] = $item;
-        }
-
-        return array_slice($unique, 0, self::MAX_TOTAL);
-    }
-
-    /**
-     * Берёт самые дешёвые совпадения и оставляет по одному экземпляру на уникальное название.
-     * Цена, фото и SKU всегда принадлежат одному и тому же товару.
-     *
-     * @return array<int, array{name: string, sku: string, feed: string, brand: string, image: ?string, price: ?string}>
-     */
-    private function modelSuggestions(string $text, ?string $brand): array
-    {
-        if (mb_strlen($text) < 2 || !preg_match('/[A-Za-z0-9]/', $text)) {
+        static $hasTable = null;
+        $hasTable ??= Schema::hasTable('autocomplete_entries');
+        if (!$hasTable) {
             return [];
         }
 
-        $like = addcslashes($text, '%_\\');
+        $norm = FeedText::normalize($typed);
+        if ($norm === '') {
+            return [];
+        }
 
-        $rows = FeedProduct::query()
-            ->where('is_active', true)
-            ->where('in_stock', true)
-            ->where(function ($q) use ($like) {
-                $q->where('name', 'like', $like . '%')
-                    ->orWhere('name', 'like', '% ' . $like . '%')
-                    ->orWhere('model_code', 'like', $like . '%');
-            })
-            ->when($brand !== null, fn ($q) => $q->where('brand', $brand))
+        $tokens = array_values(array_filter(explode(' ', $norm), fn ($t) => $t !== ''));
+        if ($tokens === []) {
+            return [];
+        }
+
+        $titleCol = match ($locale) {
+            'ru' => 'title_ru',
+            'ka' => 'title_ka',
+            'el' => 'title_el',
+            default => 'title_en',
+        };
+
+        $q = AutocompleteEntry::query()->where('is_active', true);
+
+        foreach ($tokens as $tok) {
+            $escaped = addcslashes($tok, '%_\\');
+            $q->where('search_keywords', 'like', '% ' . $escaped . '%');
+        }
+
+        $firstEscaped = addcslashes($tokens[0], '%_\\');
+
+        $entries = $q
+            ->orderByRaw("CASE WHEN LOWER({$titleCol}) LIKE ? THEN 0 ELSE 1 END", [$firstEscaped . '%'])
+            ->orderByRaw("CASE type WHEN 'brand' THEN 1 WHEN 'category' THEN 2 WHEN 'facet' THEN 3 ELSE 4 END")
+            ->orderByDesc('popularity_hits')
+            ->orderByDesc('products_count')
             ->orderBy('price')
-            ->orderBy('id')
-            ->limit(40)
-            ->get(['id', 'feed', 'brand', 'sku', 'name', 'image_url', 'price']);
+            ->limit(20)
+            ->get();
 
         $out = [];
-        $seenNames = [];
+        $seenLabels = [];
+        $modelCount = 0;
 
-        foreach ($rows as $row) {
-            $normName = mb_strtolower(trim((string) $row->name));
-            if ($normName === '' || isset($seenNames[$normName])) {
+        foreach ($entries as $entry) {
+            if ($entry->type === 'model' && $modelCount >= 4) {
                 continue;
             }
-            $seenNames[$normName] = true;
+
+            $label = $entry->titleFor($locale);
+            $normLabel = mb_strtolower(trim($label));
+            if ($normLabel === '' || isset($seenLabels[$normLabel])) {
+                continue;
+            }
+
+            $seenLabels[$normLabel] = true;
+            if ($entry->type === 'model') {
+                $modelCount++;
+            }
+
+            // Для фасета подставляем локализованный поисковый запрос
+            $value = $entry->type === 'facet'
+                ? str_replace(' — ', ' ', $label)
+                : $label;
+
+            $url = $entry->type === 'facet'
+                ? route('product-search', ['q' => $value])
+                : url($entry->url);
 
             $out[] = [
-                'name' => (string) $row->name,
-                'sku' => (string) $row->sku,
-                'feed' => (string) $row->feed,
-                'brand' => (string) ($row->brand ?? ''),
-                'image' => $row->image_url ? (string) $row->image_url : null,
-                'price' => '€' . number_format((float) $row->price, 2, '.', ' '),
+                'label' => $label,
+                'value' => $value,
+                'badge' => $entry->badgeFor($locale),
+                'url' => $url,
+                'image' => $entry->image_url,
+                'price' => $entry->price !== null ? '€' . number_format($entry->price, 2, '.', ' ') : null,
             ];
 
-            if (count($out) >= 4) {
+            if (count($out) >= self::MAX_TOTAL) {
                 break;
             }
         }
 
         return $out;
-    }
-
-    private function detectExactBrand(string $typed): ?string
-    {
-        $norm = $this->matcher->norm($typed);
-        foreach ($this->allActiveBrands() as $brand) {
-            $normBrand = $this->matcher->norm($brand);
-            if ($normBrand !== '' && preg_match('/(?<![\p{L}\p{N}])' . preg_quote($normBrand, '/') . '(?![\p{L}\p{N}])/u', $norm)) {
-                return $brand;
-            }
-        }
-
-        foreach ((array) config('search_glossary.brands', []) as $alias => $canonical) {
-            $normAlias = $this->matcher->norm((string) $alias);
-            if ($normAlias !== '' && preg_match('/(?<![\p{L}\p{N}])' . preg_quote($normAlias, '/') . '(?![\p{L}\p{N}])/u', $norm)) {
-                return (string) $canonical;
-            }
-        }
-
-        return null;
-    }
-
-    /** @return string[] */
-    private function allActiveBrands(): array
-    {
-        return Cache::remember('autocomplete.brands.all.v1', now()->addHours(6), function () {
-            return FeedProduct::query()
-                ->where('is_active', true)
-                ->where('in_stock', true)
-                ->whereNotNull('brand')
-                ->distinct()
-                ->orderBy('brand')
-                ->pluck('brand')
-                ->map(fn ($b) => trim((string) $b))
-                ->filter()
-                ->values()
-                ->all();
-        });
-    }
-
-    /** @return string[] */
-    private function brandSuggestions(string $typed): array
-    {
-        $firstWord = explode(' ', $this->matcher->norm($typed))[0] ?? '';
-        if (mb_strlen($firstWord) < 2) {
-            return [];
-        }
-
-        $brands = $this->allActiveBrands();
-        $aliases = [];
-        foreach ((array) config('search_glossary.brands', []) as $alias => $canonical) {
-            $normAlias = $this->matcher->norm((string) $alias);
-            if ($normAlias !== '' && str_starts_with($normAlias, $firstWord)) {
-                $aliases[] = $this->matcher->norm((string) $canonical);
-            }
-        }
-
-        $found = [];
-        foreach ($brands as $brand) {
-            $normBrand = $this->matcher->norm($brand);
-            if (str_starts_with($normBrand, $firstWord) || in_array($normBrand, $aliases, true)) {
-                $found[] = $brand;
-            }
-            if (count($found) >= 2) {
-                break;
-            }
-        }
-
-        return $found;
     }
 }

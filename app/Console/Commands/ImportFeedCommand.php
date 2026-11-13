@@ -3,9 +3,11 @@
 namespace App\Console\Commands;
 
 use App\Services\Feeds\AwinFeedImporter;
+use App\Services\Feeds\FeedEntityLocalizer;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
 
 class ImportFeedCommand extends Command
 {
@@ -13,7 +15,7 @@ class ImportFeedCommand extends Command
 
     protected $description = 'Импорт партнёрского продуктового фида (Awin) в таблицу feed_products';
 
-    public function handle(AwinFeedImporter $importer): int
+    public function handle(AwinFeedImporter $importer, FeedEntityLocalizer $localizer): int
     {
         $feed = (string) $this->argument('feed');
         $this->info("Импорт фида «{$feed}»...");
@@ -27,7 +29,6 @@ class ImportFeedCommand extends Command
             return self::FAILURE;
         }
 
-        // Сбрасываем кэш автокомплита и плиток категорий, чтобы новые товары и цены появились сразу
         Cache::forget("home.category_chips.v2.{$feed}");
         Cache::forget('autocomplete.brands.all.v1');
 
@@ -40,8 +41,14 @@ class ImportFeedCommand extends Command
             $this->warn('Фид намного меньше текущей базы: пропавшие товары НЕ деактивированы. Проверьте фид.');
         }
 
-        // Ставим в фоновую очередь перевод только новых категорий/цветов/характеристик, появившихся в фиде
-        app(\App\Services\Feeds\FeedEntityLocalizer::class)->dispatchMissingTranslations($feed, false);
+        $dispatched = $localizer->dispatchMissingTranslations($feed, false);
+        if ($dispatched > 0) {
+            $this->info("Поставлено в очередь на перевод новых сущностей: {$dispatched}.");
+        }
+
+        if (Schema::hasTable('autocomplete_entries')) {
+            $this->call('autocomplete:rebuild');
+        }
 
         return self::SUCCESS;
     }

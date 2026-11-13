@@ -8,6 +8,7 @@ use App\Services\SmartProductSearchManager;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Redis;
 use Illuminate\View\View;
 
 class ProductSearchController extends Controller
@@ -34,6 +35,11 @@ class ProductSearchController extends Controller
 
         if ($query !== '') {
             $query = mb_substr($query, 0, 200);
+
+            if ($page === 1 && !$request->expectsJson()) {
+                $this->trackQueryHit($query);
+            }
+
             $hasPriceFilter = isset($filters['min_price']) || isset($filters['max_price']);
 
             // Если запрос — чистая категория без фильтров цены и не AJAX-подгрузка, ведём на страницу категории
@@ -76,5 +82,17 @@ class ProductSearchController extends Controller
         return response()->json([
             'suggestions' => $suggestions,
         ]);
+    }
+
+    private function trackQueryHit(string $query): void
+    {
+        try {
+            $norm = mb_strtolower(trim($query));
+            if (mb_strlen($norm) >= 2 && mb_strlen($norm) <= 100) {
+                Redis::hincrby('autocomplete_hits_counter', $norm, 1);
+            }
+        } catch (\Throwable) {
+            // Локально Redis может быть не запущен — игнорируем без влияния на поиск
+        }
     }
 }
