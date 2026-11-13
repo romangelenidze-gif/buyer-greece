@@ -222,7 +222,8 @@ class AwinFeedImporter
     {
         $get = fn (string $key): string => trim((string) ($r[$key] ?? ''));
 
-        $sku = $get('sku') ?: ($get('product_id') ?: $get('lw_product_id'));
+        $rawSku = $get('sku') ?: ($get('product_id') ?: $get('lw_product_id'));
+        $sku = trim((string) preg_replace('/[^A-Za-z0-9._-]+/', '-', $rawSku), '-');
         $name = html_entity_decode($get('product_name'), ENT_QUOTES | ENT_HTML5, 'UTF-8');
         $deepLink = $get('tracking_url');
         $price = self::decimal($get('price'));
@@ -285,7 +286,7 @@ class AwinFeedImporter
         }
 
         $brand = $get('brand_name') !== '' ? mb_substr($get('brand_name'), 0, 64) : ($cfg['brand'] ?? null);
-        $searchText = ' ' . FeedText::normalize(implode(' ', array_filter([$brand, $name, $colour, $categoryPath, $sku, $model]))) . ' ';
+        $searchText = ' ' . FeedText::normalize(implode(' ', array_filter([$brand, $name, $colour, $categoryPath, $sku, $rawSku, $model]))) . ' ';
 
         return [
             'feed' => $feedKey,
