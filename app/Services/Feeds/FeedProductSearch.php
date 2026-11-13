@@ -26,6 +26,10 @@ class FeedProductSearch
         ]));
 
         foreach ((array) config('feeds.feeds', []) as $key => $cfg) {
+            if (($cfg['enabled'] ?? true) === false) {
+                continue;
+            }
+
             foreach ((array) ($cfg['brand_aliases'] ?? []) as $alias) {
                 if ($alias !== '' && str_contains($haystack, FeedText::normalize((string) $alias))) {
                     return (string) $key;
@@ -134,9 +138,13 @@ class FeedProductSearch
                 default => ['rating:desc', 'discount_percent:desc', 'id:asc'],
             };
 
-            $searchQuery = trim($userQuery) !== ''
+            $rawSearchQuery = trim($userQuery) !== ''
                 ? trim($userQuery)
                 : trim((string) ($analysis['query_en'] ?? ''));
+
+            $searchQuery = class_exists(ScriptTransliterator::class)
+                ? ScriptTransliterator::prepareForMeilisearch($rawSearchQuery)
+                : $rawSearchQuery;
 
             $client = new Client(
                 (string) config('scout.meilisearch.host'),

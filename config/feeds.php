@@ -1,12 +1,13 @@
 <?php
 
 /**
- * Партнёрские продуктовые фиды (Awin). Каждый фид — отдельный ключ в 'feeds'.
- * Чтобы добавить новый бренд: скопируйте блок 'adidas', поменяйте ключ, URL и алиасы
+ * Партнёрские продуктовые фиды (Awin, Linkwise). Каждый фид — отдельный ключ в 'feeds'.
+ * Чтобы добавить новый магазин: скопируйте блок 'adidas' или 'notos', поменяйте ключ, URL и алиасы
  * и запустите: php artisan feeds:import <ключ>
  *
  * .env:
  *   AWIN_ADIDAS_FEED_URL="https://productdata.awin.com/datafeed/download/apikey/.../fid/92328/.../compression/gzip/"
+ *   LINKWISE_NOTOS_FEED_URL="https://..."
  *   (URL с ключом хранится только в .env и не попадает в логи)
  */
 return [
@@ -14,6 +15,8 @@ return [
     'feeds' => [
 
         'adidas' => [
+            'enabled' => (bool) env('FEEDS_ADIDAS_ENABLED', true),
+            'network' => 'awin',
             'label' => 'Adidas',
             'brand' => 'Adidas',
             'store_name' => 'adidas.gr',
@@ -44,6 +47,22 @@ return [
             'english_url' => [
                 'find' => env('FEEDS_ADIDAS_EN_FIND'),
                 'replace' => env('FEEDS_ADIDAS_EN_REPLACE'),
+            ],
+        ],
+
+        'notos' => [
+            'enabled' => (bool) env('FEEDS_NOTOS_ENABLED', true),
+            'network' => 'linkwise',
+            'label' => 'Notos',
+            'brand' => null,
+            'store_name' => 'notos.gr',
+            'url' => env('LINKWISE_NOTOS_FEED_URL'),
+            'brand_aliases' => [],
+            'model_keywords' => [],
+            'strip_words' => [],
+            'english_url' => [
+                'find' => env('FEEDS_NOTOS_EN_FIND'),
+                'replace' => env('FEEDS_NOTOS_EN_REPLACE'),
             ],
         ],
 
