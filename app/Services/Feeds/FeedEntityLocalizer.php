@@ -17,7 +17,8 @@ class FeedEntityLocalizer
     ];
 
     /**
-     * Выделяет греческую фразу из названия товара, оставляя латинское имя модели без изменений.
+     * Выделяет греческую фразу из названия товара, оставляя латинское имя модели,
+     * размеры и хвостовой артикул/цвет ("- 007355800 Λευκό") без изменений.
      *
      * @return array{prefix: string, model: string}|null
      */
@@ -29,10 +30,21 @@ class FeedEntityLocalizer
             return null;
         }
 
+        // Отделяем хвостовой артикул и цвет вида " - 007355800 Λευκό", чтобы цвет не размножал префиксы
+        $tail = '';
+        $mainPart = $name;
+        if (preg_match('/^(.*?)\s+(-\s*[A-Za-z0-9._\/-]+\s*.*)$/u', $name, $m)) {
+            $mainPart = trim($m[1]);
+            $tail = trim($m[2]);
+        }
+
         $greekWords = [];
         $modelWords = [];
 
-        foreach (explode(' ', $name) as $word) {
+        foreach (explode(' ', $mainPart) as $word) {
+            if ($word === '') {
+                continue;
+            }
             if (preg_match('/[\x{0370}-\x{03FF}\x{1F00}-\x{1FFF}]/u', $word)) {
                 $greekWords[] = $word;
             } else {
@@ -40,10 +52,14 @@ class FeedEntityLocalizer
             }
         }
 
+        if ($tail !== '') {
+            $modelWords[] = $tail;
+        }
+
         $prefix = trim(implode(' ', $greekWords));
         $model = trim(implode(' ', $modelWords));
 
-        if ($prefix === '' || mb_strlen($prefix) > 80) {
+        if ($prefix === '' || mb_strlen($prefix) > 70 || count($greekWords) > 7) {
             return null;
         }
 
@@ -169,7 +185,7 @@ class FeedEntityLocalizer
         $thresholds = array_merge([
             'category_segment' => 1,
             'color' => 4,
-            'title_prefix' => 3,
+            'title_prefix' => 4,
             'spec' => 5,
         ], $minCounts);
 
@@ -225,7 +241,7 @@ class FeedEntityLocalizer
 
                     foreach ((array) ($row->specs ?? []) as $spec) {
                         $spec = trim((string) $spec);
-                        if ($spec === '' || mb_strlen($spec) < 3 || mb_strlen($spec) > 120) {
+                        if ($spec === '' || mb_strlen($spec) < 3 || mb_strlen($spec) > 120 || str_starts_with($spec, 'GTIN:')) {
                             continue;
                         }
                         $h = EntityTranslation::hash($spec);
@@ -245,8 +261,15 @@ class FeedEntityLocalizer
             $minFreq = max(1, (int) ($thresholds[$type] ?? 1));
 
             $filteredCounts = array_filter($counts[$type], function ($c, $h) use ($type, $minFreq, $byHash) {
-                if ($type === 'spec' && preg_match('/\d/u', $byHash[$h] ?? '')) {
+                $text = (string) ($byHash[$h] ?? '');
+
+                if ($type === 'spec' && preg_match('/\d/u', $text)) {
                     return $c >= max(10, $minFreq * 2);
+                }
+
+                // Длинные фразы (5+ слов) переводим только если они повторяются минимум у 6 товаров
+                if ($type === 'title_prefix' && substr_count($text, ' ') >= 4) {
+                    return $c >= max(6, $minFreq);
                 }
 
                 return $c >= $minFreq;
