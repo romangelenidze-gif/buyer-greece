@@ -15,6 +15,9 @@ use Illuminate\Support\Facades\Lang;
 class AutocompleteBuilder
 {
     private const LOCALES = ['en', 'ru', 'ka', 'el'];
+    private const MAX_FACET_BRANDS = 25;
+    private const MAX_MODELS = 6000;
+    private const UPSERT_CHUNK = 500;
 
     public function __construct(private FeedCategoryTiles $categoryTiles)
     {
@@ -30,6 +33,7 @@ class AutocompleteBuilder
     {
         $now = now();
         $existingHits = AutocompleteEntry::query()
+            ->where('popularity_hits', '>', 0)
             ->pluck('popularity_hits', 'entry_key')
             ->all();
 
@@ -39,7 +43,7 @@ class AutocompleteBuilder
             ->keyBy('source_hash');
 
         $brandAliasesMap = $this->buildBrandAliasesMap();
-        $rows = [];
+        $buffer = [];
         $stats = ['brands' => 0, 'categories' => 0, 'facets' => 0, 'models' => 0, 'total' => 0];
 
         // 1. Активные бренды
@@ -65,7 +69,7 @@ class AutocompleteBuilder
             $key = 'brand:' . mb_strtolower($brand);
             $aliases = $brandAliasesMap[mb_strtolower($brand)] ?? [$brand];
 
-            $rows[$key] = [
+            $buffer[$key] = [
                 'entry_key' => $key,
                 'type' => 'brand',
                 'title_en' => $brand,
@@ -87,7 +91,11 @@ class AutocompleteBuilder
                 'updated_at' => $now,
             ];
             $stats['brands']++;
+            $this->flushIfNeeded($buffer, $stats['total']);
         }
+
+        // Ограничиваем фасеты топ-25 брендами, чтобы не делать тысячи запросов на мультибрендовых фидах
+        $topFacetBrands = array_slice($activeBrands, 0, self::MAX_FACET_BRANDS, true);
 
         // 2. Категории таксономии (только те, где реально есть товары)
         $tiles = $this->categoryTiles->get();
@@ -103,7 +111,7 @@ class AutocompleteBuilder
             $labels = $this->translateUiLabel($rawLabel);
             $key = 'cat:' . $slug;
 
-            $rows[$key] = [
+            $buffer[$key] = [
                 'entry_key' => $key,
                 'type' => 'category',
                 'title_en' => $labels['en'],
@@ -125,163 +133,191 @@ class AutocompleteBuilder
                 'updated_at' => $now,
             ];
             $stats['categories']++;
+            $this->flushIfNeeded($buffer, $stats['total']);
 
-            // 3. Фасеты Бренд + Категория (только при наличии реальных товаров > 0)
-            foreach ($activeBrands as $brand => $brandTotal) {
-                $facetCount = (clone $this->categoryTiles->productsQuery($tile))
-                    ->where('brand', $brand)
-                    ->selectRaw("COUNT(DISTINCT COALESCE(NULLIF(model_code, ''), sku)) as cnt")
-                    ->value('cnt');
+            // 3. Фасеты Бренд + Категория (по топ-брендам jednym групповым запросом на категорию)
+            if ($topFacetBrands !== []) {
+                $brandCounts = (clone $this->categoryTiles->productsQuery($tile))
+                    ->whereIn('brand', array_keys($topFacetBrands))
+                    ->selectRaw("brand, COUNT(DISTINCT COALESCE(NULLIF(model_code, ''), sku)) as cnt")
+                    ->groupBy('brand')
+                    ->pluck('cnt', 'brand')
+                    ->all();
 
-                $facetCount = (int) $facetCount;
-                if ($facetCount <= 0) {
+                foreach ($topFacetBrands as $brand => $brandTotal) {
+                    $facetCount = (int) ($brandCounts[$brand] ?? 0);
+                    if ($facetCount <= 0) {
+                        continue;
+                    }
+
+                    $facetKey = 'facet:' . mb_strtolower($brand) . ':' . $slug;
+                    $aliases = $brandAliasesMap[mb_strtolower($brand)] ?? [$brand];
+
+                    $buffer[$facetKey] = [
+                        'entry_key' => $facetKey,
+                        'type' => 'facet',
+                        'title_en' => $brand . ' — ' . $labels['en'],
+                        'title_ru' => $brand . ' — ' . $labels['ru'],
+                        'title_ka' => $brand . ' — ' . $labels['ka'],
+                        'title_el' => $brand . ' — ' . $labels['el'],
+                        'badge_en' => 'Category',
+                        'badge_ru' => 'Категория',
+                        'badge_ka' => 'კატეგორია',
+                        'badge_el' => 'Καтегоρία',
+                        'search_keywords' => $this->packKeywords(array_merge($aliases, array_values($labels), [$slug])),
+                        'url' => route('product-search', ['q' => $brand . ' ' . $labels['ru']], false),
+                        'image_url' => null,
+                        'price' => null,
+                        'products_count' => $facetCount,
+                        'popularity_hits' => (int) ($existingHits[$facetKey] ?? 0),
+                        'is_active' => true,
+                        'created_at' => $now,
+                        'updated_at' => $now,
+                    ];
+                    $stats['facets']++;
+                    $this->flushIfNeeded($buffer, $stats['total']);
+                }
+            }
+        }
+
+        // 4. Топ уникальных моделей (остальные редкие артикулы и опечатки подхватывает Meilisearch)
+        $groupedModels = DB::table('feed_products')
+            ->where('is_active', true)
+            ->where('in_stock', true)
+            ->selectRaw("feed, COALESCE(NULLIF(model_code, ''), sku) as group_key, MIN(id) as primary_id, COUNT(*) as colorways_count, MAX(COALESCE(rating, 0)) as max_rating, MAX(discount_percent) as max_discount")
+            ->groupBy('feed', 'group_key')
+            ->orderByDesc('colorways_count')
+            ->orderByDesc('max_rating')
+            ->orderByDesc('max_discount')
+            ->orderBy('primary_id')
+            ->limit(self::MAX_MODELS)
+            ->get();
+
+        $primaryIds = [];
+        $colorwaysCountMap = [];
+        foreach ($groupedModels as $gm) {
+            $primaryIds[] = (int) $gm->primary_id;
+            $colorwaysCountMap[(int) $gm->primary_id] = (int) $gm->colorways_count;
+        }
+
+        foreach (array_chunk($primaryIds, 1000) as $idChunk) {
+            $products = DB::table('feed_products')
+                ->whereIn('id', $idChunk)
+                ->get(['id', 'feed', 'sku', 'model_code', 'brand', 'name', 'price', 'image_url']);
+
+            foreach ($products as $product) {
+                $brand = trim((string) ($product->brand ?? ''));
+                $rawName = trim((string) $product->name);
+                if ($rawName === '') {
                     continue;
                 }
 
-                $facetKey = 'facet:' . mb_strtolower($brand) . ':' . $slug;
-                $aliases = $brandAliasesMap[mb_strtolower($brand)] ?? [$brand];
+                $gKey = $product->feed . ':' . ($product->model_code ?: $product->sku);
+                $titleEl = $rawName;
+                $titleEn = $rawName;
+                $titleRu = $rawName;
+                $titleKa = $rawName;
 
-                $rows[$facetKey] = [
-                    'entry_key' => $facetKey,
-                    'type' => 'facet',
-                    'title_en' => $brand . ' — ' . $labels['en'],
-                    'title_ru' => $brand . ' — ' . $labels['ru'],
-                    'title_ka' => $brand . ' — ' . $labels['ka'],
-                    'title_el' => $brand . ' — ' . $labels['el'],
-                    'badge_en' => 'Category',
-                    'badge_ru' => 'Категория',
-                    'badge_ka' => 'კატეგორია',
-                    'badge_el' => 'Κατηγορία',
-                    'search_keywords' => $this->packKeywords(array_merge($aliases, array_values($labels), [$slug])),
-                    'url' => route('product-search', ['q' => $brand . ' ' . $labels['ru']], false),
-                    'image_url' => null,
-                    'price' => null,
-                    'products_count' => $facetCount,
-                    'popularity_hits' => (int) ($existingHits[$facetKey] ?? 0),
+                $split = FeedEntityLocalizer::splitGreekTitle($rawName);
+                if ($split !== null) {
+                    $tr = $prefixTranslations->get(EntityTranslation::hash($split['prefix']));
+                    if ($tr !== null) {
+                        $titleEn = trim($tr->forLocale('en') . ' ' . $split['model']);
+                        $titleRu = trim($tr->forLocale('ru') . ' ' . $split['model']);
+                        $titleKa = trim($tr->forLocale('ka') . ' ' . $split['model']);
+                    }
+                }
+
+                $entryKey = 'model:' . mb_strtolower($gKey);
+                $aliases = $brand !== '' ? ($brandAliasesMap[mb_strtolower($brand)] ?? [$brand]) : [];
+
+                $buffer[$entryKey] = [
+                    'entry_key' => $entryKey,
+                    'type' => 'model',
+                    'title_en' => mb_substr($titleEn, 0, 255),
+                    'title_ru' => mb_substr($titleRu, 0, 255),
+                    'title_ka' => mb_substr($titleKa, 0, 255),
+                    'title_el' => mb_substr($titleEl, 0, 255),
+                    'badge_en' => $brand !== '' ? $brand : 'Model',
+                    'badge_ru' => $brand !== '' ? $brand : 'Модель',
+                    'badge_ka' => $brand !== '' ? $brand : 'მოდელი',
+                    'badge_el' => $brand !== '' ? $brand : 'Μοντέλο',
+                    'search_keywords' => $this->packKeywords(array_merge(
+                        [$titleEn, $titleRu, $titleKa, $titleEl, (string) $product->model_code, (string) $product->sku],
+                        $aliases
+                    )),
+                    'url' => route('feed-product.show', ['feed' => $product->feed, 'sku' => $product->sku], false),
+                    'image_url' => $product->image_url ? (string) $product->image_url : null,
+                    'price' => (float) $product->price,
+                    'products_count' => $colorwaysCountMap[(int) $product->id] ?? 1,
+                    'popularity_hits' => (int) ($existingHits[$entryKey] ?? 0),
                     'is_active' => true,
                     'created_at' => $now,
                     'updated_at' => $now,
                 ];
-                $stats['facets']++;
+                $stats['models']++;
+                $this->flushIfNeeded($buffer, $stats['total']);
             }
         }
 
-        // 4. Уникальные модели (сгруппированы по model_code, данные берутся из самой дешёвой расцветки в наличии)
-        $groupedModels = DB::table('feed_products')
-            ->where('is_active', true)
-            ->where('in_stock', true)
-            ->selectRaw("feed, COALESCE(NULLIF(model_code, ''), sku) as group_key, MIN(id) as fallback_id, COUNT(*) as colorways_count")
-            ->groupBy('feed', 'group_key')
-            ->get();
+        $this->flushBuffer($buffer, $stats['total']);
 
-        $cheapestByGroup = [];
-        FeedProduct::query()
-            ->where('is_active', true)
-            ->where('in_stock', true)
-            ->orderBy('price')
-            ->orderBy('id')
-            ->select(['id', 'feed', 'sku', 'model_code', 'brand', 'name', 'price', 'image_url'])
-            ->chunk(2000, function ($products) use (&$cheapestByGroup) {
-                foreach ($products as $p) {
-                    $gKey = $p->feed . ':' . ($p->model_code ?: $p->sku);
-                    if (!isset($cheapestByGroup[$gKey])) {
-                        $cheapestByGroup[$gKey] = $p;
-                    }
-                }
-            });
-
-        $colorwaysCountMap = [];
-        foreach ($groupedModels as $gm) {
-            $colorwaysCountMap[$gm->feed . ':' . $gm->group_key] = (int) $gm->colorways_count;
-        }
-
-        foreach ($cheapestByGroup as $gKey => $product) {
-            $brand = trim((string) ($product->brand ?? ''));
-            $rawName = trim((string) $product->name);
-            if ($rawName === '') {
-                continue;
-            }
-
-            $titleEl = $rawName;
-            $titleEn = $rawName;
-            $titleRu = $rawName;
-            $titleKa = $rawName;
-
-            $split = FeedEntityLocalizer::splitGreekTitle($rawName);
-            if ($split !== null) {
-                $tr = $prefixTranslations->get(EntityTranslation::hash($split['prefix']));
-                if ($tr !== null) {
-                    $titleEn = trim($tr->forLocale('en') . ' ' . $split['model']);
-                    $titleRu = trim($tr->forLocale('ru') . ' ' . $split['model']);
-                    $titleKa = trim($tr->forLocale('ka') . ' ' . $split['model']);
-                }
-            }
-
-            $entryKey = 'model:' . mb_strtolower($gKey);
-            $aliases = $brand !== '' ? ($brandAliasesMap[mb_strtolower($brand)] ?? [$brand]) : [];
-
-            $rows[$entryKey] = [
-                'entry_key' => $entryKey,
-                'type' => 'model',
-                'title_en' => mb_substr($titleEn, 0, 255),
-                'title_ru' => mb_substr($titleRu, 0, 255),
-                'title_ka' => mb_substr($titleKa, 0, 255),
-                'title_el' => mb_substr($titleEl, 0, 255),
-                'badge_en' => $brand !== '' ? $brand : 'Model',
-                'badge_ru' => $brand !== '' ? $brand : 'Модель',
-                'badge_ka' => $brand !== '' ? $brand : 'მოდელი',
-                'badge_el' => $brand !== '' ? $brand : 'Μοντέλο',
-                'search_keywords' => $this->packKeywords(array_merge(
-                    [$titleEn, $titleRu, $titleKa, $titleEl, (string) $product->model_code, (string) $product->sku],
-                    $aliases
-                )),
-                'url' => route('feed-product.show', ['feed' => $product->feed, 'sku' => $product->sku], false),
-                'image_url' => $product->image_url ? (string) $product->image_url : null,
-                'price' => (float) $product->price,
-                'products_count' => $colorwaysCountMap[$gKey] ?? 1,
-                'popularity_hits' => (int) ($existingHits[$entryKey] ?? 0),
-                'is_active' => true,
-                'created_at' => $now,
-                'updated_at' => $now,
-            ];
-            $stats['models']++;
-        }
-
-        foreach (array_chunk(array_values($rows), 500) as $chunk) {
-            DB::table('autocomplete_entries')->upsert(
-                $chunk,
-                ['entry_key'],
-                [
-                    'type',
-                    'title_en',
-                    'title_ru',
-                    'title_ka',
-                    'title_el',
-                    'badge_en',
-                    'badge_ru',
-                    'badge_ka',
-                    'badge_el',
-                    'search_keywords',
-                    'url',
-                    'image_url',
-                    'price',
-                    'products_count',
-                    'is_active',
-                    'updated_at',
-                ]
-            );
-        }
-
-        if ($rows !== []) {
+        if ($stats['total'] > 0) {
             AutocompleteEntry::query()
                 ->where('updated_at', '<', $now)
                 ->delete();
         }
 
         Cache::increment('autocomplete:cache_ver');
-        $stats['total'] = count($rows);
 
         return $stats;
+    }
+
+    /**
+     * @param array<string, array<string, mixed>> $buffer
+     */
+    private function flushIfNeeded(array &$buffer, int &$total): void
+    {
+        if (count($buffer) >= self::UPSERT_CHUNK) {
+            $this->flushBuffer($buffer, $total);
+        }
+    }
+
+    /**
+     * @param array<string, array<string, mixed>> $buffer
+     */
+    private function flushBuffer(array &$buffer, int &$total): void
+    {
+        if ($buffer === []) {
+            return;
+        }
+
+        $chunk = array_values($buffer);
+        DB::table('autocomplete_entries')->upsert(
+            $chunk,
+            ['entry_key'],
+            [
+                'type',
+                'title_en',
+                'title_ru',
+                'title_ka',
+                'title_el',
+                'badge_en',
+                'badge_ru',
+                'badge_ka',
+                'badge_el',
+                'search_keywords',
+                'url',
+                'image_url',
+                'price',
+                'products_count',
+                'is_active',
+                'updated_at',
+            ]
+        );
+
+        $total += count($chunk);
+        $buffer = [];
     }
 
     /**
