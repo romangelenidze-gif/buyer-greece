@@ -5,6 +5,8 @@ namespace App\Services\Feeds;
 use App\Models\FeedProduct;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Meilisearch\Client;
 
 class FeedProductSearch
 {
@@ -65,12 +67,178 @@ class FeedProductSearch
      */
     public function searchPaginated(?string $feedKey, array $analysis, array $filters, string $userQuery = '', int $page = 1, int $perPage = self::DEFAULT_PER_PAGE): array
     {
-        $cfg = $feedKey ? (array) config("feeds.feeds.{$feedKey}", []) : [];
-        $global = (array) config('feeds', []);
         $page = max(1, $page);
         $perPage = max(1, min(60, $perPage));
-
         $brand = $feedKey === null ? $this->resolveBrand($userQuery, $analysis) : null;
+
+        if ($this->isMeilisearchEnabled()) {
+            $meiliResult = $this->searchViaMeilisearch($feedKey, $brand, $analysis, $filters, $userQuery, $page, $perPage);
+            if ($meiliResult !== null) {
+                return $meiliResult;
+            }
+        }
+
+        return $this->searchViaSql($feedKey, $brand, $analysis, $filters, $userQuery, $page, $perPage);
+    }
+
+    public function search(string $feedKey, array $analysis, array $filters, string $userQuery = '', ?int $limit = null): array
+    {
+        $perPage = $limit ?? (int) config('feeds.search_limit', self::DEFAULT_PER_PAGE);
+
+        return $this->searchPaginated($feedKey, $analysis, $filters, $userQuery, 1, $perPage)['cards'];
+    }
+
+    protected function isMeilisearchEnabled(): bool
+    {
+        return config('scout.driver') === 'meilisearch'
+            && !empty(config('scout.meilisearch.host'));
+    }
+
+    /**
+     * @return array{cards: array<int, array>, total: int, per_page: int, current_page: int, last_page: int}|null
+     */
+    protected function searchViaMeilisearch(?string $feedKey, ?string $brand, array $analysis, array $filters, string $userQuery, int $page, int $perPage): ?array
+    {
+        try {
+            $cfg = $feedKey ? (array) config("feeds.feeds.{$feedKey}", []) : [];
+            $global = (array) config('feeds', []);
+            $parsed = FeedText::parseQuery($userQuery, $cfg, $global);
+
+            $filterClauses = ['is_active = true', 'in_stock = true'];
+
+            if ($feedKey !== null) {
+                $filterClauses[] = 'feed = "' . addslashes($feedKey) . '"';
+            } elseif ($brand !== null) {
+                $filterClauses[] = 'brand = "' . addslashes($brand) . '"';
+            }
+
+            if ($parsed['gender'] === 'men') {
+                $filterClauses[] = 'gender IN ["men", "unisex"]';
+            } elseif ($parsed['gender'] === 'women') {
+                $filterClauses[] = 'gender IN ["women", "unisex"]';
+            } elseif ($parsed['gender'] === 'kids') {
+                $filterClauses[] = 'gender = "kids"';
+            }
+
+            if (!empty($filters['price_min'])) {
+                $filterClauses[] = 'price >= ' . (float) $filters['price_min'];
+            }
+            if (!empty($filters['price_max'])) {
+                $filterClauses[] = 'price <= ' . (float) $filters['price_max'];
+            }
+
+            $sort = $filters['sort'] ?? 'relevance';
+            $meiliSort = match ($sort) {
+                'price_asc' => ['price:asc', 'id:asc'],
+                'price_desc' => ['price:desc', 'id:asc'],
+                default => ['rating:desc', 'discount_percent:desc', 'id:asc'],
+            };
+
+            $searchQuery = trim($userQuery) !== ''
+                ? trim($userQuery)
+                : trim((string) ($analysis['query_en'] ?? ''));
+
+            $client = new Client(
+                (string) config('scout.meilisearch.host'),
+                config('scout.meilisearch.key') ?: null
+            );
+
+            $indexName = (new FeedProduct())->searchableAs();
+            $rawResult = $client->index($indexName)->search($searchQuery, [
+                'filter' => implode(' AND ', $filterClauses),
+                'sort' => $meiliSort,
+                'matchingStrategy' => 'all',
+                'offset' => ($page - 1) * $perPage,
+                'limit' => $perPage,
+            ]);
+
+            $hits = is_object($rawResult) ? $rawResult->getHits() : ($rawResult['hits'] ?? []);
+            $total = is_object($rawResult)
+                ? (int) ($rawResult->getEstimatedTotalHits() ?? count($hits))
+                : (int) ($rawResult['estimatedTotalHits'] ?? $rawResult['nbHits'] ?? count($hits));
+
+            if ($hits === []) {
+                return [
+                    'cards' => [],
+                    'total' => 0,
+                    'per_page' => $perPage,
+                    'current_page' => $page,
+                    'last_page' => 1,
+                ];
+            }
+
+            $primaryIds = array_values(array_filter(array_map(fn ($h) => (int) ($h['id'] ?? 0), $hits)));
+            $products = FeedProduct::query()
+                ->whereIn('id', $primaryIds)
+                ->get()
+                ->keyBy('id');
+
+            $groupKeys = [];
+            foreach ($products as $p) {
+                $groupKeys[] = $p->feed . ':' . ($p->model_code ?: $p->sku);
+            }
+            $groupKeys = array_values(array_unique($groupKeys));
+
+            $colorwaysMap = [];
+            if ($groupKeys !== []) {
+                $colorwaysMap = DB::table('feed_products')
+                    ->where('is_active', true)
+                    ->where('in_stock', true)
+                    ->whereIn(DB::raw("CONCAT(feed, ':', COALESCE(NULLIF(model_code, ''), sku))"), $groupKeys)
+                    ->selectRaw("CONCAT(feed, ':', COALESCE(NULLIF(model_code, ''), sku)) as gk, COUNT(*) as cnt")
+                    ->groupBy('gk')
+                    ->pluck('cnt', 'gk')
+                    ->all();
+            }
+
+            $cards = [];
+            foreach ($primaryIds as $id) {
+                /** @var FeedProduct|null $p */
+                $p = $products->get($id);
+                if (!$p) {
+                    continue;
+                }
+
+                $gk = $p->feed . ':' . ($p->model_code ?: $p->sku);
+                $store = (string) config("feeds.feeds.{$p->feed}.store_name", $p->brand ?: $p->feed);
+                $formatted = '€' . number_format($p->price, 2, '.', ' ');
+
+                $cards[] = $p->toCard() + [
+                    'original_title' => $p->name,
+                    'merchant' => $store,
+                    'price_from' => $p->price,
+                    'price_formatted' => $formatted,
+                    'price_note' => $formatted,
+                    'formatted_price' => $formatted,
+                    'offers_count' => 1,
+                    'rating_count' => null,
+                    'colorways_count' => (int) ($colorwaysMap[$gk] ?? 1),
+                ];
+            }
+
+            $cards = $this->localizer->localizeCardTitles($cards, app()->getLocale());
+
+            return [
+                'cards' => $cards,
+                'total' => $total,
+                'per_page' => $perPage,
+                'current_page' => $page,
+                'last_page' => max(1, (int) ceil($total / $perPage)),
+            ];
+        } catch (\Throwable $e) {
+            Log::warning('Meilisearch fallback to SQL: ' . $e->getMessage(), ['query' => $userQuery]);
+
+            return null;
+        }
+    }
+
+    /**
+     * @return array{cards: array<int, array>, total: int, per_page: int, current_page: int, last_page: int}
+     */
+    protected function searchViaSql(?string $feedKey, ?string $brand, array $analysis, array $filters, string $userQuery, int $page, int $perPage): array
+    {
+        $cfg = $feedKey ? (array) config("feeds.feeds.{$feedKey}", []) : [];
+        $global = (array) config('feeds', []);
 
         $rawCandidates = array_values(array_unique(array_filter([
             trim($userQuery),
@@ -143,13 +311,6 @@ class FeedProductSearch
             'current_page' => $page,
             'last_page' => 1,
         ];
-    }
-
-    public function search(string $feedKey, array $analysis, array $filters, string $userQuery = '', ?int $limit = null): array
-    {
-        $perPage = $limit ?? (int) config('feeds.search_limit', self::DEFAULT_PER_PAGE);
-
-        return $this->searchPaginated($feedKey, $analysis, $filters, $userQuery, 1, $perPage)['cards'];
     }
 
     protected function executePaginatedQuery(?string $feedKey, ?string $brand, array $attempt, array $filters, int $page, int $perPage): array

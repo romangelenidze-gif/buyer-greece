@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Log;
 
 class SmartProductSearchManager
 {
-    protected const CACHE_VERSION = 'v12';
+    protected const CACHE_VERSION = 'v13';
     protected const CACHE_TTL = 3600; // 1 час
 
     public function __construct(
@@ -45,7 +45,9 @@ class SmartProductSearchManager
         $result = $this->run($userQuery, $targetLang, $userFilters, $page);
         $this->logSearch($userQuery, $targetLang, $result, $startedAt);
 
-        Cache::put($cacheKey, $result, self::CACHE_TTL);
+        if (($result['pagination']['total'] ?? 0) > 0) {
+            Cache::put($cacheKey, $result, self::CACHE_TTL);
+        }
 
         return $result;
     }
@@ -67,10 +69,10 @@ class SmartProductSearchManager
         $feedKey = $this->feedSearch->matchFeed($analysis, $userQuery);
         $perPage = (int) config('feeds.search_limit', 24);
 
-        // 2. Прямой поиск по индексированной БД фидов (без LLM)
+        // 2. Прямой поиск по индексу Meilisearch / БД фидов (без LLM)
         $paginated = $this->feedSearch->searchPaginated($feedKey, $analysis, $activeFilters, $userQuery, $page, $perPage);
 
-        // 3. Крайний fallback на LLM: только если БД вернула 0, запрос длинный (>= 2 слов) и LLM явно включена для fallback
+        // 3. Крайний fallback на LLM: только если вернулось 0, запрос длинный (>= 2 слов) и LLM явно включена
         if ($paginated['total'] === 0 && config('services.groq.search_fallback', false) && count(explode(' ', $userQuery)) >= 2) {
             $aiAnalysis = $this->groqService->analyzeQuery($userQuery);
             if (empty($aiAnalysis['degraded'])) {

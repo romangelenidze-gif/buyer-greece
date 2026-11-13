@@ -3,10 +3,12 @@
 namespace App\Services;
 
 use App\Models\AutocompleteEntry;
+use App\Models\FeedProduct;
 use App\Services\Feeds\FeedText;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
+use Meilisearch\Client;
 
 class ProductAutocompleteService
 {
@@ -95,7 +97,6 @@ class ProductAutocompleteService
                 $modelCount++;
             }
 
-            // Для фасета подставляем локализованный поисковый запрос
             $value = $entry->type === 'facet'
                 ? str_replace(' — ', ' ', $label)
                 : $label;
@@ -114,10 +115,83 @@ class ProductAutocompleteService
             ];
 
             if (count($out) >= self::MAX_TOTAL) {
-                break;
+                return $out;
             }
         }
 
+        // Если из-за опечатки SQL-таблица дала мало подсказок — добираем модели из Meilisearch
+        if ($modelCount < 4 && config('scout.driver') === 'meilisearch' && !empty(config('scout.meilisearch.host'))) {
+            $this->appendMeilisearchSuggestions($typed, $locale, $titleCol, $out, $seenLabels, $modelCount);
+        }
+
         return $out;
+    }
+
+    private function appendMeilisearchSuggestions(
+        string $typed,
+        string $locale,
+        string $titleCol,
+        array &$out,
+        array &$seenLabels,
+        int &$modelCount
+    ): void {
+        try {
+            $client = new Client(
+                (string) config('scout.meilisearch.host'),
+                config('scout.meilisearch.key') ?: null
+            );
+
+            $indexName = (new FeedProduct())->searchableAs();
+            $res = $client->index($indexName)->search($typed, [
+                'filter' => 'is_active = true AND in_stock = true',
+                'matchingStrategy' => 'all',
+                'limit' => 6,
+                'attributesToRetrieve' => ['id', 'brand', 'title_en', 'title_ru', 'title_ka', 'title_el'],
+            ]);
+
+            $hits = is_object($res) ? $res->getHits() : ($res['hits'] ?? []);
+            if ($hits === []) {
+                return;
+            }
+
+            $ids = array_values(array_filter(array_map(fn ($h) => (int) ($h['id'] ?? 0), $hits)));
+            $products = FeedProduct::query()
+                ->whereIn('id', $ids)
+                ->get(['id', 'feed', 'sku', 'brand', 'name', 'price', 'image_url'])
+                ->keyBy('id');
+
+            foreach ($hits as $hit) {
+                if ($modelCount >= 4 || count($out) >= self::MAX_TOTAL) {
+                    break;
+                }
+
+                $id = (int) ($hit['id'] ?? 0);
+                /** @var FeedProduct|null $product */
+                $product = $products->get($id);
+                if (!$product) {
+                    continue;
+                }
+
+                $label = trim((string) ($hit[$titleCol] ?? $hit['title_en'] ?? $product->name));
+                $normLabel = mb_strtolower($label);
+                if ($normLabel === '' || isset($seenLabels[$normLabel])) {
+                    continue;
+                }
+
+                $seenLabels[$normLabel] = true;
+                $modelCount++;
+
+                $out[] = [
+                    'label' => $label,
+                    'value' => $label,
+                    'badge' => (string) ($product->brand ?: 'Model'),
+                    'url' => route('feed-product.show', ['feed' => $product->feed, 'sku' => $product->sku]),
+                    'image' => $product->image_url,
+                    'price' => '€' . number_format((float) $product->price, 2, '.', ' '),
+                ];
+            }
+        } catch (\Throwable $e) {
+            Log::warning('Meilisearch autocomplete fallback failed: ' . $e->getMessage(), ['query' => $typed]);
+        }
     }
 }
