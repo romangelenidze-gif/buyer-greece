@@ -310,7 +310,7 @@ class FeedEntityLocalizer
         $dispatched = 0;
 
         foreach ($missing as $type => $items) {
-            foreach (array_chunk($items, 20) as $batch) {
+            foreach (array_chunk($items, 8) as $batch) {
                 if ($sync) {
                     TranslateFeedEntitiesJob::dispatchSync($type, $batch);
                 } else {

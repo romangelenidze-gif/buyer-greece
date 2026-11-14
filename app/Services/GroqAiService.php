@@ -25,7 +25,7 @@ class GroqAiService
 
     protected const MAX_TOKENS_ANALYZE = 700;
     protected const MAX_TOKENS_TRANSLATE = 800;
-    protected const MAX_TOKENS_ENTITY_BATCH = 1800;
+    protected const MAX_TOKENS_ENTITY_BATCH = 900;
 
     protected string $apiKey;
     protected string $model;
@@ -287,7 +287,7 @@ PROMPT;
     protected function entityBatchSystemPrompt(): string
     {
         return <<<'PROMPT'
-You are a professional e-commerce localization engine for a fashion & sportswear catalog (Adidas, Nike, etc.).
+You are a professional e-commerce localization engine for a fashion, lifestyle & home catalog.
 The user sends a JSON object with "entity_type" ("spec", "category_segment", "color", or "title_prefix") and an array "items" (in Greek or English).
 Translate each item accurately into English ("en"), Russian ("ru"), and Georgian ("ka").
 
